@@ -1,214 +1,152 @@
-#include <functional>
-#include <iostream>
-#include <memory>
-#include <map>
-#include <string>
-using namespace std;
+/// @file IOC_Contaner.hpp
+/// @brief Контейнер внедрения зависимостей IoC.
+/// @author Artemenko Anton
 
+#ifndef GUID_4d7c2a91_f3e8_4c4a_9a12_6b3f8d0e71c5
+#define GUID_4d7c2a91_f3e8_4c4a_9a12_6b3f8d0e71c5
+
+#include <functional>
+#include <map>
+#include <memory>
+#include <utility>
+
+namespace ioc::container
+{
+/// @brief Контейнер внедрения зависимостей.
 class IOCContainer
 {
-	static int s_nextTypeId;
-	template<typename T>
-	static int GetTypeID() {
-		static int typeId = s_nextTypeId++;
-		return typeId;
-	}
+    /// @brief Счётчик для генерации идентификаторов типов.
+    inline static int nextTypeId_ = 115094801;
 
-public:
-	//Создание typeid для типа
-	/*
-	 * В предлагаемой реализации контейнера IOC  есть статическая целочисленная переменная,
-	 * указывающая идентификатор следующего типа, который будет выделен,
-	 * и экземпляр статической локальной переменной для каждого типа,
-	 * доступ к которому можно получить, вызвав метод GetTypeID.
-	*/
+    /// @brief Возвращает уникальный идентификатор для типа `T`.
+    /// @tparam T Тип, для которого создаётся идентификатор.
+    /// @return Уникальный идентификатор типа.
+    template <typename T>
+    static int GetTypeID()
+    {
+        static int typeId = nextTypeId_++;
+        return typeId;
+    }
 
-	/*
-	 * Получение экземпляров объекта
-	 * Теперь, когда у нас есть идентификатор типа,
-	 * мы должны иметь возможность хранить какой-то фабричный объект,
-	 * чтобы представить тот факт, что мы не знаем, как создать этот объект.
-	 * Предлагается хранить все фабрики в одной коллекции, в связи с этим 
-	 * создаем абстрактный базовый класс, от которого будут производными фабрики,
-	 * и реализацию, которая фиксирует функтор для последующего вызова.
-	 * Для простоты использовали std::map для хранения фабрик.
-	 */
-	
-	class FactoryRoot
-	{
-	public:
-		virtual ~FactoryRoot() {}
-	};
+   public:
+    /// @brief Базовый интерфейс для всех фабрик.
+    /// @details
+    /// Создание typeid для типа
+    ///
+    /// В предлагаемой реализации контейнера IOC  есть статическая целочисленная переменная,
+    /// указывающая идентификатор следующего типа, который будет выделен,
+    /// и экземпляр статической локальной переменной для каждого типа,
+    /// доступ к которому можно получить, вызвав метод GetTypeID.
+    ///
+    /// Получение экземпляров объекта
+    /// Теперь, когда у нас есть идентификатор типа,
+    /// мы должны иметь возможность хранить какой-то фабричный объект,
+    /// чтобы представить тот факт, что мы не знаем, как создать этот объект.
+    /// Предлагается хранить все фабрики в одной коллекции, в связи с этим
+    /// создаем абстрактный базовый класс, от которого будут производными фабрики,
+    /// и реализацию, которая фиксирует функтор для последующего вызова.
+    /// Для простоты использовали std::map для хранения фабрик.
+    class FactoryRoot
+    {
+       public:
+        /// @brief Виртуальный деструктор базовой фабрики.
+        virtual ~FactoryRoot() = default;
+    };
 
+    /// @brief Хранилище зарегистрированных фабрик по идентификатору типа.
+    std::map<int, std::shared_ptr<FactoryRoot>> factories_;
 
-	std::map<int, std::shared_ptr<FactoryRoot>> m_factories;
+    /// @brief Фабрика, возвращающая объект типа `T`.
+    /// @tparam T Тип создаваемого объекта.
+    template <typename T>
+    class CFactory : public FactoryRoot
+    {
+        /// @brief Функтор создания объекта.
+        std::function<std::shared_ptr<T>()> functor_;
 
-	//Получить экземпляр объекта
-	template<typename T>
-	class CFactory : public FactoryRoot
-	{
-		std::function<std::shared_ptr<T>()> m_functor;
+       public:
+        /// @brief Виртуальный деструктор фабрики.
+        ~CFactory() override = default;
 
-	public:
-		~CFactory() {}
+        /// @brief Создаёт фабрику с заданным функтором.
+        /// @param functor Функтор создания объекта.
+        explicit CFactory(std::function<std::shared_ptr<T>()> functor) : functor_(std::move(functor))
+        {
+        }
 
-		CFactory(std::function<std::shared_ptr<T>()> functor)
-			: m_functor(functor)
-		{}
+        /// @brief Возвращает новый экземпляр объекта.
+        /// @return Созданный объект.
+        std::shared_ptr<T> GetObject()
+        {
+            return functor_();
+        }
+    };
 
-		std::shared_ptr<T> GetObject() {
-			return m_functor();
-		}
-	};
+    /// @brief Получает зарегистрированный объект типа `T`.
+    /// @tparam T Тип объекта.
+    /// @return Зарегистрированный объект.
+    template <typename T>
+    std::shared_ptr<T> GetObject()
+    {
+        auto typeId = GetTypeID<T>();
+        auto factoryBase = factories_[typeId];
+        auto factory = std::static_pointer_cast<CFactory<T>>(factoryBase);
+        return factory->GetObject();
+    }
 
-	template<typename T>
-	std::shared_ptr<T> GetObject() {
-		auto typeId = GetTypeID<T>();
-		auto factoryBase = m_factories[typeId];
-		auto factory = std::static_pointer_cast<CFactory<T>>(factoryBase);
-		return factory->GetObject();
-	}
+    /// @brief Регистрирует функтор создания объекта.
+    /// @tparam TInterface Тип интерфейса.
+    /// @tparam TS Типы зависимостей.
+    /// @param functor Функтор создания объекта.
+    template <typename TInterface, typename... TS>
+    void RegisterFunctor(std::function<std::shared_ptr<TInterface>(std::shared_ptr<TS>... ts)> functor)
+    {
+        factories_[GetTypeID<TInterface>()] =
+            std::make_shared<CFactory<TInterface>>([=] { return functor(GetObject<TS>()...); });
+    }
 
-	//Регистрация экземпляров
-	//Самая простая реализация - зарегистрировать функтор
-	template<typename TInterface, typename... TS>
-	void RegisterFunctor(
-		std::function<std::shared_ptr<TInterface>(std::shared_ptr<TS>... ts)> functor) {
-		m_factories[GetTypeID<TInterface>()] = std::make_shared<CFactory<TInterface>>(
-				[ = ] { return functor(GetObject<TS>()...); });
-	}
+    /// @brief Регистрирует уже созданный экземпляр.
+    /// @tparam TInterface Тип интерфейса.
+    /// @param t Зарегистрированный объект.
+    template <typename TInterface>
+    void RegisterInstance(std::shared_ptr<TInterface> t)
+    {
+        factories_[GetTypeID<TInterface>()] = std::make_shared<CFactory<TInterface>>([=] { return t; });
+    }
 
-	//Регистрация одного экземпляра объекта
-	template<typename TInterface>
-	void RegisterInstance(std::shared_ptr<TInterface> t) {
-		m_factories[GetTypeID<TInterface>()] = std::make_shared<CFactory<TInterface>>(
-				[ = ] { return t; });
-	}
+    /// @brief Регистрирует функтор по указателю на функцию.
+    /// @tparam TInterface Тип интерфейса.
+    /// @tparam TS Типы зависимостей.
+    /// @param functor Указатель на функцию создания объекта.
+    template <typename TInterface, typename... TS>
+    void RegisterFunctor(std::shared_ptr<TInterface> (*functor)(std::shared_ptr<TS>... ts))
+    {
+        RegisterFunctor(std::function<std::shared_ptr<TInterface>(std::shared_ptr<TS>... ts)>(functor));
+    }
 
-	//Подаем указатель на функцию
-	template<typename TInterface, typename... TS>
-	void RegisterFunctor(std::shared_ptr<TInterface> (*functor)(std::shared_ptr<TS>... ts)) {
-		RegisterFunctor(
-			std::function<std::shared_ptr<TInterface>(std::shared_ptr<TS>... ts)>(functor));
-	}
+    /// @brief Регистрирует фабрику, создающую новый экземпляр при каждом запросе.
+    /// @tparam TInterface Тип интерфейса.
+    /// @tparam TConcrete Тип конкретной реализации.
+    /// @tparam TArguments Типы зависимостей конструктора.
+    template <typename TInterface, typename TConcrete, typename... TArguments>
+    void RegisterFactory()
+    {
+        RegisterFunctor(std::function<std::shared_ptr<TInterface>(std::shared_ptr<TArguments>... ts)>(
+            [](std::shared_ptr<TArguments>... arguments) -> std::shared_ptr<TInterface> {
+                return std::make_shared<TConcrete>(std::forward<std::shared_ptr<TArguments>>(arguments)...);
+            }));
+    }
 
-	//Фабрика, которая будет вызывать конструктор, для каждого экземпляра
-	template<typename TInterface, typename TConcrete, typename... TArguments>
-	void RegisterFactory() {
-		RegisterFunctor(
-			std::function<std::shared_ptr<TInterface>(std::shared_ptr<TArguments>... ts)>(
-		[](std::shared_ptr<TArguments>... arguments) -> std::shared_ptr<TInterface> {
-			return std::make_shared<TConcrete>(
-				std::forward<std::shared_ptr<TArguments>>(arguments)...);
-		}));
-	}
-
-	//Фабрика, которая будет возвращать один экземпляр
-	template<typename TInterface, typename TConcrete, typename... TArguments>
-	void RegisterInstance() {
-		RegisterInstance<TInterface>(std::make_shared<TConcrete>(GetObject<TArguments>()...));
-	}
+    /// @brief Регистрирует единственный экземпляр конкретной реализации.
+    /// @tparam TInterface Тип интерфейса.
+    /// @tparam TConcrete Тип конкретной реализации.
+    /// @tparam TArguments Типы зависимостей конструктора.
+    template <typename TInterface, typename TConcrete, typename... TArguments>
+    void RegisterInstance()
+    {
+        RegisterInstance<TInterface>(std::make_shared<TConcrete>(GetObject<TArguments>()...));
+    }
 };
+}  // namespace ioc::container
 
-IOCContainer gContainer;
-
-// инициализируем ненулевым числом
-int IOCContainer::s_nextTypeId = 115094801;
-
-class IAmAThing
-{
-public:
-	virtual ~IAmAThing() {}
-	virtual void TestThis() = 0;
-};
-
-class IAmTheOtherThing
-{
-public:
-	virtual ~IAmTheOtherThing() {}
-	virtual void TheOtherTest() = 0;
-};
-
-class TheThing : public IAmAThing
-{
-public:
-	TheThing() {}
-	void TestThis() {
-		std::cout << "A Thing" << std::endl;
-	}
-};
-
-class TheOtherThing : public IAmTheOtherThing
-{
-	std::shared_ptr<IAmAThing> m_thing;
-	string m_superInfo;
-
-public:
-	TheOtherThing(std::shared_ptr<IAmAThing> thing)
-		: m_thing(thing) {
-		m_superInfo = "From TheOtherThing";
-	}
-	TheOtherThing(std::shared_ptr<IAmAThing> thing, string sInfo)
-		: m_thing(thing)
-		, m_superInfo(sInfo) {
-		m_superInfo = sInfo;
-	}
-	void TheOtherTest() {
-		std::cout << m_superInfo << std::endl;
-		m_thing->TestThis();
-	}
-};
-
-class IHello
-{
-public:
-	virtual void hello() const = 0;
-	virtual ~IHello() = default;
-};
-
-class Hello : public IHello
-{
-public:
-	virtual void hello() const {
-		std::cout << "hello world!" << std::endl;
-	}
-};
-
-class Privet : public IHello
-{
-public:
-	virtual void hello() const {
-		std::cout << "Privet world!" << std::endl;
-	}
-};
-
-
-int main(int argc, const char *argv[])
-{
-	//------Example #1----------------
-	//Injector injector;
-	IOCContainer injector;
-
-	// Регистрируем IHello с классом Hello, т.о. каждый раз запрашивая IHell получаем объект Hello.
-	injector.RegisterInstance<IHello, Hello>();
-	auto helloInstance = injector.GetObject<IHello>();
-	helloInstance->hello();
-	injector.RegisterInstance<IHello, Privet>();
-
-	//Здесь, после регистрации получим объект Privet
-	helloInstance = injector.GetObject<IHello>();
-	helloInstance->hello();
-
-	//------Example #2----------------
-
-	gContainer.RegisterInstance<IAmAThing, TheThing>();
-	gContainer.RegisterFactory<IAmTheOtherThing, TheOtherThing, IAmAThing>();
-
-	gContainer.GetObject<IAmAThing>()->TestThis();
-	gContainer.GetObject<IAmTheOtherThing>()->TheOtherTest();
-
-	//Опять запршиваем объект,после последней регистрации получим объект Privet
-	helloInstance = injector.GetObject<IHello>();
-	helloInstance->hello();
-	return 0;
-}
+#endif  // GUID_4d7c2a91_f3e8_4c4a_9a12_6b3f8d0e71c5
