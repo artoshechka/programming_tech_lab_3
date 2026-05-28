@@ -9,10 +9,10 @@ namespace data
 /// @brief Класс для представления данных временной шкалы.
 class TimelineData : public IData
 {
-  public:
+   public:
     ~TimelineData() = default;
     /// @brief Метод для получения данных временной шкалы.
     void GetData() override;
 };
-} // namespace data
-#endif // GUID_f0ad56a1_3baa_4836_a15e_b8803adf069b
+}  // namespace data
+#endif  // GUID_f0ad56a1_3baa_4836_a15e_b8803adf069b
