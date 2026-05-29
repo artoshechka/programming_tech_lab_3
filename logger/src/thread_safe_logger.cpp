@@ -2,23 +2,25 @@
 /// @brief Реализация потокобезопасного базового логгера
 /// @author Artemenko Anton
 
-#include <QDateTime>
-#include <QDir>
-#include <QFileInfo>
+#include <chrono>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <thread_safe_logger.hpp>
 
 using logger::LogLevel;
 using logger::ThreadSafeLogger;
 
-ThreadSafeLogger::ThreadSafeLogger(const QString& componentName, LogOutput output)
-    : componentName_(componentName), settings_(QString(), LogLevel::Debug, output)
+ThreadSafeLogger::ThreadSafeLogger(const std::string& componentName, LogOutput output)
+    : componentName_(componentName), settings_(std::string(), LogLevel::Debug, output)
 {
 }
 
 ThreadSafeLogger::~ThreadSafeLogger()
 {
-    if (logFile_.isOpen())
+    if (logFile_.is_open())
     {
         logFile_.close();
     }
@@ -26,11 +28,11 @@ ThreadSafeLogger::~ThreadSafeLogger()
 
 void ThreadSafeLogger::SetSettings(const logger::LoggerSettings& settings)
 {
-    QMutexLocker locker(&syncMutex_);
+    std::lock_guard<std::mutex> lock(syncMutex_);
 
     settings_ = settings;
 
-    if (logFile_.isOpen())
+    if (logFile_.is_open())
     {
         logFile_.close();
     }
@@ -38,11 +40,11 @@ void ThreadSafeLogger::SetSettings(const logger::LoggerSettings& settings)
 
 logger::LoggerSettings ThreadSafeLogger::GetSettings() const
 {
-    QMutexLocker locker(&syncMutex_);
+    std::lock_guard<std::mutex> lock(syncMutex_);
     return settings_;
 }
 
-QString ThreadSafeLogger::LogLevelToString(LogLevel level)
+std::string ThreadSafeLogger::LogLevelToString(LogLevel level)
 {
     switch (level)
     {
@@ -63,48 +65,39 @@ QString ThreadSafeLogger::LogLevelToString(LogLevel level)
     }
 }
 
-void ThreadSafeLogger::Log(LogLevel level, const QString& message, const char* file, int line, const char* function)
+void ThreadSafeLogger::Log(LogLevel level, const std::string& message, const char* file, int line, const char* function)
 {
-    QMutexLocker locker(&syncMutex_);
+    std::lock_guard<std::mutex> lock(syncMutex_);
 
     if (level < settings_.logLevel_)
     {
         return;
     }
 
-    const QString logEntry = FormatMessage(level, message, file, line, function);
+    const std::string logEntry = FormatMessage(level, message, file, line, function);
 
     if (settings_.output_ == LogOutput::Console)
     {
-        std::cout << logEntry.toStdString() << std::endl;
+        std::cout << logEntry << '\n';
     } else if (settings_.output_ == LogOutput::File)
     {
-        if (!settings_.logFilePath_.has_value() || settings_.logFilePath_->isEmpty())
+        if (!settings_.logFilePath_.has_value() || settings_.logFilePath_->empty())
         {
             return;
         }
 
-        const QString& logFilePath = settings_.logFilePath_.value();
-        if (!logFile_.isOpen())
+        const std::string& logFilePath = settings_.logFilePath_.value();
+        if (!logFile_.is_open())
         {
-            logFile_.setFileName(logFilePath);
-
-            QDir dir(QFileInfo(logFilePath).absolutePath());
-            if (!dir.exists())
-            {
-                dir.mkpath(".");
-            }
-
-            if (!logFile_.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text))
+            std::filesystem::create_directories(std::filesystem::path(logFilePath).parent_path());
+            logFile_.open(logFilePath, std::ios::app);
+            if (!logFile_.is_open())
             {
                 return;
             }
-
-            textStream_.setDevice(&logFile_);
-            textStream_.setCodec("UTF-8");
         }
 
-        textStream_ << logEntry << Qt::endl;
-        textStream_.flush();
+        logFile_ << logEntry << '\n';
+        logFile_.flush();
     }
 }

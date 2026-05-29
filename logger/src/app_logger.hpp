@@ -27,8 +27,8 @@ class AppLogger final : public ThreadSafeLogger
     /// @param[in] line Номер строки
     /// @param[in] function Имя функции
     /// @return Отформатированное сообщение
-    QString FormatMessage(LogLevel level, const QString& message, const char* file, int line,
-                          const char* function) const override;
+    std::string FormatMessage(LogLevel level, const std::string& message, const char* file, int line,
+                              const char* function) const override;
 };
 
 }  // namespace logger

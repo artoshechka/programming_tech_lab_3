@@ -4,10 +4,10 @@
 #ifndef GUID_8b9db8a0_64a9_4a28_a8e2_ef99f9a87516
 #define GUID_8b9db8a0_64a9_4a28_a8e2_ef99f9a87516
 
-#include <QString>
-#include <QTextStream>
 #include <ilogger.hpp>
 #include <memory>
+#include <sstream>
+#include <string>
 
 namespace logger
 {
@@ -41,8 +41,7 @@ class LogEntryStream final
     const char* file_;                 ///< Имя файла источника
     int line_;                         ///< Номер строки источника
     const char* function_;             ///< Имя функции источника
-    QString message_;                  ///< Буфер формируемого сообщения
-    QTextStream stream_;               ///< Поток формирования сообщения через operator<<
+    std::ostringstream stream_;        ///< Поток формирования сообщения через operator<<
 };
 
 }  // namespace detail

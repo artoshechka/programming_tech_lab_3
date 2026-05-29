@@ -4,10 +4,9 @@
 #ifndef GUID_d1cbe2e9_7462_42f5_90e5_52ffccfe7677
 #define GUID_d1cbe2e9_7462_42f5_90e5_52ffccfe7677
 
-#include <QFile>
-#include <QMutex>
-#include <QTextStream>
+#include <fstream>
 #include <ilogger.hpp>
+#include <mutex>
 
 namespace logger
 {
@@ -18,7 +17,7 @@ class ThreadSafeLogger : public ILogger
     /// @brief Конструктор потокобезопасного логгера
     /// @param[in] componentName Имя компонента для идентификации в логах
     /// @param[in] output Режим вывода логов
-    explicit ThreadSafeLogger(const QString& componentName, LogOutput output = LogOutput::Console);
+    explicit ThreadSafeLogger(const std::string& componentName, LogOutput output = LogOutput::Console);
 
     /// @brief Виртуальный деструктор
     ~ThreadSafeLogger() override;
@@ -37,7 +36,7 @@ class ThreadSafeLogger : public ILogger
     /// @param[in] file Имя исходного файла
     /// @param[in] line Номер строки
     /// @param[in] function Имя функции
-    void Log(LogLevel level, const QString& message, const char* file = nullptr, int line = 0,
+    void Log(LogLevel level, const std::string& message, const char* file = nullptr, int line = 0,
              const char* function = nullptr) override;
 
    protected:
@@ -49,22 +48,21 @@ class ThreadSafeLogger : public ILogger
     /// @param[in] line Номер строки источника
     /// @param[in] function Имя функции источника
     /// @return Отформатированное сообщение для вывода
-    virtual QString FormatMessage(LogLevel level, const QString& message, const char* file, int line,
-                                  const char* function) const = 0;
+    virtual std::string FormatMessage(LogLevel level, const std::string& message, const char* file, int line,
+                                      const char* function) const = 0;
 
     /// @brief Преобразует уровень логирования в строку
     /// @param[in] level Уровень логирования
     /// @return Строковое представление уровня
-    static QString LogLevelToString(LogLevel level);
+    static std::string LogLevelToString(LogLevel level);
 
    protected:
-    QString componentName_;  ///< Имя компонента логирования для идентификации в формате сообщений
+    std::string componentName_;  ///< Имя компонента логирования для идентификации в формате сообщений
 
    private:
-    QFile logFile_;             ///< Открытый файл логов для записи
-    QTextStream textStream_;    ///< Текстовый поток для записи в файл
-    mutable QMutex syncMutex_;  ///< Мьютекс для обеспечения потокобезопасности при записи в лог
-    LoggerSettings settings_;   ///< Текущие настройки логгера
+    std::ofstream logFile_;         ///< Открытый файл логов для записи
+    mutable std::mutex syncMutex_;  ///< Мьютекс для обеспечения потокобезопасности при записи в лог
+    LoggerSettings settings_;       ///< Текущие настройки логгера
 };
 
 }  // namespace logger

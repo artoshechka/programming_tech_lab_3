@@ -1,4 +1,4 @@
-/// @file
+/// @file logger_macros.hpp
 /// @brief Макросы для логирования
 /// @author Artemenko Anton
 #ifndef GUID_13d828c9_913c_478d_aab2_8f1404db6d7f

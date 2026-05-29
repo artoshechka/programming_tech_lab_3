@@ -1,4 +1,4 @@
-/// @file
+/// @file log_levels.hpp
 /// @brief Объявление уровней логирования
 /// @author Artemenko Anton
 #ifndef GUID_7f71c29a_8f1f_41dc_bbd2_2406bd48a72b
