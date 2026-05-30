@@ -23,6 +23,16 @@ namespace
 /// @brief Уникальное имя соединения, чтобы не пересекаться между вызовами.
 const char* const kConnectionName = "DatabaseParserConnection";
 
+/// @brief Экранирует двойные кавычки в имени таблицы для безопасной подстановки в SQL.
+/// @param[in] name Имя таблицы.
+/// @return Экранированное имя.
+QString sanitized(const QString& name)
+{
+    QString s = name;
+    s.replace('"', "\"\"");
+    return s;
+}
+
 /// @brief Заполняет одно поле точки из значения колонки QVariant.
 /// @tparam T Тип поля.
 /// @param[out] field Заполняемое поле.
@@ -69,7 +79,7 @@ TimelineData DatabaseParser::Load(const std::string& source)
                 LogDebug(logger_) << "DB table selected: " << result.name_;
 
                 QSqlQuery query(db);
-                query.exec(QString("SELECT * FROM \"%1\"").arg(table));
+                query.exec(QString("SELECT * FROM \"%1\"").arg(sanitized(table)));
                 while (query.next())
                 {
                     result.points_.push_back(ReadPoint(query));
@@ -102,11 +112,11 @@ void DatabaseParser::Save(const TimelineData& data, const std::string& destinati
         {
             const QString table = QString::fromStdString(data.name_);
             QSqlQuery query(db);
-            query.exec(QString("DROP TABLE IF EXISTS \"%1\"").arg(table));
-            query.exec(QString("CREATE TABLE \"%1\" ([Time] Datetime, [Value] Float)").arg(table));
+            query.exec(QString("DROP TABLE IF EXISTS \"%1\"").arg(sanitized(table)));
+            query.exec(QString("CREATE TABLE \"%1\" ([Time] Datetime, [Value] Float)").arg(sanitized(table)));
 
             db.transaction();
-            query.prepare(QString("INSERT INTO \"%1\" ([Time], [Value]) VALUES (?, ?)").arg(table));
+            query.prepare(QString("INSERT INTO \"%1\" ([Time], [Value]) VALUES (?, ?)").arg(sanitized(table)));
             for (const TimePoint& point : data.points_)
             {
                 query.addBindValue(QString::fromStdString(point.time_));
