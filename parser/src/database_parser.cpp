@@ -9,6 +9,7 @@
 #include <QStringList>
 #include <QVariant>
 #include <data_model/schema.hpp>
+#include <logger/logger_macros.hpp>
 #include <parser/src/database_parser.hpp>
 #include <string>
 #include <type_traits>
@@ -51,6 +52,8 @@ TimePoint ReadPoint(const QSqlQuery& query)
 }  // namespace
 TimelineData DatabaseParser::Load(const std::string& source)
 {
+    LogInfo(logger_) << "DB load started: " << source;
+
     TimelineData result;
 
     {
@@ -63,6 +66,7 @@ TimelineData DatabaseParser::Load(const std::string& source)
             {
                 const QString table = tables.first();
                 result.name_ = table.toStdString();
+                LogDebug(logger_) << "DB table selected: " << result.name_;
 
                 QSqlQuery query(db);
                 query.exec(QString("SELECT * FROM \"%1\"").arg(table));
@@ -70,17 +74,27 @@ TimelineData DatabaseParser::Load(const std::string& source)
                 {
                     result.points_.push_back(ReadPoint(query));
                 }
+            } else
+            {
+                LogWarning(logger_) << "DB load: no tables in " << source;
             }
             db.close();
+        } else
+        {
+            LogError(logger_) << "DB load failed: cannot open " << source;
         }
     }
     QSqlDatabase::removeDatabase(kConnectionName);
 
+    LogInfo(logger_) << "DB load finished: series '" << result.name_ << "', " << result.points_.size() << " points";
     return result;
 }
 
 void DatabaseParser::Save(const TimelineData& data, const std::string& destination)
 {
+    LogInfo(logger_) << "DB save started: series '" << data.name_ << "', " << data.points_.size() << " points -> "
+                     << destination;
+
     {
         QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", kConnectionName);
         db.setDatabaseName(QString::fromStdString(destination));
@@ -101,6 +115,10 @@ void DatabaseParser::Save(const TimelineData& data, const std::string& destinati
             }
             db.commit();
             db.close();
+            LogInfo(logger_) << "DB save finished: " << destination;
+        } else
+        {
+            LogError(logger_) << "DB save failed: cannot open " << destination;
         }
     }
     QSqlDatabase::removeDatabase(kConnectionName);

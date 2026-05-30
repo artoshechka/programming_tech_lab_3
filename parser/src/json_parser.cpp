@@ -9,6 +9,7 @@
 #include <QJsonValue>
 #include <QString>
 #include <data_model/schema.hpp>
+#include <logger/logger_macros.hpp>
 #include <parser/src/json_parser.hpp>
 #include <string>
 #include <type_traits>
@@ -107,11 +108,14 @@ void JsonToField(T& field, const QJsonValue& json)
 
 TimelineData JsonParser::Load(const std::string& source)
 {
+    LogInfo(logger_) << "JSON load started: " << source;
+
     TimelineData result;
 
     QFile file(QString::fromStdString(source));
     if (!file.open(QIODevice::ReadOnly))
     {
+        LogError(logger_) << "JSON load failed: cannot open file " << source;
         return result;
     }
 
@@ -121,24 +125,31 @@ TimelineData JsonParser::Load(const std::string& source)
     const QJsonDocument document = QJsonDocument::fromJson(raw);
     if (!document.isObject())
     {
+        LogError(logger_) << "JSON load failed: root is not an object in " << source;
         return result;
     }
 
     StructFromJson(result, document.object());
+    LogInfo(logger_) << "JSON load finished: series '" << result.name_ << "', " << result.points_.size() << " points";
     return result;
 }
 
 void JsonParser::Save(const TimelineData& data, const std::string& destination)
 {
+    LogInfo(logger_) << "JSON save started: series '" << data.name_ << "', " << data.points_.size() << " points -> "
+                     << destination;
+
     const QJsonObject root = StructToJson(data);
     const QJsonDocument document(root);
 
     QFile file(QString::fromStdString(destination));
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
+        LogError(logger_) << "JSON save failed: cannot open file " << destination;
         return;
     }
 
     file.write(document.toJson(QJsonDocument::Indented));
     file.close();
+    LogInfo(logger_) << "JSON save finished: " << destination;
 }

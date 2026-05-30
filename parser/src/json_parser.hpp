@@ -5,6 +5,8 @@
 #ifndef GUID_cf64fc0e_c3bd_4922_8d74_fae170ae2ea0
 #define GUID_cf64fc0e_c3bd_4922_8d74_fae170ae2ea0
 
+#include <logger/ilogger.hpp>
+#include <memory>
 #include <parser/iparser.hpp>
 
 namespace parser
@@ -14,6 +16,12 @@ namespace parser
 class JsonParser : public IParser
 {
    public:
+    /// @brief Конструктор с внедрением логгера.
+    /// @param[in] logger Указатель на логгер (копируется, владение разделяется).
+    explicit JsonParser(std::shared_ptr<logger::ILogger> logger) : IParser(logger)
+    {
+    }
+
     ~JsonParser() override = default;
 
     /// @brief Загрузить временной ряд из JSON-файла.

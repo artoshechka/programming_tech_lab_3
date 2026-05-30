@@ -5,6 +5,8 @@
 #ifndef GUID_d8990b3f_06fb_4bd3_9a73_38fa220978bb
 #define GUID_d8990b3f_06fb_4bd3_9a73_38fa220978bb
 
+#include <logger/ilogger.hpp>
+#include <memory>
 #include <parser/iparser.hpp>
 
 namespace parser
@@ -14,6 +16,12 @@ namespace parser
 class DatabaseParser : public IParser
 {
    public:
+    /// @brief Конструктор с внедрением логгера.
+    /// @param[in] logger Указатель на логгер (копируется, владение разделяется).
+    explicit DatabaseParser(std::shared_ptr<logger::ILogger> logger) : IParser(logger)
+    {
+    }
+
     ~DatabaseParser() override = default;
 
     /// @brief Загрузить временной ряд из SQLite-файла.
