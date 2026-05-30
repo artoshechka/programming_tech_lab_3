@@ -119,6 +119,13 @@ TimelineData JsonParser::Load(const std::string& source)
         return result;
     }
 
+    constexpr qint64 kMaxJsonBytes = 256LL * 1024 * 1024;
+    if (file.size() > kMaxJsonBytes)
+    {
+        LogError(logger_) << "JSON load failed: file too large " << source;
+        return result;
+    }
+
     const QByteArray raw = file.readAll();
     file.close();
 
