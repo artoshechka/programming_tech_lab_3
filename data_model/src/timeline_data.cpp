@@ -4,3 +4,7 @@
 
 #include <data_model/src/timeline_data.hpp>
 using data::TimelineData;
+
+void TimelineData::GetData()
+{
+}
