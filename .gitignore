@@ -4,3 +4,4 @@ build-coverage/
 .DS_Store
 
 heleper_info/
+test_data/output/
