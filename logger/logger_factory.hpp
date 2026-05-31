@@ -17,7 +17,10 @@ struct AppLoggerTag;
 /// @tparam TLoggerTag Тип тега логгера
 /// @return Умный указатель на логгер
 template <typename TLoggerTag>
-std::shared_ptr<ILogger> GetLogger();
+std::shared_ptr<ILogger> GetLogger()
+{
+    static_assert(sizeof(TLoggerTag) == 0, "No GetLogger<> specialization for this tag");
+}
 
 /// @brief Специализация фабрики для логгера приложения
 template <>
