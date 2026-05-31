@@ -1,0 +1,24 @@
+cmake_minimum_required(VERSION 3.16)
+project(gui LANGUAGES CXX)
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+find_package(Qt5 REQUIRED COMPONENTS Widgets Charts PrintSupport)
+
+add_library(${PROJECT_NAME} STATIC
+    src/mainwindow.cpp
+)
+
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR})
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+        chart
+        style
+        parser
+        Qt5::Widgets
+        Qt5::Charts
+        Qt5::PrintSupport
+)
