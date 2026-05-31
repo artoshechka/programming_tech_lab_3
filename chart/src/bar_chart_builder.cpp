@@ -7,12 +7,16 @@ QT_CHARTS_USE_NAMESPACE
 
 namespace chart {
 
+static constexpr int kMaxBars = 50;
+
 QChart* BarChartBuilder::Build(const data::TimelineData& data) {
     auto* set = new QBarSet(QString::fromStdString(data.name_));
     QStringList categories;
-    for (const auto& pt : data.points_) {
-        *set << pt.value_;
-        categories << QString::fromStdString(pt.time_);
+
+    const int count = std::min(kMaxBars, static_cast<int>(data.points_.size()));
+    for (int i = 0; i < count; ++i) {
+        *set << data.points_[i].value_;
+        categories << QString::fromStdString(data.points_[i].time_);
     }
 
     auto* series = new QBarSeries();

@@ -1,10 +1,7 @@
 #ifndef GUID_d0e1f2a3_b4c5_6789_defa_890123456789
 #define GUID_d0e1f2a3_b4c5_6789_defa_890123456789
 
-#include <ioc_container/IOC_Contaner.hpp>
-#include <chart/ichart_builder.hpp>
-#include <style/ichart_style.hpp>
-#include <parser/iparser_registry.hpp>
+#include <gui/src/mainwindow.hpp>
 #include <chart/src/pie_chart_builder.hpp>
 #include <chart/src/bar_chart_builder.hpp>
 #include <style/src/color_style.hpp>
@@ -16,18 +13,23 @@
 
 namespace gui {
 
-/// @brief Регистрирует все зависимости в IoC-контейнере.
-inline void RegisterDependencies(ioc::container::IOCContainer& ioc) {
+/// @brief Собирает MainWindow с зарегистрированными зависимостями.
+inline MainWindow* CreateMainWindow(QWidget* parent = nullptr) {
     auto logger = logger::GetLogger<logger::AppLoggerTag>();
-    ioc.RegisterInstance<logger::ILogger>(logger);
 
-    auto registry = std::make_shared<parser::ParserRegistry>();
-    registry->Register("json",   std::make_shared<parser::JsonParser>(logger));
-    registry->Register("sqlite", std::make_shared<parser::DatabaseParser>(logger));
-    ioc.RegisterInstance<parser::IParserRegistry>(registry);
+    auto parserRegistry = std::make_shared<parser::ParserRegistry>();
+    parserRegistry->Register("json",   std::make_shared<parser::JsonParser>(logger));
+    parserRegistry->Register("sqlite", std::make_shared<parser::DatabaseParser>(logger));
 
-    ioc.RegisterFactory<chart::IChartBuilder, chart::PieChartBuilder>();
-    ioc.RegisterFactory<style::IChartStyle,   style::ColorStyle>();
+    BuilderFactory builders;
+    builders["Pie"] = [] { return std::make_shared<chart::PieChartBuilder>(); };
+    builders["Bar"] = [] { return std::make_shared<chart::BarChartBuilder>(); };
+
+    StyleFactory styles;
+    styles["Color"]     = [] { return std::make_shared<style::ColorStyle>(); };
+    styles["Grayscale"] = [] { return std::make_shared<style::GrayscaleStyle>(); };
+
+    return new MainWindow(std::move(builders), std::move(styles), parserRegistry, parent);
 }
 
 } // namespace gui

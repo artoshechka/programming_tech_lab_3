@@ -2,43 +2,50 @@
 #define GUID_c9d0e1f2_a3b4_5678_cdef_789012345678
 
 #include <QMainWindow>
-#include <memory>
+#include <QTreeView>
+#include <QComboBox>
+#include <QtCharts/QChartView>
 #include <chart/ichart_builder.hpp>
 #include <style/ichart_style.hpp>
 #include <parser/iparser_registry.hpp>
-
-QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
-QT_END_NAMESPACE
+#include <map>
+#include <functional>
+#include <string>
 
 QT_CHARTS_USE_NAMESPACE
 
 namespace gui {
+
+using BuilderFactory = std::map<std::string, std::function<std::shared_ptr<chart::IChartBuilder>()>>;
+using StyleFactory   = std::map<std::string, std::function<std::shared_ptr<style::IChartStyle>()>>;
 
 /// @brief Главное окно приложения.
 class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
     explicit MainWindow(
-        std::shared_ptr<chart::IChartBuilder> builder,
-        std::shared_ptr<style::IChartStyle>   style,
+        BuilderFactory                           builders,
+        StyleFactory                             styles,
         std::shared_ptr<parser::IParserRegistry> registry,
         QWidget* parent = nullptr
     );
-    ~MainWindow() override;
+    ~MainWindow() override = default;
 
 private slots:
-    void onOpenFile();
+    void onFileSelected(const QModelIndex& index);
     void onSavePdf();
 
 private:
     void loadFile(const QString& path);
 
-    Ui::MainWindow* ui_;
-    std::shared_ptr<chart::IChartBuilder>      builder_;
-    std::shared_ptr<style::IChartStyle>        style_;
-    std::shared_ptr<parser::IParserRegistry>   registry_;
-    QChartView* chartView_ = nullptr;
+    BuilderFactory                           builders_;
+    StyleFactory                             styles_;
+    std::shared_ptr<parser::IParserRegistry> registry_;
+
+    QTreeView*   treeView_   = nullptr;
+    QChartView*  chartView_  = nullptr;
+    QComboBox*   chartCombo_ = nullptr;
+    QComboBox*   styleCombo_ = nullptr;
 };
 
 } // namespace gui

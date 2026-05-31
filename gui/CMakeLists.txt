@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.16)
 project(gui LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 find_package(Qt5 REQUIRED COMPONENTS Widgets Charts PrintSupport)
 
