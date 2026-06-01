@@ -4,10 +4,12 @@
 #include <QFileInfo>
 #include <QFileSystemModel>
 #include <QSplitter>
+#include <QStatusBar>
 #include <QToolBar>
 #include <QPdfWriter>
 #include <QPainter>
 #include <QPushButton>
+#include <QPageSize>
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -70,8 +72,14 @@ MainWindow::MainWindow(
     splitter->setStretchFactor(1, 3);
     setCentralWidget(splitter);
 
-    connect(treeView_, &QTreeView::clicked, this, &MainWindow::onFileSelected);
-    connect(pdfBtn,    &QPushButton::clicked, this, &MainWindow::onSavePdf);
+    connect(treeView_,  &QTreeView::clicked,                  this, &MainWindow::onFileSelected);
+    connect(pdfBtn,     &QPushButton::clicked,                this, &MainWindow::onSavePdf);
+    connect(chartCombo_, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onRedraw);
+    connect(styleCombo_, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onRedraw);
+}
+
+void MainWindow::onRedraw() {
+    if (!currentPath_.isEmpty()) loadFile(currentPath_);
 }
 
 void MainWindow::onFileSelected(const QModelIndex& index) {
@@ -81,6 +89,7 @@ void MainWindow::onFileSelected(const QModelIndex& index) {
 }
 
 void MainWindow::loadFile(const QString& path) {
+    currentPath_ = path;
     const std::string ext = QFileInfo(path).suffix().toLower().toStdString();
     auto parser = registry_->Get(ext);
     if (!parser) { statusBar()->showMessage("Неизвестный формат: " + QString::fromStdString(ext)); return; }
@@ -100,7 +109,7 @@ void MainWindow::onSavePdf() {
     const QString path = QFileDialog::getSaveFileName(this, "Сохранить PDF", {}, "PDF (*.pdf)");
     if (path.isEmpty()) return;
     QPdfWriter writer(path);
-    writer.setPageSize(QPagedPaintDevice::A4);
+    writer.setPageSize(QPageSize(QPageSize::A4));
     QPainter painter(&writer);
     chartView_->render(&painter);
     painter.end();

@@ -34,6 +34,7 @@ public:
 private slots:
     void onFileSelected(const QModelIndex& index);
     void onSavePdf();
+    void onRedraw();
 
 private:
     void loadFile(const QString& path);
@@ -42,10 +43,11 @@ private:
     StyleFactory                             styles_;
     std::shared_ptr<parser::IParserRegistry> registry_;
 
-    QTreeView*   treeView_   = nullptr;
-    QChartView*  chartView_  = nullptr;
-    QComboBox*   chartCombo_ = nullptr;
-    QComboBox*   styleCombo_ = nullptr;
+    QTreeView*   treeView_    = nullptr;
+    QChartView*  chartView_   = nullptr;
+    QComboBox*   chartCombo_  = nullptr;
+    QComboBox*   styleCombo_  = nullptr;
+    QString      currentPath_;
 };
 
 } // namespace gui
