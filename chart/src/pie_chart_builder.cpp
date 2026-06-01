@@ -1,5 +1,6 @@
 #include "pie_chart_builder.hpp"
 #include <QtCharts/QPieSeries>
+#include <QtCharts/QPieSlice>
 #include <algorithm>
 
 QT_CHARTS_USE_NAMESPACE
@@ -25,9 +26,15 @@ QChart* PieChartBuilder::Build(const data::TimelineData& data) {
     if (other > 0.0)
         series->append("Other", other);
 
+    for (auto* slice : series->slices()) {
+        slice->setLabelVisible(true);
+        slice->setLabelFormat("@label\n@percent%");
+    }
+
     auto* chart = new QChart();
     chart->addSeries(series);
     chart->setTitle(QString::fromStdString(data.name_));
+    chart->legend()->setAlignment(Qt::AlignRight);
     chart->legend()->setVisible(true);
     return chart;
 }
