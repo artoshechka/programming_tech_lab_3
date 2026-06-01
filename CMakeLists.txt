@@ -11,6 +11,7 @@ find_package(Qt5 REQUIRED COMPONENTS Widgets Charts PrintSupport)
 
 add_subdirectory(logger)
 add_subdirectory(data_model)
+add_subdirectory(database_module)
 add_subdirectory(parser)
 add_subdirectory(chart)
 add_subdirectory(style)
