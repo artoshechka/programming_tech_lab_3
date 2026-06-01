@@ -59,6 +59,13 @@ void ForEachField(T& object, Fn&& fn)
                std::remove_reference_t<T>::kSchema);
 }
 
+template <typename T, typename Fn>
+void ForEachField(const T& object, Fn&& fn)
+{
+    std::apply([&](auto&&... entry) { (fn(object.*(entry.first), entry.second), ...); },
+               std::remove_reference_t<T>::kSchema);
+}
+
 }  // namespace data
 
 #endif  // GUID_b3f1d2c4_5a6e_4f8b_9c0d_1e2f3a4b5c6d
