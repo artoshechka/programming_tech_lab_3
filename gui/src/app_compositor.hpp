@@ -10,17 +10,27 @@
 #include <parser/src/json_parser.hpp>
 #include <parser/src/database_parser.hpp>
 #include <database_module/src/sqlite_db_manager.hpp>
+#include <ioc_container/IOC_Contaner.hpp>
 #include <logger/logger_factory.hpp>
 
 namespace gui {
 
 inline MainWindow* CreateMainWindow(QWidget* parent = nullptr) {
-    auto logger = logger::GetLogger<logger::AppLoggerTag>();
-    auto dbManager = std::make_shared<database::manager::SqliteDBManager>();
+    // IoC: singletons live as instances, parsers are auto-wired from their deps.
+    ioc::container::IOCContainer ioc;
+    ioc.RegisterInstance<logger::ILogger>(logger::GetLogger<logger::AppLoggerTag>());
+    ioc.RegisterInstance<database::manager::IDatabaseManager,
+                         database::manager::SqliteDBManager>();
+    ioc.RegisterFactory<parser::JsonParser, parser::JsonParser,
+                        logger::ILogger>();
+    ioc.RegisterFactory<parser::DatabaseParser, parser::DatabaseParser,
+                        logger::ILogger, database::manager::IDatabaseManager>();
+
+    auto dbManager = ioc.GetObject<database::manager::IDatabaseManager>();
 
     auto parserRegistry = std::make_shared<parser::ParserRegistry>();
-    parserRegistry->Register("json",   std::make_shared<parser::JsonParser>(logger));
-    parserRegistry->Register("sqlite", std::make_shared<parser::DatabaseParser>(logger, dbManager));
+    parserRegistry->Register("json",   ioc.GetObject<parser::JsonParser>());
+    parserRegistry->Register("sqlite", ioc.GetObject<parser::DatabaseParser>());
 
     BuilderFactory builders;
     builders["Pie"] = [] { return std::make_shared<chart::PieChartBuilder>(); };
