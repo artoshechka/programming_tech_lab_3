@@ -1,4 +1,5 @@
 #include "bar_chart_builder.hpp"
+#include <chart/aggregate.hpp>
 #include <QtCharts/QBarSet>
 #include <QtCharts/QBarSeries>
 #include <QtCharts/QBarCategoryAxis>
@@ -8,15 +9,17 @@ QT_CHARTS_USE_NAMESPACE
 
 namespace chart {
 
-static constexpr int kMaxBars = 24;
-
-QChart* BarChartBuilder::Build(const data::TimelineData& data) {
-    const int count = std::min(kMaxBars, static_cast<int>(data.points_.size()));
+QChart* BarChartBuilder::Build(const data::TimelineData& raw) {
+    // агрегируем по месяцу если точек много, иначе берём как есть
+    const data::TimelineData agg_ = (raw.points_.size() > kAggregateThreshold)
+        ? Aggregate(raw) : raw;
+    const data::TimelineData& data = agg_;
 
     auto* set = new QBarSet(QString::fromStdString(data.name_));
     QStringList categories;
     double minVal = 0.0, maxVal = 0.0;
-    for (int i = 0; i < count; ++i) {
+
+    for (int i = 0; i < static_cast<int>(data.points_.size()); ++i) {
         double v = data.points_[i].value_;
         *set << v;
         categories << QString::fromStdString(data.points_[i].time_);
@@ -26,9 +29,6 @@ QChart* BarChartBuilder::Build(const data::TimelineData& data) {
 
     auto* series = new QBarSeries();
     series->append(set);
-    series->setLabelsVisible(true);
-    series->setLabelsFormat("@value");
-    series->setLabelsPosition(QAbstractBarSeries::LabelsOutsideEnd);
 
     auto* axisX = new QBarCategoryAxis();
     axisX->append(categories);

@@ -1,4 +1,5 @@
 #include "pie_chart_builder.hpp"
+#include <chart/aggregate.hpp>
 #include <QtCharts/QPieSeries>
 #include <QtCharts/QPieSlice>
 #include <algorithm>
@@ -9,8 +10,12 @@ namespace chart {
 
 static constexpr int kMaxSlices = 10;
 
-QChart* PieChartBuilder::Build(const data::TimelineData& data) {
-    auto pts = data.points_;
+QChart* PieChartBuilder::Build(const data::TimelineData& raw) {
+    // агрегируем по месяцу если точек много
+    const data::TimelineData agg = (raw.points_.size() > kAggregateThreshold)
+        ? Aggregate(raw) : raw;
+
+    auto pts = agg.points_;
     std::sort(pts.begin(), pts.end(), [](const auto& a, const auto& b) {
         return a.value_ > b.value_;
     });
@@ -26,14 +31,12 @@ QChart* PieChartBuilder::Build(const data::TimelineData& data) {
     if (other > 0.0)
         series->append("Other", other);
 
-    for (auto* slice : series->slices()) {
-        slice->setLabelVisible(true);
-        slice->setLabelFormat("@label\n@percent%");
-    }
+    series->setLabelsVisible(true);
+    series->setLabelsPosition(QPieSlice::LabelOutside);
 
     auto* chart = new QChart();
     chart->addSeries(series);
-    chart->setTitle(QString::fromStdString(data.name_));
+    chart->setTitle(QString::fromStdString(agg.name_));
     chart->legend()->setAlignment(Qt::AlignRight);
     chart->legend()->setVisible(true);
     return chart;
