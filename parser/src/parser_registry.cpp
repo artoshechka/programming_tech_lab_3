@@ -3,7 +3,9 @@
 namespace parser {
 
 void ParserRegistry::Register(const std::string& extension, std::shared_ptr<IParser> parser) {
-    parsers_[extension] = std::move(parser);
+    std::string key = extension;
+    std::transform(key.begin(), key.end(), key.begin(), ::tolower);
+    parsers_[key] = std::move(parser);
 }
 
 std::shared_ptr<IParser> ParserRegistry::Get(const std::string& extension) const {

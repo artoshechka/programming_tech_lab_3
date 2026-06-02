@@ -22,7 +22,7 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC
         data_model
         logger
+        database_module
     PRIVATE
         Qt${QT_VERSION_MAJOR}::Core
-        Qt${QT_VERSION_MAJOR}::Sql
 )

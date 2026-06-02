@@ -5,35 +5,33 @@
 #ifndef GUID_d8990b3f_06fb_4bd3_9a73_38fa220978bb
 #define GUID_d8990b3f_06fb_4bd3_9a73_38fa220978bb
 
-#include <logger/ilogger.hpp>
-#include <memory>
+#include <database_module/idatabase_manager.hpp>
 #include <parser/iparser.hpp>
 
 namespace parser
 {
-/// @brief Парсер для обработки данных базы данных SQLite.
-/// @details Имя таблицы трактуется как имя ряда; колонки Time/Value читаются по строковым именам схемы.
+/// @brief Парсер SQLite через IDatabaseManager.
+/// @details source передаётся как "path|tableName". Если tableName отсутствует — берётся первая таблица.
 class DatabaseParser : public IParser
 {
    public:
-    /// @brief Конструктор с внедрением логгера.
-    /// @param[in] logger Указатель на логгер (копируется, владение разделяется).
-    explicit DatabaseParser(std::shared_ptr<logger::ILogger> logger) : IParser(logger)
+    /// @param logger  Логгер.
+    /// @param manager Фабрика соединений с БД.
+    DatabaseParser(std::shared_ptr<logger::ILogger> logger,
+                   std::shared_ptr<database::manager::IDatabaseManager> manager)
+        : IParser(logger), manager_(std::move(manager))
     {
     }
 
     ~DatabaseParser() override = default;
 
-    /// @brief Загрузить временной ряд из SQLite-файла.
-    /// @param[in] source Путь к файлу базы данных.
-    /// @return Загруженный временной ряд.
+    /// @throws ParseException при ошибке открытия или разбора.
     data::TimelineData Load(const std::string& source) override;
 
-    /// @brief Сохранить временной ряд в SQLite-файл.
-    /// @param[in] data Временной ряд для сохранения.
-    /// @param[in] destination Путь к файлу базы данных.
-    void Save(const data::TimelineData& data, const std::string& destination) override;
-};
+   private:
+    std::shared_ptr<database::manager::IDatabaseManager> manager_;
 
+    static int nextConnId_;
+};
 }  // namespace parser
 #endif  // GUID_d8990b3f_06fb_4bd3_9a73_38fa220978bb
