@@ -9,10 +9,12 @@
 
 namespace database::manager
 {
+/// @brief Фабрика SQLite-соединений.
 class SqliteDBManager : public IDatabaseManager
 {
    public:
-    virtual ~SqliteDBManager() = default;
+    ~SqliteDBManager() override = default;
+    std::shared_ptr<database::IDatabase> Create(const std::string& connectionName) override;
 };
 }  // namespace database::manager
 

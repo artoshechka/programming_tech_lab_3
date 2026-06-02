@@ -3,15 +3,22 @@ project(programming_tech_lab_3 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_SOURCE_DIR}/gui/src)
+
+find_package(Qt5 REQUIRED COMPONENTS Widgets Charts PrintSupport)
 
 add_subdirectory(logger)
 add_subdirectory(data_model)
+add_subdirectory(database_module)
 add_subdirectory(parser)
+add_subdirectory(chart)
+add_subdirectory(style)
+add_subdirectory(gui)
 
 add_executable(${PROJECT_NAME} main.cpp)
 
-# Абсолютный путь к корню проекта, чтобы данные находились независимо от рабочей директории.
 target_compile_definitions(${PROJECT_NAME} PRIVATE PROJECT_ROOT_DIR="${CMAKE_SOURCE_DIR}")
-
-# parser публично тянет logger и data_model, поэтому линкуем только его.
-target_link_libraries(${PROJECT_NAME} PRIVATE parser)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
+target_link_libraries(${PROJECT_NAME} PRIVATE gui)
