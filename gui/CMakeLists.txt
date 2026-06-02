@@ -7,6 +7,8 @@ find_package(Qt5 REQUIRED COMPONENTS Widgets Charts PrintSupport)
 
 add_library(${PROJECT_NAME} STATIC
     src/mainwindow.cpp
+    src/chart_presenter.cpp
+    src/table_select_dialog.cpp
 )
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
@@ -16,6 +18,7 @@ target_link_libraries(${PROJECT_NAME}
         chart
         style
         parser
+        database_module
         Qt5::Widgets
         Qt5::Charts
         Qt5::PrintSupport

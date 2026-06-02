@@ -1,70 +1,66 @@
+/// @file mainwindow.cpp
+/// @brief Определение MainWindow
+/// @author Artemenko Anton
+
 #include "mainwindow.hpp"
+#include "chart_presenter.hpp"
+#include "table_select_dialog.hpp"
 
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFileSystemModel>
+#include <QMenuBar>
+#include <QMessageBox>
+#include <QPageSize>
+#include <QPainter>
+#include <QPdfWriter>
+#include <QPushButton>
 #include <QSplitter>
 #include <QStatusBar>
 #include <QToolBar>
-#include <QPdfWriter>
-#include <QPainter>
-#include <QPushButton>
-#include <QPageSize>
+
+#include <database_module/idatabase.hpp>
+#include <parser/parse_exception.hpp>
 
 QT_CHARTS_USE_NAMESPACE
 
 namespace gui {
 
+MainWindow::~MainWindow() = default;
+
 MainWindow::MainWindow(
-    BuilderFactory                           builders,
-    StyleFactory                             styles,
-    std::shared_ptr<parser::IParserRegistry> registry,
+    BuilderFactory                                        builders,
+    StyleFactory                                          styles,
+    std::shared_ptr<parser::IParserRegistry>              registry,
+    std::shared_ptr<database::manager::IDatabaseManager>  dbManager,
     QWidget* parent)
     : QMainWindow(parent)
-    , builders_(std::move(builders))
-    , styles_(std::move(styles))
-    , registry_(std::move(registry))
+    , presenter_(std::make_unique<ChartPresenter>(builders, styles, registry))
+    , dbManager_(std::move(dbManager))
 {
-    // --- тулбар ---
     auto* toolbar = addToolBar("Controls");
-    toolbar->setMovable(false);
+    toolbar->setMovable(true);
 
     chartCombo_ = new QComboBox();
-    for (const auto& [name, _] : builders_) chartCombo_->addItem(QString::fromStdString(name));
+    for (const auto& [name, _] : builders) chartCombo_->addItem(QString::fromStdString(name));
     toolbar->addWidget(chartCombo_);
     toolbar->addSeparator();
 
     styleCombo_ = new QComboBox();
-    for (const auto& [name, _] : styles_) styleCombo_->addItem(QString::fromStdString(name));
+    for (const auto& [name, _] : styles) styleCombo_->addItem(QString::fromStdString(name));
     toolbar->addWidget(styleCombo_);
     toolbar->addSeparator();
 
-    auto* pdfBtn = new QPushButton("Сохранить PDF");
+    auto* folderBtn = new QPushButton("Папка");
+    auto* pdfBtn    = new QPushButton("Сохранить PDF");
+    toolbar->addWidget(folderBtn);
     toolbar->addWidget(pdfBtn);
 
-    // --- дерево файлов ---
-    const QString root = QFileDialog::getExistingDirectory(this, "Выберите папку с данными");
-
-    auto* fsModel = new QFileSystemModel(this);
-    fsModel->setFilter(QDir::NoDotAndDotDot | QDir::AllDirs | QDir::Files);
-    fsModel->setNameFilters({"*.sqlite", "*.json"});
-    fsModel->setNameFilterDisables(false);
-    fsModel->setRootPath(root);
-
-    treeView_ = new QTreeView();
-    treeView_->setModel(fsModel);
-    treeView_->setRootIndex(fsModel->index(root));
-    treeView_->setColumnWidth(0, 220);
-    treeView_->hideColumn(1); // size
-    treeView_->hideColumn(2); // type
-    treeView_->hideColumn(3); // date
-
-    // --- чарт ---
+    treeView_  = new QTreeView();
     chartView_ = new QChartView();
     chartView_->setRenderHint(QPainter::Antialiasing);
     chartView_->setChart(new QChart());
 
-    // --- сплиттер ---
     auto* splitter = new QSplitter(Qt::Horizontal);
     splitter->addWidget(treeView_);
     splitter->addWidget(chartView_);
@@ -72,14 +68,51 @@ MainWindow::MainWindow(
     splitter->setStretchFactor(1, 3);
     setCentralWidget(splitter);
 
-    connect(treeView_,  &QTreeView::clicked,                  this, &MainWindow::onFileSelected);
-    connect(pdfBtn,     &QPushButton::clicked,                this, &MainWindow::onSavePdf);
-    connect(chartCombo_, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onRedraw);
-    connect(styleCombo_, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onRedraw);
+    const QString root = QFileDialog::getExistingDirectory(this, "Выберите папку с данными");
+    if (!root.isEmpty()) setRoot(root);
+
+    connect(treeView_,   &QTreeView::clicked,
+            this, &MainWindow::onFileSelected);
+    connect(folderBtn,   &QPushButton::clicked,
+            this, &MainWindow::onChooseFolder);
+    connect(pdfBtn,      &QPushButton::clicked,
+            this, &MainWindow::onSavePdf);
+    connect(chartCombo_, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &MainWindow::onRedraw);
+    connect(styleCombo_, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &MainWindow::onRedraw);
+}
+
+void MainWindow::setRoot(const QString& path) {
+    auto* old   = qobject_cast<QFileSystemModel*>(treeView_->model());
+    auto* model = new QFileSystemModel(this);
+    model->setFilter(QDir::NoDotAndDotDot | QDir::AllDirs | QDir::Files);
+    model->setNameFilters({"*.sqlite", "*.json"});
+    model->setNameFilterDisables(false);
+    model->setRootPath(path);
+    treeView_->setModel(model);
+    treeView_->setRootIndex(model->index(path));
+    treeView_->setColumnWidth(0, 220);
+    for (int c = 1; c <= 3; ++c) treeView_->hideColumn(c);
+    if (old) old->deleteLater();
+    statusBar()->showMessage(path);
+}
+
+void MainWindow::onChooseFolder() {
+    const QString path = QFileDialog::getExistingDirectory(this, "Выберите папку с данными");
+    if (!path.isEmpty()) { currentSource_.clear(); setRoot(path); }
 }
 
 void MainWindow::onRedraw() {
-    if (!currentPath_.isEmpty()) loadFile(currentPath_);
+    if (currentSource_.isEmpty()) return;
+    try {
+        QChart* chart = presenter_->rebuild(
+            chartCombo_->currentText().toStdString(),
+            styleCombo_->currentText().toStdString());
+        if (chart) setChart(chart);
+    } catch (const std::exception& e) {
+        QMessageBox::critical(this, "Ошибка", QString::fromStdString(e.what()));
+    }
 }
 
 void MainWindow::onFileSelected(const QModelIndex& index) {
@@ -89,20 +122,48 @@ void MainWindow::onFileSelected(const QModelIndex& index) {
 }
 
 void MainWindow::loadFile(const QString& path) {
-    currentPath_ = path;
-    const std::string ext = QFileInfo(path).suffix().toLower().toStdString();
-    auto parser = registry_->Get(ext);
-    if (!parser) { statusBar()->showMessage("Неизвестный формат: " + QString::fromStdString(ext)); return; }
+    std::string source = path.toStdString();
 
-    const data::TimelineData data = parser->Load(path.toStdString());
+    // Для SQLite с несколькими таблицами — спросить у пользователя
+    if (QFileInfo(path).suffix().toLower() == "sqlite") {
+        const std::string connName = "MainWindow_probe_" + std::to_string(reinterpret_cast<uintptr_t>(this));
+        auto db = dbManager_->Create(connName);
+        if (db->Open(path.toStdString())) {
+            const auto tables = db->Tables();
+            db->Close();
+            if (tables.size() > 1) {
+                QStringList qTables;
+                for (const auto& t : tables) qTables << QString::fromStdString(t);
+                TableSelectDialog dlg(qTables, this);
+                if (dlg.exec() != QDialog::Accepted) return;
+                const QString selected = dlg.selectedTable();
+                if (selected.isEmpty()) return;
+                source += "|" + selected.toStdString();
+            }
+        }
+    }
 
-    auto builder = builders_.at(chartCombo_->currentText().toStdString())();
-    auto style   = styles_.at(styleCombo_->currentText().toStdString())();
+    try {
+        currentSource_ = QString::fromStdString(source);
+        QChart* chart = presenter_->load(
+            source,
+            chartCombo_->currentText().toStdString(),
+            styleCombo_->currentText().toStdString());
+        setChart(chart);
+        statusBar()->showMessage(path);
+    } catch (const parser::ParseException& e) {
+        currentSource_.clear();
+        QMessageBox::critical(this, "Ошибка загрузки", QString::fromStdString(e.what()));
+    } catch (const std::exception& e) {
+        currentSource_.clear();
+        QMessageBox::critical(this, "Ошибка", QString::fromStdString(e.what()));
+    }
+}
 
-    QChart* chart = builder->Build(data);
-    style->Apply(chart);
+void MainWindow::setChart(QChart* chart) {
+    auto* old = chartView_->chart();
     chartView_->setChart(chart);
-    statusBar()->showMessage(path);
+    delete old;
 }
 
 void MainWindow::onSavePdf() {

@@ -9,17 +9,18 @@
 #include <parser/src/parser_registry.hpp>
 #include <parser/src/json_parser.hpp>
 #include <parser/src/database_parser.hpp>
+#include <database_module/src/sqlite_db_manager.hpp>
 #include <logger/logger_factory.hpp>
 
 namespace gui {
 
-/// @brief Собирает MainWindow с зарегистрированными зависимостями.
 inline MainWindow* CreateMainWindow(QWidget* parent = nullptr) {
     auto logger = logger::GetLogger<logger::AppLoggerTag>();
+    auto dbManager = std::make_shared<database::manager::SqliteDBManager>();
 
     auto parserRegistry = std::make_shared<parser::ParserRegistry>();
     parserRegistry->Register("json",   std::make_shared<parser::JsonParser>(logger));
-    parserRegistry->Register("sqlite", std::make_shared<parser::DatabaseParser>(logger));
+    parserRegistry->Register("sqlite", std::make_shared<parser::DatabaseParser>(logger, dbManager));
 
     BuilderFactory builders;
     builders["Pie"] = [] { return std::make_shared<chart::PieChartBuilder>(); };
@@ -29,7 +30,7 @@ inline MainWindow* CreateMainWindow(QWidget* parent = nullptr) {
     styles["Color"]     = [] { return std::make_shared<style::ColorStyle>(); };
     styles["Grayscale"] = [] { return std::make_shared<style::GrayscaleStyle>(); };
 
-    return new MainWindow(std::move(builders), std::move(styles), parserRegistry, parent);
+    return new MainWindow(std::move(builders), std::move(styles), parserRegistry, dbManager, parent);
 }
 
 } // namespace gui
