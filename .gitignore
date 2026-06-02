@@ -5,3 +5,5 @@ build-coverage/
 
 heleper_info/
 test_data/output/
+
+.cache*
