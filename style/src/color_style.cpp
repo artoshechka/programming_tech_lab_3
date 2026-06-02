@@ -3,6 +3,7 @@
 #include <QtCharts/QPieSlice>
 #include <QtCharts/QBarSeries>
 #include <QtCharts/QBarSet>
+#include <QtCharts/QAbstractAxis>
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -16,16 +17,13 @@ static const QList<QColor> kPalette = {
 };
 
 void ColorStyle::Apply(QChart* chart) {
-    chart->setTheme(QChart::ChartThemeLight);
-    chart->setBackgroundBrush(Qt::white);
-
     for (auto* series : chart->series()) {
         if (auto* pie = qobject_cast<QPieSeries*>(series)) {
             auto slices = pie->slices();
             for (int i = 0; i < slices.size(); ++i) {
-                QColor c = kPalette[i % kPalette.size()];
-                slices[i]->setColor(c);
+                slices[i]->setColor(kPalette[i % kPalette.size()]);
                 slices[i]->setBorderColor(Qt::white);
+                slices[i]->setLabelColor(Qt::black);
             }
         } else if (auto* bar = qobject_cast<QBarSeries*>(series)) {
             auto sets = bar->barSets();
