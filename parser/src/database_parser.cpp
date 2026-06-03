@@ -6,6 +6,8 @@
 #include <parser/parse_exception.hpp>
 #include <logger/logger_macros.hpp>
 #include <data_model/schema.hpp>
+#include <algorithm>
+#include <atomic>
 #include <string>
 #include <type_traits>
 
@@ -24,8 +26,8 @@ std::pair<std::string, std::string> SplitSource(const std::string& source)
     return {source.substr(0, pos), source.substr(pos + 1)};
 }
 
-/// @brief Экранирует двойные кавычки в SQL-идентификаторе.
-std::string Sanitize(const std::string& name)
+/// @brief Экранирует двойные кавычки в SQL-идентификаторе (для безопасной интерполяции).
+std::string QuoteIdent(const std::string& name)
 {
     std::string s;
     s.reserve(name.size());
@@ -34,7 +36,7 @@ std::string Sanitize(const std::string& name)
 }
 }  // namespace
 
-int DatabaseParser::nextConnId_ = 0;
+std::atomic<int> DatabaseParser::nextConnId_{0};
 
 TimelineData DatabaseParser::Load(const std::string& source)
 {
@@ -50,7 +52,22 @@ TimelineData DatabaseParser::Load(const std::string& source)
     const auto tables = db->Tables();
     if (tables.empty()) { db->Close(); throw ParseException("DB: no tables in: " + path); }
 
-    const std::string table = requestedTable.empty() ? tables.front() : requestedTable;
+    // Имя таблицы — недоверенный ввод (часть source). Разрешаем только реально
+    // существующую таблицу: это закрывает SQL-инъекцию через интерполяцию имени.
+    std::string table;
+    if (requestedTable.empty())
+    {
+        table = tables.front();
+    }
+    else if (std::find(tables.begin(), tables.end(), requestedTable) != tables.end())
+    {
+        table = requestedTable;
+    }
+    else
+    {
+        db->Close();
+        throw ParseException("DB: no such table: " + requestedTable);
+    }
 
     TimelineData result;
     result.name_ = table;
@@ -58,7 +75,7 @@ TimelineData DatabaseParser::Load(const std::string& source)
     // Визитор вызывается для каждой (col, val) в строке последовательно.
     // Начало новой строки детектируем по первой схемной колонке "Time".
     const std::string firstCol = "Time";
-    db->Query("SELECT * FROM \"" + Sanitize(table) + "\"",
+    db->Query("SELECT * FROM \"" + QuoteIdent(table) + "\"",
               [&](const std::string& col, const std::string& val) {
                   if (col == firstCol) result.points_.push_back({});
                   if (result.points_.empty()) return;
