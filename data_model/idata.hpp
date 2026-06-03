@@ -6,9 +6,11 @@
 
 namespace data
 {
+/// @brief Интерфейс данных.
 class IData
 {
    public:
+    /// @brief Виртуальный деструктор интерфейса.
     virtual ~IData() = default;
 
     /// @brief Метод для получения данных.

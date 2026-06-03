@@ -7,6 +7,7 @@
 
 namespace gui {
 
+/// @brief Конструктор презентера.
 ChartPresenter::ChartPresenter(BuilderFactory builders, StyleFactory styles,
                                std::shared_ptr<parser::IParserRegistry> registry)
     : builders_(std::move(builders))
@@ -14,6 +15,7 @@ ChartPresenter::ChartPresenter(BuilderFactory builders, StyleFactory styles,
     , registry_(std::move(registry))
 {}
 
+/// @brief Загружает файл, кэширует TimelineData, строит и возвращает QChart.
 QChart* ChartPresenter::load(const std::string& source, const std::string& builder, const std::string& style)
 {
     auto ext = source.substr(0, source.find('|'));
@@ -29,12 +31,14 @@ QChart* ChartPresenter::load(const std::string& source, const std::string& build
     return buildChart(builder, style);
 }
 
+/// @brief Пересобирает QChart из кэша (без IO).
 QChart* ChartPresenter::rebuild(const std::string& builder, const std::string& style)
 {
     if (!hasCached_) return nullptr;
     return buildChart(builder, style);
 }
 
+/// @brief Строит график из кэшированных данных по заданным построителю и стилю.
 QChart* ChartPresenter::buildChart(const std::string& builder, const std::string& style)
 {
     QChart* chart = builders_.at(builder)()->Build(cached_);

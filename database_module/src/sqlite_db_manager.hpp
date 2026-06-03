@@ -13,7 +13,12 @@ namespace database::manager
 class SqliteDBManager : public IDatabaseManager
 {
    public:
+    /// @brief Виртуальный деструктор.
     ~SqliteDBManager() override = default;
+
+    /// @brief Создаёт новое SQLite-соединение.
+    /// @param[in] connectionName Уникальное имя Qt-соединения.
+    /// @return Разделяемый указатель на объект SqliteDB.
     std::shared_ptr<database::IDatabase> Create(const std::string& connectionName) override;
 };
 }  // namespace database::manager

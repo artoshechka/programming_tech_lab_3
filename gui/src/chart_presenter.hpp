@@ -15,25 +15,40 @@ namespace gui {
 /// @brief Загружает данные, кэширует их и строит QChart по текущим builder/style.
 class ChartPresenter {
 public:
+    /// @brief Конструктор презентера.
+    /// @param[in] builders Фабрика построителей графиков (имя -> создатель).
+    /// @param[in] styles Фабрика стилей графиков (имя -> создатель).
+    /// @param[in] registry Реестр парсеров для выбора парсера по расширению.
     ChartPresenter(BuilderFactory builders, StyleFactory styles,
                    std::shared_ptr<parser::IParserRegistry> registry);
 
     /// @brief Загружает файл, кэширует TimelineData, строит и возвращает QChart.
+    /// @details Расширение извлекается из части source до символа '|' (формат "путь" либо "путь|таблица").
+    /// @param[in] source Источник данных (путь, опционально с "|таблица" для SQLite).
+    /// @param[in] builder Имя построителя графика.
+    /// @param[in] style Имя стиля графика.
+    /// @return Построенный график.
     /// @throws parser::ParseException при ошибке парсинга.
     QChart* load(const std::string& source, const std::string& builder, const std::string& style);
 
     /// @brief Пересобирает QChart из кэша (без IO).
-    /// @return nullptr если кэш пуст.
+    /// @param[in] builder Имя построителя графика.
+    /// @param[in] style Имя стиля графика.
+    /// @return Построенный график или nullptr если кэш пуст.
     QChart* rebuild(const std::string& builder, const std::string& style);
 
 private:
+    /// @brief Строит график из кэшированных данных по заданным построителю и стилю.
+    /// @param[in] builder Имя построителя графика.
+    /// @param[in] style Имя стиля графика.
+    /// @return Построенный график.
     QChart* buildChart(const std::string& builder, const std::string& style);
 
-    BuilderFactory builders_;
-    StyleFactory   styles_;
-    std::shared_ptr<parser::IParserRegistry> registry_;
-    data::TimelineData cached_;
-    bool hasCached_ = false;
+    BuilderFactory builders_;                              ///< Фабрика построителей графиков.
+    StyleFactory   styles_;                                ///< Фабрика стилей графиков.
+    std::shared_ptr<parser::IParserRegistry> registry_;    ///< Реестр парсеров по расширению.
+    data::TimelineData cached_;                            ///< Кэш последних загруженных данных.
+    bool hasCached_ = false;                               ///< Признак наличия валидного кэша.
 };
 
 } // namespace gui

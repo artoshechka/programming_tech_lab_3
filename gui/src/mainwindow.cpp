@@ -26,8 +26,10 @@ QT_CHARTS_USE_NAMESPACE
 
 namespace gui {
 
+/// @brief Виртуальный деструктор.
 MainWindow::~MainWindow() = default;
 
+/// @brief Конструктор: создаёт панель инструментов, дерево файлов и область графика, связывает сигналы.
 MainWindow::MainWindow(
     BuilderFactory                                        builders,
     StyleFactory                                          styles,
@@ -83,6 +85,7 @@ MainWindow::MainWindow(
             this, &MainWindow::onRedraw);
 }
 
+/// @brief Устанавливает корневую папку дерева файлов.
 void MainWindow::setRoot(const QString& path) {
     auto* old   = qobject_cast<QFileSystemModel*>(treeView_->model());
     auto* model = new QFileSystemModel(this);
@@ -98,11 +101,13 @@ void MainWindow::setRoot(const QString& path) {
     statusBar()->showMessage(path);
 }
 
+/// @brief Слот выбора рабочей папки с данными.
 void MainWindow::onChooseFolder() {
     const QString path = QFileDialog::getExistingDirectory(this, "Выберите папку с данными");
     if (!path.isEmpty()) { currentSource_.clear(); setRoot(path); }
 }
 
+/// @brief Слот перерисовки графика при смене построителя или стиля.
 void MainWindow::onRedraw() {
     if (currentSource_.isEmpty()) return;
     try {
@@ -115,12 +120,14 @@ void MainWindow::onRedraw() {
     }
 }
 
+/// @brief Слот выбора файла в дереве.
 void MainWindow::onFileSelected(const QModelIndex& index) {
     auto* model = static_cast<QFileSystemModel*>(treeView_->model());
     if (model->isDir(index)) return;
     loadFile(model->filePath(index));
 }
 
+/// @brief Загружает источник данных и строит график.
 void MainWindow::loadFile(const QString& path) {
     std::string source = path.toStdString();
 
@@ -160,12 +167,14 @@ void MainWindow::loadFile(const QString& path) {
     }
 }
 
+/// @brief Заменяет текущий график в области отображения.
 void MainWindow::setChart(QChart* chart) {
     auto* old = chartView_->chart();
     chartView_->setChart(chart);
     delete old;
 }
 
+/// @brief Слот сохранения текущего графика в PDF.
 void MainWindow::onSavePdf() {
     const QString path = QFileDialog::getSaveFileName(this, "Сохранить PDF", {}, "PDF (*.pdf)");
     if (path.isEmpty()) return;

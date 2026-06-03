@@ -12,6 +12,7 @@ namespace parser
 class ParseException : public std::runtime_error
 {
    public:
+    /// @brief Наследует конструкторы std::runtime_error (приём текста сообщения об ошибке).
     using std::runtime_error::runtime_error;
 };
 }  // namespace parser

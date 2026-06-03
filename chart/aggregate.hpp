@@ -1,3 +1,6 @@
+/// @file aggregate.hpp
+/// @brief Утилита агрегации точек временного ряда по префиксу метки времени.
+/// @author Artemenko Anton
 #ifndef GUID_ee1a2b3c_4d5e_6f70_8192_a3b4c5d6e7f8
 #define GUID_ee1a2b3c_4d5e_6f70_8192_a3b4c5d6e7f8
 
@@ -9,14 +12,16 @@
 
 namespace chart {
 
-/// @brief Порог: если точек больше — агрегируем.
-constexpr int kAggregateThreshold = 50;
+constexpr int kAggregateThreshold = 50;  ///< Порог числа точек: при превышении применяется агрегация.
+constexpr int kAggKeyLen = 7;            ///< Длина ключа агрегации по умолчанию: 7 → "MM.YYYY", 4 → "YYYY".
 
-/// @brief Длина ключа агрегации: 7 → "MM.YYYY", 4 → "YYYY".
-constexpr int kAggKeyLen = 7;
-
-/// @brief Агрегирует точки по префиксу метки времени, вычисляя среднее.
-/// @details Формат "DD.MM.YYYY …" → offset=3; иначе offset=0 (ISO и прочее).
+/// @brief Агрегирует точки временного ряда по префиксу метки времени, вычисляя среднее.
+/// @details Если метка имеет формат "DD.MM.YYYY …" (третий символ — точка),
+///          используется смещение 3 для пропуска дня; иначе смещение 0 (ISO 8601 и прочее).
+///          Значения в каждой группе усредняются и округляются до двух знаков после запятой.
+/// @param[in] data   Исходный временной ряд.
+/// @param[in] keyLen Длина ключа агрегации (по умолчанию kAggKeyLen).
+/// @return Новый временной ряд с агрегированными точками.
 inline data::TimelineData Aggregate(const data::TimelineData& data, int keyLen = kAggKeyLen) {
     std::map<std::string, std::pair<double, int>> acc;
     std::vector<std::string> order;
