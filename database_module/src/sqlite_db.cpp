@@ -25,6 +25,9 @@ SqliteDB::~SqliteDB()
 
 bool SqliteDB::Open(const std::string& path)
 {
+    // NUL обрывает строку в C-API SQLite: путь "ok.db\0../secret" открыл бы не тот файл.
+    if (path.find('\0') != std::string::npos)
+        return false;
     db_.setDatabaseName(QString::fromStdString(path));
     return db_.open();
 }
@@ -46,7 +49,8 @@ void SqliteDB::Query(const std::string& sql,
                      std::function<void(const std::string& col, const std::string& val)> rowFn)
 {
     QSqlQuery query(db_);
-    query.exec(QString::fromStdString(sql));
+    if (!query.exec(QString::fromStdString(sql)))
+        return;
     const QSqlRecord rec = query.record();
     while (query.next())
     {

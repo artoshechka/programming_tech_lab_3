@@ -7,6 +7,7 @@
 
 #include <database_module/idatabase_manager.hpp>
 #include <parser/iparser.hpp>
+#include <atomic>
 
 namespace parser
 {
@@ -36,7 +37,7 @@ class DatabaseParser : public IParser
    private:
     std::shared_ptr<database::manager::IDatabaseManager> manager_;  ///< Фабрика соединений с БД.
 
-    static int nextConnId_;  ///< Счётчик для генерации уникальных имён соединений.
+    static std::atomic<int> nextConnId_;  ///< Счётчик для генерации уникальных имён соединений.
 };
 }  // namespace parser
 #endif  // GUID_d8990b3f_06fb_4bd3_9a73_38fa220978bb
