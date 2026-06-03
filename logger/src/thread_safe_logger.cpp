@@ -36,6 +36,21 @@ void ThreadSafeLogger::SetSettings(const logger::LoggerSettings& settings)
     {
         logFile_.close();
     }
+    OpenLogFile();
+}
+
+void ThreadSafeLogger::OpenLogFile()
+{
+    if (settings_.output_ != LogOutput::File)
+        return;
+    if (!settings_.logFilePath_.has_value() || settings_.logFilePath_->empty())
+        return;
+
+    const std::string& logFilePath = settings_.logFilePath_.value();
+    const auto parent = std::filesystem::path(logFilePath).parent_path();
+    if (!parent.empty())
+        std::filesystem::create_directories(parent);
+    logFile_.open(logFilePath, std::ios::app);
 }
 
 logger::LoggerSettings ThreadSafeLogger::GetSettings() const
@@ -81,23 +96,10 @@ void ThreadSafeLogger::Log(LogLevel level, const std::string& message, const cha
         std::cout << logEntry << '\n';
     } else if (settings_.output_ == LogOutput::File)
     {
-        if (!settings_.logFilePath_.has_value() || settings_.logFilePath_->empty())
+        // Файл открывается в SetSettings(); если он не открыт — выводить некуда.
+        if (logFile_.is_open())
         {
-            return;
+            logFile_ << logEntry << '\n';
         }
-
-        const std::string& logFilePath = settings_.logFilePath_.value();
-        if (!logFile_.is_open())
-        {
-            std::filesystem::create_directories(std::filesystem::path(logFilePath).parent_path());
-            logFile_.open(logFilePath, std::ios::app);
-            if (!logFile_.is_open())
-            {
-                return;
-            }
-        }
-
-        logFile_ << logEntry << '\n';
-        logFile_.flush();
     }
 }

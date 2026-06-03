@@ -22,6 +22,11 @@ class ThreadSafeLogger : public ILogger
     /// @brief Виртуальный деструктор
     ~ThreadSafeLogger() override;
 
+    ThreadSafeLogger(const ThreadSafeLogger&) = delete;             ///< Копирование запрещено (mutex/файл).
+    ThreadSafeLogger& operator=(const ThreadSafeLogger&) = delete;  ///< Присваивание копированием запрещено.
+    ThreadSafeLogger(ThreadSafeLogger&&) = delete;                  ///< Перемещение запрещено (mutex).
+    ThreadSafeLogger& operator=(ThreadSafeLogger&&) = delete;       ///< Присваивание перемещением запрещено.
+
     /// @brief Установить все настройки логгера одним вызовом
     /// @param[in] settings Набор настроек логгера
     void SetSettings(const LoggerSettings& settings) override;
@@ -60,6 +65,10 @@ class ThreadSafeLogger : public ILogger
     std::string componentName_;  ///< Имя компонента логирования для идентификации в формате сообщений
 
    private:
+    /// @brief Открывает (или переоткрывает) файл лога согласно текущим настройкам.
+    /// @details Вызывается под syncMutex_. При выводе не в файл или пустом пути файл остаётся закрытым.
+    void OpenLogFile();
+
     std::ofstream logFile_;         ///< Открытый файл логов для записи
     mutable std::mutex syncMutex_;  ///< Мьютекс для обеспечения потокобезопасности при записи в лог
     LoggerSettings settings_;       ///< Текущие настройки логгера

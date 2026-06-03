@@ -28,6 +28,11 @@ class LogEntryStream final
     /// @brief Деструктор, автоматически отправляет собранное сообщение в логгер
     ~LogEntryStream();
 
+    LogEntryStream(const LogEntryStream&) = delete;             ///< Копирование запрещено (RAII-отправка в dtor).
+    LogEntryStream& operator=(const LogEntryStream&) = delete;  ///< Присваивание копированием запрещено.
+    LogEntryStream(LogEntryStream&&) = delete;                  ///< Перемещение запрещено.
+    LogEntryStream& operator=(LogEntryStream&&) = delete;       ///< Присваивание перемещением запрещено.
+
     template <typename T>
     LogEntryStream& operator<<(const T& value)
     {
