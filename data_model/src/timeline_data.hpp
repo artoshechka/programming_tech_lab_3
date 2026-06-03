@@ -4,7 +4,6 @@
 #ifndef GUID_f0ad56a1_3baa_4836_a15e_b8803adf069b
 #define GUID_f0ad56a1_3baa_4836_a15e_b8803adf069b
 
-#include <data_model/idata.hpp>
 #include <data_model/schema.hpp>
 #include <string>
 #include <utility>
@@ -26,15 +25,9 @@ struct TimePoint
 
 /// @brief Класс для представления данных временной шкалы.
 /// @details Главный класс ряда: имя ряда и набор точек. Владеет вектором TimePoint.
-class TimelineData : public IData
+class TimelineData
 {
    public:
-    /// @brief Деструктор по умолчанию.
-    ~TimelineData() override = default;
-
-    /// @brief Метод для получения данных временной шкалы.
-    void GetData() override;
-
     std::string name_;               ///< Имя ряда (совпадает с именем таблицы БД)
     std::vector<TimePoint> points_;  ///< Точки временного ряда
 
