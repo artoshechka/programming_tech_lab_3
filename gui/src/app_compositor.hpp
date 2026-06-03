@@ -1,3 +1,6 @@
+/// @file app_compositor.hpp
+/// @brief Сборка зависимостей приложения и создание главного окна
+/// @author Artemenko Anton
 #ifndef GUID_d0e1f2a3_b4c5_6789_defa_890123456789
 #define GUID_d0e1f2a3_b4c5_6789_defa_890123456789
 
@@ -15,6 +18,12 @@
 
 namespace gui {
 
+/// @brief Создаёт и связывает все зависимости приложения, возвращая готовое главное окно.
+/// @details Точка композиции (IoC): через IOCContainer регистрируются логгер и менеджер БД
+///          как синглтоны, парсеры авто-связываются со своими зависимостями; затем собираются
+///          реестр парсеров и фабрики построителей/стилей, которые внедряются в MainWindow.
+/// @param[in] parent Родительский виджет (по умолчанию nullptr).
+/// @return Указатель на созданное главное окно (владение передаётся вызывающему).
 inline MainWindow* CreateMainWindow(QWidget* parent = nullptr) {
     // IoC: singletons live as instances, parsers are auto-wired from their deps.
     ioc::container::IOCContainer ioc;

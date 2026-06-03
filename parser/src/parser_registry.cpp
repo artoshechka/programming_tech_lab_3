@@ -1,3 +1,7 @@
+/// @file parser_registry.cpp
+/// @brief Определение реестра парсеров
+/// @author Artemenko Anton
+
 #include "parser_registry.hpp"
 
 namespace parser {

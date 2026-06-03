@@ -1,5 +1,6 @@
 /// @file IOC_Contaner.hpp
 /// @brief Контейнер внедрения зависимостей IoC.
+/// @author Artemenko Anton
 
 #ifndef GUID_4d7c2a91_f3e8_4c4a_9a12_6b3f8d0e71c5
 #define GUID_4d7c2a91_f3e8_4c4a_9a12_6b3f8d0e71c5
@@ -14,8 +15,7 @@ namespace ioc::container
 /// @brief Контейнер внедрения зависимостей.
 class IOCContainer
 {
-    /// @brief Счётчик для генерации идентификаторов типов.
-    inline static int nextTypeId_ = 115094801;
+    inline static int nextTypeId_ = 115094801;  ///< Счётчик для генерации идентификаторов типов.
 
     /// @brief Возвращает уникальный идентификатор для типа `T`.
     /// @tparam T Тип, для которого создаётся идентификатор.
@@ -52,23 +52,21 @@ class IOCContainer
         virtual ~FactoryRoot() = default;
     };
 
-    /// @brief Хранилище зарегистрированных фабрик по идентификатору типа.
-    std::map<int, std::shared_ptr<FactoryRoot>> factories_;
+    std::map<int, std::shared_ptr<FactoryRoot>> factories_;  ///< Хранилище зарегистрированных фабрик по идентификатору типа.
 
     /// @brief Фабрика, возвращающая объект типа `T`.
     /// @tparam T Тип создаваемого объекта.
     template <typename T>
     class CFactory : public FactoryRoot
     {
-        /// @brief Функтор создания объекта.
-        std::function<std::shared_ptr<T>()> functor_;
+        std::function<std::shared_ptr<T>()> functor_;  ///< Функтор создания объекта.
 
        public:
         /// @brief Виртуальный деструктор фабрики.
         ~CFactory() override = default;
 
         /// @brief Создаёт фабрику с заданным функтором.
-        /// @param functor Функтор создания объекта.
+        /// @param[in] functor Функтор создания объекта.
         explicit CFactory(std::function<std::shared_ptr<T>()> functor) : functor_(std::move(functor))
         {
         }
@@ -96,7 +94,7 @@ class IOCContainer
     /// @brief Регистрирует функтор создания объекта.
     /// @tparam TInterface Тип интерфейса.
     /// @tparam TS Типы зависимостей.
-    /// @param functor Функтор создания объекта.
+    /// @param[in] functor Функтор создания объекта.
     template <typename TInterface, typename... TS>
     void RegisterFunctor(std::function<std::shared_ptr<TInterface>(std::shared_ptr<TS>... ts)> functor)
     {
@@ -106,7 +104,7 @@ class IOCContainer
 
     /// @brief Регистрирует уже созданный экземпляр.
     /// @tparam TInterface Тип интерфейса.
-    /// @param t Зарегистрированный объект.
+    /// @param[in] t Зарегистрированный объект.
     template <typename TInterface>
     void RegisterInstance(std::shared_ptr<TInterface> t)
     {
@@ -116,7 +114,7 @@ class IOCContainer
     /// @brief Регистрирует функтор по указателю на функцию.
     /// @tparam TInterface Тип интерфейса.
     /// @tparam TS Типы зависимостей.
-    /// @param functor Указатель на функцию создания объекта.
+    /// @param[in] functor Указатель на функцию создания объекта.
     template <typename TInterface, typename... TS>
     void RegisterFunctor(std::shared_ptr<TInterface> (*functor)(std::shared_ptr<TS>... ts))
     {

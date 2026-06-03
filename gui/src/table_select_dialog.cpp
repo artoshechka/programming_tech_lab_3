@@ -8,6 +8,7 @@
 
 namespace gui {
 
+/// @brief Конструктор: наполняет список таблиц и добавляет кнопки OK/Cancel.
 TableSelectDialog::TableSelectDialog(const QStringList& tables, QWidget* parent)
     : QDialog(parent), list_(new QListWidget(this))
 {
@@ -24,6 +25,7 @@ TableSelectDialog::TableSelectDialog(const QStringList& tables, QWidget* parent)
     layout->addWidget(buttons);
 }
 
+/// @brief Возвращает выбранное пользователем имя таблицы.
 QString TableSelectDialog::selectedTable() const
 {
     auto* item = list_->currentItem();

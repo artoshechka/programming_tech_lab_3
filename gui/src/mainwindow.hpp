@@ -20,7 +20,9 @@ QT_CHARTS_USE_NAMESPACE
 
 namespace gui {
 
+/// @brief Фабрика построителей графиков: имя -> функция, создающая IChartBuilder.
 using BuilderFactory = std::map<std::string, std::function<std::shared_ptr<chart::IChartBuilder>()>>;
+/// @brief Фабрика стилей графиков: имя -> функция, создающая IChartStyle.
 using StyleFactory   = std::map<std::string, std::function<std::shared_ptr<style::IChartStyle>()>>;
 
 class ChartPresenter;
@@ -29,6 +31,12 @@ class ChartPresenter;
 class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
+    /// @brief Конструктор главного окна.
+    /// @param[in] builders Фабрика построителей графиков (имя -> создатель).
+    /// @param[in] styles Фабрика стилей графиков (имя -> создатель).
+    /// @param[in] registry Реестр парсеров для загрузки данных по расширению.
+    /// @param[in] dbManager Менеджер БД для работы с источниками SQLite.
+    /// @param[in] parent Родительский виджет (по умолчанию nullptr).
     explicit MainWindow(
         BuilderFactory                                        builders,
         StyleFactory                                          styles,
@@ -36,27 +44,39 @@ public:
         std::shared_ptr<database::manager::IDatabaseManager>  dbManager,
         QWidget* parent = nullptr
     );
+    /// @brief Виртуальный деструктор.
     ~MainWindow() override;
 
 private slots:
+    /// @brief Слот выбора файла в дереве.
+    /// @param[in] index Индекс выбранного элемента модели файловой системы.
     void onFileSelected(const QModelIndex& index);
+    /// @brief Слот сохранения текущего графика в PDF.
     void onSavePdf();
+    /// @brief Слот перерисовки графика при смене построителя или стиля.
     void onRedraw();
+    /// @brief Слот выбора рабочей папки с данными.
     void onChooseFolder();
 
 private:
+    /// @brief Загружает источник данных и строит график.
+    /// @param[in] path Путь к файлу данных.
     void loadFile(const QString& path);
+    /// @brief Устанавливает корневую папку дерева файлов.
+    /// @param[in] path Путь к папке.
     void setRoot(const QString& path);
+    /// @brief Заменяет текущий график в области отображения.
+    /// @param[in] chart Новый график (владение передаётся представлению).
     void setChart(QChart* chart);
 
-    std::unique_ptr<ChartPresenter>                       presenter_;
-    std::shared_ptr<database::manager::IDatabaseManager>  dbManager_;
+    std::unique_ptr<ChartPresenter>                       presenter_;       ///< Презентер загрузки данных и построения графика.
+    std::shared_ptr<database::manager::IDatabaseManager>  dbManager_;       ///< Менеджер БД для источников SQLite.
 
-    QTreeView*  treeView_   = nullptr;
-    QChartView* chartView_  = nullptr;
-    QComboBox*  chartCombo_ = nullptr;
-    QComboBox*  styleCombo_ = nullptr;
-    QString     currentSource_;
+    QTreeView*  treeView_   = nullptr;  ///< Дерево файлов с данными.
+    QChartView* chartView_  = nullptr;  ///< Область отображения графика.
+    QComboBox*  chartCombo_ = nullptr;  ///< Выбор типа построителя графика.
+    QComboBox*  styleCombo_ = nullptr;  ///< Выбор стиля графика.
+    QString     currentSource_;         ///< Текущий источник данных (путь, опционально с "|таблица").
 };
 
 } // namespace gui

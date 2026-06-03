@@ -14,9 +14,16 @@ namespace parser
 class JsonParser : public IParser
 {
    public:
+    /// @brief Конструктор парсера JSON.
+    /// @param[in] logger Логгер для записи диагностических сообщений.
     explicit JsonParser(std::shared_ptr<logger::ILogger> logger) : IParser(logger) {}
+
+    /// @brief Виртуальный деструктор.
     ~JsonParser() override = default;
 
+    /// @brief Загрузить временной ряд из JSON-файла.
+    /// @param[in] source Путь к JSON-файлу.
+    /// @return Загруженный временной ряд данных.
     /// @throws ParseException при ошибке открытия или разбора.
     data::TimelineData Load(const std::string& source) override;
 };

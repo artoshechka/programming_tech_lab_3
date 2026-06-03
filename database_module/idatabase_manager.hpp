@@ -14,10 +14,14 @@ namespace database::manager
 class IDatabaseManager
 {
    public:
+    /// @brief Виртуальный деструктор.
     virtual ~IDatabaseManager() = default;
 
-    /// @brief Создаёт новое соединение с уникальным именем.
-    /// @param connectionName Уникальное имя Qt-соединения.
+    /// @brief Создаёт новое соединение с базой данных.
+    /// @param[in] connectionName Уникальное имя Qt-соединения.
+    /// @return Разделяемый указатель на созданное соединение IDatabase.
+    /// @details Имя connectionName должно быть уникальным в пределах процесса:
+    ///          оно используется для идентификации соединения внутри Qt SQL.
     virtual std::shared_ptr<database::IDatabase> Create(const std::string& connectionName) = 0;
 };
 }  // namespace database::manager

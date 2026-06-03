@@ -14,13 +14,17 @@ namespace gui {
 class TableSelectDialog : public QDialog {
     Q_OBJECT
 public:
+    /// @brief Конструктор диалога выбора таблицы.
+    /// @param[in] tables Список имён таблиц для отображения.
+    /// @param[in] parent Родительский виджет (по умолчанию nullptr).
     explicit TableSelectDialog(const QStringList& tables, QWidget* parent = nullptr);
 
+    /// @brief Возвращает выбранное пользователем имя таблицы.
     /// @return Выбранное имя таблицы или пустую строку если отменено.
     QString selectedTable() const;
 
 private:
-    QListWidget* list_;
+    QListWidget* list_;  ///< Список таблиц для выбора.
 };
 
 } // namespace gui
