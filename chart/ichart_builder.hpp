@@ -6,6 +6,7 @@
 
 #include <data_model/src/timeline_data.hpp>
 #include <QtCharts/QChart>
+#include <memory>
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -19,8 +20,8 @@ public:
 
     /// @brief Строит и возвращает QChart на основе данных.
     /// @param[in] data Входные данные временного ряда.
-    /// @return Указатель на построенный QChart (владение передаётся вызывающему).
-    virtual QChart* Build(const data::TimelineData& data) = 0;
+    /// @return Владеющий указатель на построенный QChart.
+    [[nodiscard]] virtual std::unique_ptr<QChart> Build(const data::TimelineData& data) = 0;
 };
 
 } // namespace chart

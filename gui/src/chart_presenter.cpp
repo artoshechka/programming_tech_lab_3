@@ -41,9 +41,9 @@ QChart* ChartPresenter::rebuild(const std::string& builder, const std::string& s
 /// @brief Строит график из кэшированных данных по заданным построителю и стилю.
 QChart* ChartPresenter::buildChart(const std::string& builder, const std::string& style)
 {
-    QChart* chart = builders_.at(builder)()->Build(cached_);
-    styles_.at(style)()->Apply(chart);
-    return chart;
+    std::unique_ptr<QChart> chart = builders_.at(builder)()->Build(cached_);
+    styles_.at(style)()->Apply(chart.get());
+    return chart.release();  // владение переходит QChartView (см. MainWindow::setChart)
 }
 
 } // namespace gui
