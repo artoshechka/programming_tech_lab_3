@@ -70,7 +70,6 @@ private:
     void setChart(QChart* chart);
 
     std::unique_ptr<ChartPresenter>                       presenter_;       ///< Презентер загрузки данных и построения графика.
-    std::shared_ptr<database::manager::IDatabaseManager>  dbManager_;       ///< Менеджер БД для источников SQLite.
 
     QTreeView*  treeView_   = nullptr;  ///< Дерево файлов с данными.
     QChartView* chartView_  = nullptr;  ///< Область отображения графика.

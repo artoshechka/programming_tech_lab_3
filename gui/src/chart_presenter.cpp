@@ -4,16 +4,35 @@
 
 #include <gui/src/chart_presenter.hpp>
 #include <parser/iparser.hpp>
+#include <database_module/idatabase.hpp>
+#include <atomic>
 
 namespace gui {
 
 /// @brief Конструктор презентера.
 ChartPresenter::ChartPresenter(BuilderFactory builders, StyleFactory styles,
-                               std::shared_ptr<parser::IParserRegistry> registry)
+                               std::shared_ptr<parser::IParserRegistry> registry,
+                               std::shared_ptr<database::manager::IDatabaseManager> dbManager)
     : builders_(std::move(builders))
     , styles_(std::move(styles))
     , registry_(std::move(registry))
+    , dbManager_(std::move(dbManager))
 {}
+
+/// @brief Возвращает список таблиц SQLite-файла.
+std::vector<std::string> ChartPresenter::listTables(const std::string& path)
+{
+    if (!dbManager_) return {};
+
+    static std::atomic<int> probeId{0};
+    const std::string connName = "ChartPresenter_probe_" + std::to_string(probeId++);
+
+    auto db = dbManager_->Create(connName);
+    if (!db->Open(path)) return {};
+    auto tables = db->Tables();
+    db->Close();
+    return tables;
+}
 
 /// @brief Загружает файл, кэширует TimelineData, строит и возвращает QChart.
 QChart* ChartPresenter::load(const std::string& source, const std::string& builder, const std::string& style)
