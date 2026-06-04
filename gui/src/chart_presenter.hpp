@@ -6,7 +6,9 @@
 
 #include <gui/src/mainwindow.hpp>
 #include <data_model/src/timeline_data.hpp>
+#include <database_module/idatabase_manager.hpp>
 #include <QtCharts/QChart>
+#include <vector>
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -19,8 +21,15 @@ public:
     /// @param[in] builders Фабрика построителей графиков (имя -> создатель).
     /// @param[in] styles Фабрика стилей графиков (имя -> создатель).
     /// @param[in] registry Реестр парсеров для выбора парсера по расширению.
+    /// @param[in] dbManager Менеджер БД для инспекции источников SQLite.
     ChartPresenter(BuilderFactory builders, StyleFactory styles,
-                   std::shared_ptr<parser::IParserRegistry> registry);
+                   std::shared_ptr<parser::IParserRegistry> registry,
+                   std::shared_ptr<database::manager::IDatabaseManager> dbManager);
+
+    /// @brief Возвращает список таблиц SQLite-файла (для выбора таблицы пользователем).
+    /// @param[in] path Путь к файлу базы данных.
+    /// @return Имена таблиц; пустой вектор, если файл не открылся или таблиц нет.
+    std::vector<std::string> listTables(const std::string& path);
 
     /// @brief Загружает файл, кэширует TimelineData, строит и возвращает QChart.
     /// @details Расширение извлекается из части source до символа '|' (формат "путь" либо "путь|таблица").
@@ -47,6 +56,7 @@ private:
     BuilderFactory builders_;                              ///< Фабрика построителей графиков.
     StyleFactory   styles_;                                ///< Фабрика стилей графиков.
     std::shared_ptr<parser::IParserRegistry> registry_;    ///< Реестр парсеров по расширению.
+    std::shared_ptr<database::manager::IDatabaseManager> dbManager_;  ///< Менеджер БД для инспекции SQLite.
     data::TimelineData cached_;                            ///< Кэш последних загруженных данных.
     bool hasCached_ = false;                               ///< Признак наличия валидного кэша.
 };

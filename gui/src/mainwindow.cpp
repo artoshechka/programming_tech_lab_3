@@ -37,8 +37,7 @@ MainWindow::MainWindow(
     std::shared_ptr<database::manager::IDatabaseManager>  dbManager,
     QWidget* parent)
     : QMainWindow(parent)
-    , presenter_(std::make_unique<ChartPresenter>(builders, styles, registry))
-    , dbManager_(std::move(dbManager))
+    , presenter_(std::make_unique<ChartPresenter>(builders, styles, registry, std::move(dbManager)))
 {
     auto* toolbar = addToolBar("Controls");
     toolbar->setMovable(true);
@@ -131,22 +130,18 @@ void MainWindow::onFileSelected(const QModelIndex& index) {
 void MainWindow::loadFile(const QString& path) {
     std::string source = path.toStdString();
 
-    // Для SQLite с несколькими таблицами — спросить у пользователя
+    // Для SQLite с несколькими таблицами — спросить у пользователя.
+    // Инспекция источника делегирована презентеру; здесь остаётся только диалог.
     if (QFileInfo(path).suffix().toLower() == "sqlite") {
-        const std::string connName = "MainWindow_probe_" + std::to_string(reinterpret_cast<uintptr_t>(this));
-        auto db = dbManager_->Create(connName);
-        if (db->Open(path.toStdString())) {
-            const auto tables = db->Tables();
-            db->Close();
-            if (tables.size() > 1) {
-                QStringList qTables;
-                for (const auto& t : tables) qTables << QString::fromStdString(t);
-                TableSelectDialog dlg(qTables, this);
-                if (dlg.exec() != QDialog::Accepted) return;
-                const QString selected = dlg.selectedTable();
-                if (selected.isEmpty()) return;
-                source += "|" + selected.toStdString();
-            }
+        const auto tables = presenter_->listTables(source);
+        if (tables.size() > 1) {
+            QStringList qTables;
+            for (const auto& t : tables) qTables << QString::fromStdString(t);
+            TableSelectDialog dlg(qTables, this);
+            if (dlg.exec() != QDialog::Accepted) return;
+            const QString selected = dlg.selectedTable();
+            if (selected.isEmpty()) return;
+            source += "|" + selected.toStdString();
         }
     }
 
