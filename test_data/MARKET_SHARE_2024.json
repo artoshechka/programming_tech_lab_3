@@ -1,0 +1,37 @@
+{
+  "name": "MARKET_SHARE_2024",
+  "points": [
+    {
+      "Time": "Alpha",
+      "Value": 34.5
+    },
+    {
+      "Time": "Beta",
+      "Value": 22.1
+    },
+    {
+      "Time": "Gamma",
+      "Value": 15.8
+    },
+    {
+      "Time": "Delta",
+      "Value": 10.2
+    },
+    {
+      "Time": "Epsilon",
+      "Value": 7.4
+    },
+    {
+      "Time": "Zeta",
+      "Value": 4.9
+    },
+    {
+      "Time": "Eta",
+      "Value": 3.1
+    },
+    {
+      "Time": "Other",
+      "Value": 2.0
+    }
+  ]
+}
