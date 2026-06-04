@@ -6,14 +6,14 @@
 #define GUID_d8990b3f_06fb_4bd3_9a73_38fa220978bb
 
 #include <database_module/idatabase_manager.hpp>
-#include <parser/iparser.hpp>
+#include <parser/parser_base.hpp>
 #include <atomic>
 
 namespace parser
 {
 /// @brief Парсер SQLite через IDatabaseManager.
 /// @details source передаётся как "path|tableName". Если tableName отсутствует — берётся первая таблица.
-class DatabaseParser : public IParser
+class DatabaseParser : public ParserBase
 {
    public:
     /// @brief Конструктор парсера базы данных.
@@ -21,7 +21,7 @@ class DatabaseParser : public IParser
     /// @param[in] manager Фабрика соединений с БД.
     DatabaseParser(std::shared_ptr<logger::ILogger> logger,
                    std::shared_ptr<database::manager::IDatabaseManager> manager)
-        : IParser(logger), manager_(std::move(manager))
+        : ParserBase(std::move(logger)), manager_(std::move(manager))
     {
     }
 
