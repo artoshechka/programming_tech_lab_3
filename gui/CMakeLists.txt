@@ -9,6 +9,7 @@ add_library(${PROJECT_NAME} STATIC
     src/mainwindow.cpp
     src/chart_presenter.cpp
     src/table_select_dialog.cpp
+    src/app_compositor.cpp
 )
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)

@@ -4,6 +4,7 @@
 
 #include <QApplication>
 #include <gui/src/app_compositor.hpp>
+#include <gui/src/mainwindow.hpp>
 
 /// @brief Точка входа приложения.
 /// @param[in] argc Количество аргументов командной строки.
