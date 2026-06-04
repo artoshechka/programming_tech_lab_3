@@ -10,7 +10,7 @@ namespace chart {
 
 static constexpr int kMaxSlices = 10;
 
-QChart* PieChartBuilder::Build(const data::TimelineData& raw) {
+std::unique_ptr<QChart> PieChartBuilder::Build(const data::TimelineData& raw) {
     // агрегируем по месяцу если точек много
     const data::TimelineData agg = (raw.points_.size() > kAggregateThreshold)
         ? Aggregate(raw) : raw;
@@ -34,7 +34,7 @@ QChart* PieChartBuilder::Build(const data::TimelineData& raw) {
     series->setLabelsVisible(true);
     series->setLabelsPosition(QPieSlice::LabelOutside);
 
-    auto* chart = new QChart();
+    auto chart = std::make_unique<QChart>();
     chart->addSeries(series);
     chart->setTitle(QString::fromStdString(agg.name_));
     chart->legend()->setAlignment(Qt::AlignRight);

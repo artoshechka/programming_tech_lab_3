@@ -16,8 +16,8 @@ public:
     ///          усредняются. Отображаются до 10 крупнейших срезов; остаток
     ///          объединяется в сектор "Other". Метки выводятся снаружи.
     /// @param[in] data Входные данные временного ряда.
-    /// @return Указатель на построенный QChart (владение передаётся вызывающему).
-    QChart* Build(const data::TimelineData& data) override;
+    /// @return Владеющий указатель на построенный QChart.
+    [[nodiscard]] std::unique_ptr<QChart> Build(const data::TimelineData& data) override;
 };
 
 } // namespace chart

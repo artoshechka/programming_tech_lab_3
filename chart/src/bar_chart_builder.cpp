@@ -9,7 +9,7 @@ QT_CHARTS_USE_NAMESPACE
 
 namespace chart {
 
-QChart* BarChartBuilder::Build(const data::TimelineData& raw) {
+std::unique_ptr<QChart> BarChartBuilder::Build(const data::TimelineData& raw) {
     // агрегируем по месяцу если точек много, иначе берём как есть
     const data::TimelineData agg_ = (raw.points_.size() > kAggregateThreshold)
         ? Aggregate(raw) : raw;
@@ -39,7 +39,7 @@ QChart* BarChartBuilder::Build(const data::TimelineData& raw) {
     axisY->setTickCount(6);
     axisY->setGridLineVisible(true);
 
-    auto* chart = new QChart();
+    auto chart = std::make_unique<QChart>();
     chart->addSeries(series);
     chart->setTitle(QString::fromStdString(data.name_));
     chart->addAxis(axisX, Qt::AlignBottom);
