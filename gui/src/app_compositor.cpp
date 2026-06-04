@@ -2,36 +2,36 @@
 /// @brief Реализация точки композиции приложения
 /// @author Artemenko Anton
 
+#include <chart/src/bar_chart_builder.hpp>
+#include <chart/src/pie_chart_builder.hpp>
+#include <database_module/src/sqlite_db_manager.hpp>
 #include <gui/src/app_compositor.hpp>
 #include <gui/src/mainwindow.hpp>
-#include <chart/src/pie_chart_builder.hpp>
-#include <chart/src/bar_chart_builder.hpp>
-#include <style/src/color_style.hpp>
-#include <style/src/grayscale_style.hpp>
-#include <parser/src/parser_registry.hpp>
-#include <parser/src/json_parser.hpp>
-#include <parser/src/database_parser.hpp>
-#include <database_module/src/sqlite_db_manager.hpp>
 #include <ioc_container/IOC_Contaner.hpp>
 #include <logger/logger_factory.hpp>
+#include <parser/src/database_parser.hpp>
+#include <parser/src/json_parser.hpp>
+#include <parser/src/parser_registry.hpp>
+#include <style/src/color_style.hpp>
+#include <style/src/grayscale_style.hpp>
 
-namespace gui {
+namespace gui
+{
 
-MainWindow* CreateMainWindow(QWidget* parent) {
+MainWindow* CreateMainWindow(QWidget* parent)
+{
     // IoC: singletons live as instances, parsers are auto-wired from their deps.
     ioc::container::IOCContainer ioc;
     ioc.RegisterInstance<logger::ILogger>(logger::GetLogger<logger::AppLoggerTag>());
-    ioc.RegisterInstance<database::manager::IDatabaseManager,
-                         database::manager::SqliteDBManager>();
-    ioc.RegisterFactory<parser::JsonParser, parser::JsonParser,
-                        logger::ILogger>();
-    ioc.RegisterFactory<parser::DatabaseParser, parser::DatabaseParser,
-                        logger::ILogger, database::manager::IDatabaseManager>();
+    ioc.RegisterInstance<database::manager::IDatabaseManager, database::manager::SqliteDBManager>();
+    ioc.RegisterFactory<parser::JsonParser, parser::JsonParser, logger::ILogger>();
+    ioc.RegisterFactory<parser::DatabaseParser, parser::DatabaseParser, logger::ILogger,
+                        database::manager::IDatabaseManager>();
 
     auto dbManager = ioc.GetObject<database::manager::IDatabaseManager>();
 
     auto parserRegistry = std::make_shared<parser::ParserRegistry>();
-    parserRegistry->Register("json",   ioc.GetObject<parser::JsonParser>());
+    parserRegistry->Register("json", ioc.GetObject<parser::JsonParser>());
     parserRegistry->Register("sqlite", ioc.GetObject<parser::DatabaseParser>());
 
     BuilderFactory builders;
@@ -39,10 +39,10 @@ MainWindow* CreateMainWindow(QWidget* parent) {
     builders["Bar"] = [] { return std::make_shared<chart::BarChartBuilder>(); };
 
     StyleFactory styles;
-    styles["Color"]     = [] { return std::make_shared<style::ColorStyle>(); };
+    styles["Color"] = [] { return std::make_shared<style::ColorStyle>(); };
     styles["Grayscale"] = [] { return std::make_shared<style::GrayscaleStyle>(); };
 
     return new MainWindow(std::move(builders), std::move(styles), parserRegistry, dbManager, parent);
 }
 
-} // namespace gui
+}  // namespace gui

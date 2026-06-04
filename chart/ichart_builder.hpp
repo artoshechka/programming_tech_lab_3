@@ -4,17 +4,19 @@
 #ifndef GUID_a1b2c3d4_e5f6_7890_abcd_ef1234567890
 #define GUID_a1b2c3d4_e5f6_7890_abcd_ef1234567890
 
-#include <data_model/src/timeline_data.hpp>
 #include <QtCharts/QChart>
+#include <data_model/src/timeline_data.hpp>
 #include <memory>
 
 QT_CHARTS_USE_NAMESPACE
 
-namespace chart {
+namespace chart
+{
 
 /// @brief Интерфейс построителя графика из временного ряда.
-class IChartBuilder {
-public:
+class IChartBuilder
+{
+   public:
     /// @brief Виртуальный деструктор.
     virtual ~IChartBuilder() = default;
 
@@ -24,6 +26,6 @@ public:
     [[nodiscard]] virtual std::unique_ptr<QChart> Build(const data::TimelineData& data) = 0;
 };
 
-} // namespace chart
+}  // namespace chart
 
-#endif // GUID_a1b2c3d4_e5f6_7890_abcd_ef1234567890
+#endif  // GUID_a1b2c3d4_e5f6_7890_abcd_ef1234567890

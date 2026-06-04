@@ -6,7 +6,8 @@
 
 #include <QWidget>
 
-namespace gui {
+namespace gui
+{
 
 class MainWindow;
 
@@ -18,6 +19,6 @@ class MainWindow;
 /// @return Указатель на созданное главное окно (владение передаётся вызывающему).
 MainWindow* CreateMainWindow(QWidget* parent = nullptr);
 
-} // namespace gui
+}  // namespace gui
 
-#endif // GUID_d0e1f2a3_b4c5_6789_defa_890123456789
+#endif  // GUID_d0e1f2a3_b4c5_6789_defa_890123456789

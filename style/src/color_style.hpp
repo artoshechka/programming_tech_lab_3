@@ -6,11 +6,13 @@
 
 #include <style/ichart_style.hpp>
 
-namespace style {
+namespace style
+{
 
 /// @brief Цветной стиль — тема Qt по умолчанию.
-class ColorStyle : public IChartStyle {
-public:
+class ColorStyle : public IChartStyle
+{
+   public:
     /// @brief Применяет цветовую палитру к сериям графика.
     /// @details Каждому сектору круговой и каждому набору столбчатой диаграммы
     ///          назначается цвет из встроенной палитры по циклическому индексу.
@@ -18,6 +20,6 @@ public:
     void Apply(QChart* chart) override;
 };
 
-} // namespace style
+}  // namespace style
 
-#endif // GUID_e5f6a7b8_c9d0_1234_efab_345678901234
+#endif  // GUID_e5f6a7b8_c9d0_1234_efab_345678901234

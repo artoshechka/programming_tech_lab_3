@@ -5,9 +5,9 @@
 #ifndef GUID_d8990b3f_06fb_4bd3_9a73_38fa220978bb
 #define GUID_d8990b3f_06fb_4bd3_9a73_38fa220978bb
 
+#include <atomic>
 #include <database_module/idatabase_manager.hpp>
 #include <parser/parser_base.hpp>
-#include <atomic>
 
 namespace parser
 {

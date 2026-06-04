@@ -6,11 +6,13 @@
 
 #include <chart/ichart_builder.hpp>
 
-namespace chart {
+namespace chart
+{
 
 /// @brief Построитель столбчатой диаграммы.
-class BarChartBuilder : public IChartBuilder {
-public:
+class BarChartBuilder : public IChartBuilder
+{
+   public:
     /// @brief Строит столбчатую диаграмму на основе данных.
     /// @details При числе точек выше порога агрегации данные предварительно
     ///          усредняются; ось значений масштабируется с отступом 15%.
@@ -19,6 +21,6 @@ public:
     [[nodiscard]] std::unique_ptr<QChart> Build(const data::TimelineData& data) override;
 };
 
-} // namespace chart
+}  // namespace chart
 
-#endif // GUID_d4e5f6a7_b8c9_0123_defa_234567890123
+#endif  // GUID_d4e5f6a7_b8c9_0123_defa_234567890123

@@ -1,30 +1,39 @@
 #include "bar_chart_builder.hpp"
-#include <chart/aggregate.hpp>
-#include <QtCharts/QBarSet>
-#include <QtCharts/QBarSeries>
+
 #include <QtCharts/QBarCategoryAxis>
+#include <QtCharts/QBarSeries>
+#include <QtCharts/QBarSet>
 #include <QtCharts/QValueAxis>
+#include <chart/aggregate.hpp>
 
 QT_CHARTS_USE_NAMESPACE
 
-namespace chart {
+namespace chart
+{
 
-std::unique_ptr<QChart> BarChartBuilder::Build(const data::TimelineData& raw) {
+std::unique_ptr<QChart> BarChartBuilder::Build(const data::TimelineData& raw)
+{
     // агрегируем по месяцу если точек много, иначе берём как есть
-    const data::TimelineData agg_ = (raw.points_.size() > kAggregateThreshold)
-        ? Aggregate(raw) : raw;
+    const data::TimelineData agg_ = (raw.points_.size() > kAggregateThreshold) ? Aggregate(raw) : raw;
     const data::TimelineData& data = agg_;
 
     auto* set = new QBarSet(QString::fromStdString(data.name_));
     QStringList categories;
     double minVal = 0.0, maxVal = 0.0;
 
-    for (int i = 0; i < static_cast<int>(data.points_.size()); ++i) {
+    for (int i = 0; i < static_cast<int>(data.points_.size()); ++i)
+    {
         double v = data.points_[i].value_;
         *set << v;
         categories << QString::fromStdString(data.points_[i].time_);
-        if (i == 0) { minVal = maxVal = v; }
-        else { minVal = std::min(minVal, v); maxVal = std::max(maxVal, v); }
+        if (i == 0)
+        {
+            minVal = maxVal = v;
+        } else
+        {
+            minVal = std::min(minVal, v);
+            maxVal = std::max(maxVal, v);
+        }
     }
 
     auto* series = new QBarSeries();
@@ -50,4 +59,4 @@ std::unique_ptr<QChart> BarChartBuilder::Build(const data::TimelineData& raw) {
     return chart;
 }
 
-} // namespace chart
+}  // namespace chart

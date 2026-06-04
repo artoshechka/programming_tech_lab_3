@@ -52,7 +52,8 @@ class IOCContainer
         virtual ~FactoryRoot() = default;
     };
 
-    std::map<int, std::shared_ptr<FactoryRoot>> factories_;  ///< Хранилище зарегистрированных фабрик по идентификатору типа.
+    std::map<int, std::shared_ptr<FactoryRoot>>
+        factories_;  ///< Хранилище зарегистрированных фабрик по идентификатору типа.
 
     /// @brief Фабрика, возвращающая объект типа `T`.
     /// @tparam T Тип создаваемого объекта.

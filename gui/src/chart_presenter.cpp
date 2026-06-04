@@ -2,22 +2,24 @@
 /// @brief Определение ChartPresenter
 /// @author Artemenko Anton
 
+#include <atomic>
+#include <database_module/idatabase.hpp>
 #include <gui/src/chart_presenter.hpp>
 #include <parser/iparser.hpp>
-#include <database_module/idatabase.hpp>
-#include <atomic>
 
-namespace gui {
+namespace gui
+{
 
 /// @brief Конструктор презентера.
 ChartPresenter::ChartPresenter(BuilderFactory builders, StyleFactory styles,
                                std::shared_ptr<parser::IParserRegistry> registry,
                                std::shared_ptr<database::manager::IDatabaseManager> dbManager)
-    : builders_(std::move(builders))
-    , styles_(std::move(styles))
-    , registry_(std::move(registry))
-    , dbManager_(std::move(dbManager))
-{}
+    : builders_(std::move(builders)),
+      styles_(std::move(styles)),
+      registry_(std::move(registry)),
+      dbManager_(std::move(dbManager))
+{
+}
 
 /// @brief Возвращает список таблиц SQLite-файла.
 std::vector<std::string> ChartPresenter::listTables(const std::string& path)
@@ -42,10 +44,9 @@ QChart* ChartPresenter::load(const std::string& source, const std::string& build
     for (auto& c : ext) c = static_cast<char>(::tolower(c));
 
     auto parser = registry_->Get(ext);
-    if (!parser)
-        throw std::invalid_argument("Unknown format: " + ext);
+    if (!parser) throw std::invalid_argument("Unknown format: " + ext);
 
-    cached_   = parser->Load(source);  // throws ParseException on error
+    cached_ = parser->Load(source);  // throws ParseException on error
     hasCached_ = true;
     return buildChart(builder, style);
 }
@@ -65,4 +66,4 @@ QChart* ChartPresenter::buildChart(const std::string& builder, const std::string
     return chart.release();  // владение переходит QChartView (см. MainWindow::setChart)
 }
 
-} // namespace gui
+}  // namespace gui

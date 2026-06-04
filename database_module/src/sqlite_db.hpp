@@ -5,8 +5,8 @@
 #ifndef GUID_652d92c5_34e4_4c88_9e56_d4bf9ed33d6d
 #define GUID_652d92c5_34e4_4c88_9e56_d4bf9ed33d6d
 
-#include <database_module/idatabase.hpp>
 #include <QSqlDatabase>
+#include <database_module/idatabase.hpp>
 #include <string>
 
 namespace database

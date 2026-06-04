@@ -28,9 +28,8 @@ template <typename T>
 QJsonObject StructToJson(const T& object)
 {
     QJsonObject json;
-    data::ForEachField(object, [&](const auto& value, const char* name) {
-        json[QString::fromUtf8(name)] = FieldToJson(value);
-    });
+    data::ForEachField(
+        object, [&](const auto& value, const char* name) { json[QString::fromUtf8(name)] = FieldToJson(value); });
     return json;
 }
 
@@ -44,8 +43,7 @@ QJsonValue FieldToJson(const T& field)
         QJsonArray array;
         for (const auto& item : field) array.append(FieldToJson(item));
         return array;
-    }
-    else if constexpr (std::is_same_v<T, std::string>)
+    } else if constexpr (std::is_same_v<T, std::string>)
         return QJsonValue(QString::fromStdString(field));
     else
         return QJsonValue(field);
@@ -76,8 +74,7 @@ void JsonToField(T& field, const QJsonValue& json)
             JsonToField(element, item);
             field.push_back(std::move(element));
         }
-    }
-    else if constexpr (std::is_same_v<T, std::string>)
+    } else if constexpr (std::is_same_v<T, std::string>)
         field = json.toString().toStdString();
     else
         field = static_cast<T>(json.toDouble());
@@ -89,17 +86,14 @@ TimelineData JsonParser::Load(const std::string& source)
     LogInfo(logger_) << "JSON load: " << source;
 
     QFile file(QString::fromStdString(source));
-    if (!file.open(QIODevice::ReadOnly))
-        throw ParseException("JSON: cannot open file: " + source);
+    if (!file.open(QIODevice::ReadOnly)) throw ParseException("JSON: cannot open file: " + source);
 
     constexpr qint64 kMaxJsonBytes = 256LL * 1024 * 1024;
-    if (file.size() > kMaxJsonBytes)
-        throw ParseException("JSON: file too large: " + source);
+    if (file.size() > kMaxJsonBytes) throw ParseException("JSON: file too large: " + source);
 
     const QByteArray raw = file.readAll();
     const QJsonDocument doc = QJsonDocument::fromJson(raw);
-    if (!doc.isObject())
-        throw ParseException("JSON: root is not an object: " + source);
+    if (!doc.isObject()) throw ParseException("JSON: root is not an object: " + source);
 
     TimelineData result;
     StructFromJson(result, doc.object());

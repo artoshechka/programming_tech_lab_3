@@ -6,11 +6,13 @@
 
 #include <style/ichart_style.hpp>
 
-namespace style {
+namespace style
+{
 
 /// @brief Чёрно-белый стиль.
-class GrayscaleStyle : public IChartStyle {
-public:
+class GrayscaleStyle : public IChartStyle
+{
+   public:
     /// @brief Применяет градации серого к сериям графика.
     /// @details Элементам серий назначаются оттенки серого, равномерно
     ///          распределённые по градиенту от тёмного к светлому.
@@ -18,6 +20,6 @@ public:
     void Apply(QChart* chart) override;
 };
 
-} // namespace style
+}  // namespace style
 
-#endif // GUID_f6a7b8c9_d0e1_2345_fabc_456789012345
+#endif  // GUID_f6a7b8c9_d0e1_2345_fabc_456789012345

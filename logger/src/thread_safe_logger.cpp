@@ -41,15 +41,12 @@ void ThreadSafeLogger::SetSettings(const logger::LoggerSettings& settings)
 
 void ThreadSafeLogger::OpenLogFile()
 {
-    if (settings_.output_ != LogOutput::File)
-        return;
-    if (!settings_.logFilePath_.has_value() || settings_.logFilePath_->empty())
-        return;
+    if (settings_.output_ != LogOutput::File) return;
+    if (!settings_.logFilePath_.has_value() || settings_.logFilePath_->empty()) return;
 
     const std::string& logFilePath = settings_.logFilePath_.value();
     const auto parent = std::filesystem::path(logFilePath).parent_path();
-    if (!parent.empty())
-        std::filesystem::create_directories(parent);
+    if (!parent.empty()) std::filesystem::create_directories(parent);
     logFile_.open(logFilePath, std::ios::app);
 }
 

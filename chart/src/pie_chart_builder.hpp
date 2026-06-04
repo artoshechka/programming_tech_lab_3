@@ -6,11 +6,13 @@
 
 #include <chart/ichart_builder.hpp>
 
-namespace chart {
+namespace chart
+{
 
 /// @brief Построитель круговой диаграммы.
-class PieChartBuilder : public IChartBuilder {
-public:
+class PieChartBuilder : public IChartBuilder
+{
+   public:
     /// @brief Строит круговую диаграмму на основе данных.
     /// @details При числе точек выше порога агрегации данные предварительно
     ///          усредняются. Отображаются до 10 крупнейших срезов; остаток
@@ -20,6 +22,6 @@ public:
     [[nodiscard]] std::unique_ptr<QChart> Build(const data::TimelineData& data) override;
 };
 
-} // namespace chart
+}  // namespace chart
 
-#endif // GUID_c3d4e5f6_a7b8_9012_cdef_123456789012
+#endif  // GUID_c3d4e5f6_a7b8_9012_cdef_123456789012

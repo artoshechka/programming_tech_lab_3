@@ -5,14 +5,16 @@
 #ifndef GUID_b8c9d0e1_f2a3_4567_bcde_678901234567
 #define GUID_b8c9d0e1_f2a3_4567_bcde_678901234567
 
-#include <parser/iparser_registry.hpp>
 #include <map>
+#include <parser/iparser_registry.hpp>
 
-namespace parser {
+namespace parser
+{
 
 /// @brief Реестр парсеров: extension → IParser.
-class ParserRegistry : public IParserRegistry {
-public:
+class ParserRegistry : public IParserRegistry
+{
+   public:
     /// @brief Регистрирует парсер для указанного расширения.
     /// @param[in] extension Расширение файла (регистр игнорируется, приводится к нижнему).
     /// @param[in] parser Парсер, связываемый с расширением.
@@ -22,10 +24,11 @@ public:
     /// @param[in] extension Расширение файла без точки (например, "json", "sqlite").
     /// @return Парсер или nullptr, если расширение не зарегистрировано.
     std::shared_ptr<IParser> Get(const std::string& extension) const override;
-private:
+
+   private:
     std::map<std::string, std::shared_ptr<IParser>> parsers_;  ///< Соответствие расширение → парсер.
 };
 
-} // namespace parser
+}  // namespace parser
 
-#endif // GUID_b8c9d0e1_f2a3_4567_bcde_678901234567
+#endif  // GUID_b8c9d0e1_f2a3_4567_bcde_678901234567

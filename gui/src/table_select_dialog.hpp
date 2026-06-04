@@ -8,12 +8,14 @@
 #include <QListWidget>
 #include <QStringList>
 
-namespace gui {
+namespace gui
+{
 
 /// @brief Показывает список таблиц и возвращает выбранную.
-class TableSelectDialog : public QDialog {
+class TableSelectDialog : public QDialog
+{
     Q_OBJECT
-public:
+   public:
     /// @brief Конструктор диалога выбора таблицы.
     /// @param[in] tables Список имён таблиц для отображения.
     /// @param[in] parent Родительский виджет (по умолчанию nullptr).
@@ -23,10 +25,10 @@ public:
     /// @return Выбранное имя таблицы или пустую строку если отменено.
     QString selectedTable() const;
 
-private:
+   private:
     QListWidget* list_;  ///< Список таблиц для выбора.
 };
 
-} // namespace gui
+}  // namespace gui
 
-#endif // GUID_c2d3e4f5_a6b7_8901_cdef_012345678901
+#endif  // GUID_c2d3e4f5_a6b7_8901_cdef_012345678901

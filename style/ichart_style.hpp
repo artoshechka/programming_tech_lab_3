@@ -8,11 +8,13 @@
 
 QT_CHARTS_USE_NAMESPACE
 
-namespace style {
+namespace style
+{
 
 /// @brief Интерфейс стиля оформления графика.
-class IChartStyle {
-public:
+class IChartStyle
+{
+   public:
     /// @brief Виртуальный деструктор.
     virtual ~IChartStyle() = default;
 
@@ -21,6 +23,6 @@ public:
     virtual void Apply(QChart* chart) = 0;
 };
 
-} // namespace style
+}  // namespace style
 
-#endif // GUID_b2c3d4e5_f6a7_8901_bcde_f12345678901
+#endif  // GUID_b2c3d4e5_f6a7_8901_bcde_f12345678901

@@ -2,11 +2,12 @@
 /// @brief Определение TableSelectDialog
 /// @author Artemenko Anton
 
-#include <gui/src/table_select_dialog.hpp>
 #include <QDialogButtonBox>
 #include <QVBoxLayout>
+#include <gui/src/table_select_dialog.hpp>
 
-namespace gui {
+namespace gui
+{
 
 /// @brief Конструктор: наполняет список таблиц и добавляет кнопки OK/Cancel.
 TableSelectDialog::TableSelectDialog(const QStringList& tables, QWidget* parent)
@@ -32,4 +33,4 @@ QString TableSelectDialog::selectedTable() const
     return item ? item->text() : QString{};
 }
 
-} // namespace gui
+}  // namespace gui

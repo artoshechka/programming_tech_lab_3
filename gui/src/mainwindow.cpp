@@ -3,8 +3,6 @@
 /// @author Artemenko Anton
 
 #include "mainwindow.hpp"
-#include "chart_presenter.hpp"
-#include "table_select_dialog.hpp"
 
 #include <QFileDialog>
 #include <QFileInfo>
@@ -18,26 +16,25 @@
 #include <QSplitter>
 #include <QStatusBar>
 #include <QToolBar>
-
 #include <database_module/idatabase.hpp>
 #include <parser/parse_exception.hpp>
 
+#include "chart_presenter.hpp"
+#include "table_select_dialog.hpp"
+
 QT_CHARTS_USE_NAMESPACE
 
-namespace gui {
+namespace gui
+{
 
 /// @brief Виртуальный деструктор.
 MainWindow::~MainWindow() = default;
 
 /// @brief Конструктор: создаёт панель инструментов, дерево файлов и область графика, связывает сигналы.
-MainWindow::MainWindow(
-    BuilderFactory                                        builders,
-    StyleFactory                                          styles,
-    std::shared_ptr<parser::IParserRegistry>              registry,
-    std::shared_ptr<database::manager::IDatabaseManager>  dbManager,
-    QWidget* parent)
-    : QMainWindow(parent)
-    , presenter_(std::make_unique<ChartPresenter>(builders, styles, registry, std::move(dbManager)))
+MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared_ptr<parser::IParserRegistry> registry,
+                       std::shared_ptr<database::manager::IDatabaseManager> dbManager, QWidget* parent)
+    : QMainWindow(parent),
+      presenter_(std::make_unique<ChartPresenter>(builders, styles, registry, std::move(dbManager)))
 {
     auto* toolbar = addToolBar("Controls");
     toolbar->setMovable(true);
@@ -53,11 +50,11 @@ MainWindow::MainWindow(
     toolbar->addSeparator();
 
     auto* folderBtn = new QPushButton("Папка");
-    auto* pdfBtn    = new QPushButton("Сохранить PDF");
+    auto* pdfBtn = new QPushButton("Сохранить PDF");
     toolbar->addWidget(folderBtn);
     toolbar->addWidget(pdfBtn);
 
-    treeView_  = new QTreeView();
+    treeView_ = new QTreeView();
     chartView_ = new QChartView();
     chartView_->setRenderHint(QPainter::Antialiasing);
     chartView_->setChart(new QChart());
@@ -72,21 +69,17 @@ MainWindow::MainWindow(
     const QString root = QFileDialog::getExistingDirectory(this, "Выберите папку с данными");
     if (!root.isEmpty()) setRoot(root);
 
-    connect(treeView_,   &QTreeView::clicked,
-            this, &MainWindow::onFileSelected);
-    connect(folderBtn,   &QPushButton::clicked,
-            this, &MainWindow::onChooseFolder);
-    connect(pdfBtn,      &QPushButton::clicked,
-            this, &MainWindow::onSavePdf);
-    connect(chartCombo_, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, &MainWindow::onRedraw);
-    connect(styleCombo_, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, &MainWindow::onRedraw);
+    connect(treeView_, &QTreeView::clicked, this, &MainWindow::onFileSelected);
+    connect(folderBtn, &QPushButton::clicked, this, &MainWindow::onChooseFolder);
+    connect(pdfBtn, &QPushButton::clicked, this, &MainWindow::onSavePdf);
+    connect(chartCombo_, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onRedraw);
+    connect(styleCombo_, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onRedraw);
 }
 
 /// @brief Устанавливает корневую папку дерева файлов.
-void MainWindow::setRoot(const QString& path) {
-    auto* old   = qobject_cast<QFileSystemModel*>(treeView_->model());
+void MainWindow::setRoot(const QString& path)
+{
+    auto* old = qobject_cast<QFileSystemModel*>(treeView_->model());
     auto* model = new QFileSystemModel(this);
     model->setFilter(QDir::NoDotAndDotDot | QDir::AllDirs | QDir::Files);
     model->setNameFilters({"*.sqlite", "*.json"});
@@ -101,40 +94,51 @@ void MainWindow::setRoot(const QString& path) {
 }
 
 /// @brief Слот выбора рабочей папки с данными.
-void MainWindow::onChooseFolder() {
+void MainWindow::onChooseFolder()
+{
     const QString path = QFileDialog::getExistingDirectory(this, "Выберите папку с данными");
-    if (!path.isEmpty()) { currentSource_.clear(); setRoot(path); }
+    if (!path.isEmpty())
+    {
+        currentSource_.clear();
+        setRoot(path);
+    }
 }
 
 /// @brief Слот перерисовки графика при смене построителя или стиля.
-void MainWindow::onRedraw() {
+void MainWindow::onRedraw()
+{
     if (currentSource_.isEmpty()) return;
-    try {
-        QChart* chart = presenter_->rebuild(
-            chartCombo_->currentText().toStdString(),
-            styleCombo_->currentText().toStdString());
+    try
+    {
+        QChart* chart =
+            presenter_->rebuild(chartCombo_->currentText().toStdString(), styleCombo_->currentText().toStdString());
         if (chart) setChart(chart);
-    } catch (const std::exception& e) {
+    } catch (const std::exception& e)
+    {
         QMessageBox::critical(this, "Ошибка", QString::fromStdString(e.what()));
     }
 }
 
 /// @brief Слот выбора файла в дереве.
-void MainWindow::onFileSelected(const QModelIndex& index) {
+void MainWindow::onFileSelected(const QModelIndex& index)
+{
     auto* model = static_cast<QFileSystemModel*>(treeView_->model());
     if (model->isDir(index)) return;
     loadFile(model->filePath(index));
 }
 
 /// @brief Загружает источник данных и строит график.
-void MainWindow::loadFile(const QString& path) {
+void MainWindow::loadFile(const QString& path)
+{
     std::string source = path.toStdString();
 
     // Для SQLite с несколькими таблицами — спросить у пользователя.
     // Инспекция источника делегирована презентеру; здесь остаётся только диалог.
-    if (QFileInfo(path).suffix().toLower() == "sqlite") {
+    if (QFileInfo(path).suffix().toLower() == "sqlite")
+    {
         const auto tables = presenter_->listTables(source);
-        if (tables.size() > 1) {
+        if (tables.size() > 1)
+        {
             QStringList qTables;
             for (const auto& t : tables) qTables << QString::fromStdString(t);
             TableSelectDialog dlg(qTables, this);
@@ -145,32 +149,35 @@ void MainWindow::loadFile(const QString& path) {
         }
     }
 
-    try {
+    try
+    {
         currentSource_ = QString::fromStdString(source);
-        QChart* chart = presenter_->load(
-            source,
-            chartCombo_->currentText().toStdString(),
-            styleCombo_->currentText().toStdString());
+        QChart* chart = presenter_->load(source, chartCombo_->currentText().toStdString(),
+                                         styleCombo_->currentText().toStdString());
         setChart(chart);
         statusBar()->showMessage(path);
-    } catch (const parser::ParseException& e) {
+    } catch (const parser::ParseException& e)
+    {
         currentSource_.clear();
         QMessageBox::critical(this, "Ошибка загрузки", QString::fromStdString(e.what()));
-    } catch (const std::exception& e) {
+    } catch (const std::exception& e)
+    {
         currentSource_.clear();
         QMessageBox::critical(this, "Ошибка", QString::fromStdString(e.what()));
     }
 }
 
 /// @brief Заменяет текущий график в области отображения.
-void MainWindow::setChart(QChart* chart) {
+void MainWindow::setChart(QChart* chart)
+{
     auto* old = chartView_->chart();
     chartView_->setChart(chart);
     delete old;
 }
 
 /// @brief Слот сохранения текущего графика в PDF.
-void MainWindow::onSavePdf() {
+void MainWindow::onSavePdf()
+{
     const QString path = QFileDialog::getSaveFileName(this, "Сохранить PDF", {}, "PDF (*.pdf)");
     if (path.isEmpty()) return;
     QPdfWriter writer(path);
@@ -181,4 +188,4 @@ void MainWindow::onSavePdf() {
     statusBar()->showMessage("Сохранено: " + path);
 }
 
-} // namespace gui
+}  // namespace gui

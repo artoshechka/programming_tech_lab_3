@@ -6,14 +6,16 @@
 #define GUID_a7b8c9d0_e1f2_3456_abcd_567890123456
 
 #include <memory>
-#include <string>
 #include <parser/iparser.hpp>
+#include <string>
 
-namespace parser {
+namespace parser
+{
 
 /// @brief Реестр парсеров с диспетчеризацией по расширению файла.
-class IParserRegistry {
-public:
+class IParserRegistry
+{
+   public:
     /// @brief Виртуальный деструктор.
     virtual ~IParserRegistry() = default;
 
@@ -23,6 +25,6 @@ public:
     virtual std::shared_ptr<IParser> Get(const std::string& extension) const = 0;
 };
 
-} // namespace parser
+}  // namespace parser
 
-#endif // GUID_a7b8c9d0_e1f2_3456_abcd_567890123456
+#endif  // GUID_a7b8c9d0_e1f2_3456_abcd_567890123456
