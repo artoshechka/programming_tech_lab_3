@@ -5,18 +5,18 @@
 #ifndef GUID_cf64fc0e_c3bd_4922_8d74_fae170ae2ea0
 #define GUID_cf64fc0e_c3bd_4922_8d74_fae170ae2ea0
 
-#include <parser/iparser.hpp>
+#include <parser/parser_base.hpp>
 
 namespace parser
 {
 /// @brief Парсер JSON.
 /// @details Формат: { "name": <строка>, "points": [ { "Time": <строка>, "Value": <число> } ] }.
-class JsonParser : public IParser
+class JsonParser : public ParserBase
 {
    public:
     /// @brief Конструктор парсера JSON.
     /// @param[in] logger Логгер для записи диагностических сообщений.
-    explicit JsonParser(std::shared_ptr<logger::ILogger> logger) : IParser(logger) {}
+    explicit JsonParser(std::shared_ptr<logger::ILogger> logger) : ParserBase(std::move(logger)) {}
 
     /// @brief Виртуальный деструктор.
     ~JsonParser() override = default;
