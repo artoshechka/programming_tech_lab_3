@@ -49,6 +49,12 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
     toolbar->addWidget(styleCombo_);
     toolbar->addSeparator();
 
+    aggregateCheck_ = new QCheckBox("Агрегация");
+    aggregateCheck_->setChecked(false);
+    aggregateCheck_->setEnabled(chartCombo_->currentText() == "Pie");
+    toolbar->addWidget(aggregateCheck_);
+    toolbar->addSeparator();
+
     auto* folderBtn = new QPushButton("Папка");
     auto* pdfBtn = new QPushButton("Сохранить PDF");
     toolbar->addWidget(folderBtn);
@@ -72,8 +78,14 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
     connect(treeView_, &QTreeView::clicked, this, &MainWindow::onFileSelected);
     connect(folderBtn, &QPushButton::clicked, this, &MainWindow::onChooseFolder);
     connect(pdfBtn, &QPushButton::clicked, this, &MainWindow::onSavePdf);
-    connect(chartCombo_, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onRedraw);
+    connect(chartCombo_, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+            [this]
+            {
+                aggregateCheck_->setEnabled(chartCombo_->currentText() == "Pie");
+                onRedraw();
+            });
     connect(styleCombo_, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onRedraw);
+    connect(aggregateCheck_, &QCheckBox::stateChanged, this, &MainWindow::onRedraw);
 }
 
 /// @brief Устанавливает корневую папку дерева файлов.
@@ -110,8 +122,8 @@ void MainWindow::onRedraw()
     if (currentSource_.isEmpty()) return;
     try
     {
-        QChart* chart =
-            presenter_->rebuild(chartCombo_->currentText().toStdString(), styleCombo_->currentText().toStdString());
+        QChart* chart = presenter_->rebuild(chartCombo_->currentText().toStdString(),
+                                            styleCombo_->currentText().toStdString(), aggregateCheck_->isChecked());
         if (chart) setChart(chart);
     } catch (const std::exception& e)
     {
@@ -153,7 +165,7 @@ void MainWindow::loadFile(const QString& path)
     {
         currentSource_ = QString::fromStdString(source);
         QChart* chart = presenter_->load(source, chartCombo_->currentText().toStdString(),
-                                         styleCombo_->currentText().toStdString());
+                                         styleCombo_->currentText().toStdString(), aggregateCheck_->isChecked());
         setChart(chart);
         statusBar()->showMessage(path);
     } catch (const parser::ParseException& e)

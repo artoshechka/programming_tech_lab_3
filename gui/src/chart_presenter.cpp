@@ -3,6 +3,7 @@
 /// @author Artemenko Anton
 
 #include <atomic>
+#include <chart/src/pie_chart_builder.hpp>
 #include <database_module/idatabase.hpp>
 #include <gui/src/chart_presenter.hpp>
 #include <parser/iparser.hpp>
@@ -37,7 +38,8 @@ std::vector<std::string> ChartPresenter::listTables(const std::string& path)
 }
 
 /// @brief Загружает файл, кэширует TimelineData, строит и возвращает QChart.
-QChart* ChartPresenter::load(const std::string& source, const std::string& builder, const std::string& style)
+QChart* ChartPresenter::load(const std::string& source, const std::string& builder, const std::string& style,
+                             bool aggregate)
 {
     auto ext = source.substr(0, source.find('|'));
     ext = ext.substr(ext.rfind('.') + 1);
@@ -48,20 +50,22 @@ QChart* ChartPresenter::load(const std::string& source, const std::string& build
 
     cached_ = parser->Load(source);  // throws ParseException on error
     hasCached_ = true;
-    return buildChart(builder, style);
+    return buildChart(builder, style, aggregate);
 }
 
 /// @brief Пересобирает QChart из кэша (без IO).
-QChart* ChartPresenter::rebuild(const std::string& builder, const std::string& style)
+QChart* ChartPresenter::rebuild(const std::string& builder, const std::string& style, bool aggregate)
 {
     if (!hasCached_) return nullptr;
-    return buildChart(builder, style);
+    return buildChart(builder, style, aggregate);
 }
 
 /// @brief Строит график из кэшированных данных по заданным построителю и стилю.
-QChart* ChartPresenter::buildChart(const std::string& builder, const std::string& style)
+QChart* ChartPresenter::buildChart(const std::string& builder, const std::string& style, bool aggregate)
 {
-    std::unique_ptr<QChart> chart = builders_.at(builder)()->Build(cached_);
+    auto chartBuilder = builders_.at(builder)();
+    if (auto* pie = dynamic_cast<chart::PieChartBuilder*>(chartBuilder.get())) pie->SetAggregate(aggregate);
+    std::unique_ptr<QChart> chart = chartBuilder->Build(cached_);
     styles_.at(style)()->Apply(chart.get());
     return chart.release();  // владение переходит QChartView (см. MainWindow::setChart)
 }

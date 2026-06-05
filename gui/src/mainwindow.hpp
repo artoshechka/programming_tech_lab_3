@@ -4,6 +4,7 @@
 #ifndef GUID_c9d0e1f2_a3b4_5678_cdef_789012345678
 #define GUID_c9d0e1f2_a3b4_5678_cdef_789012345678
 
+#include <QCheckBox>
 #include <QComboBox>
 #include <QMainWindow>
 #include <QTreeView>
@@ -68,11 +69,12 @@ class MainWindow : public QMainWindow
 
     std::unique_ptr<ChartPresenter> presenter_;  ///< Презентер загрузки данных и построения графика.
 
-    QTreeView* treeView_ = nullptr;    ///< Дерево файлов с данными.
-    QChartView* chartView_ = nullptr;  ///< Область отображения графика.
-    QComboBox* chartCombo_ = nullptr;  ///< Выбор типа построителя графика.
-    QComboBox* styleCombo_ = nullptr;  ///< Выбор стиля графика.
-    QString currentSource_;            ///< Текущий источник данных (путь, опционально с "|таблица").
+    QTreeView* treeView_ = nullptr;        ///< Дерево файлов с данными.
+    QChartView* chartView_ = nullptr;      ///< Область отображения графика.
+    QComboBox* chartCombo_ = nullptr;      ///< Выбор типа построителя графика.
+    QComboBox* styleCombo_ = nullptr;      ///< Выбор стиля графика.
+    QCheckBox* aggregateCheck_ = nullptr;  ///< Чекбокс включения агрегации (актуален для Pie).
+    QString currentSource_;                ///< Текущий источник данных (путь, опционально с "|таблица").
 };
 
 }  // namespace gui
