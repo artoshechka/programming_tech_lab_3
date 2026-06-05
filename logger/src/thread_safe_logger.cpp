@@ -28,7 +28,7 @@ ThreadSafeLogger::~ThreadSafeLogger()
 
 void ThreadSafeLogger::SetSettings(const logger::LoggerSettings& settings)
 {
-    std::lock_guard<std::mutex> lock(syncMutex_);
+    std::lock_guard<std::recursive_mutex> lock(syncMutex_);
 
     settings_ = settings;
 
@@ -52,7 +52,7 @@ void ThreadSafeLogger::OpenLogFile()
 
 logger::LoggerSettings ThreadSafeLogger::GetSettings() const
 {
-    std::lock_guard<std::mutex> lock(syncMutex_);
+    std::lock_guard<std::recursive_mutex> lock(syncMutex_);
     return settings_;
 }
 
@@ -79,7 +79,7 @@ std::string ThreadSafeLogger::LogLevelToString(LogLevel level)
 
 void ThreadSafeLogger::Log(LogLevel level, const std::string& message, const char* file, int line, const char* function)
 {
-    std::lock_guard<std::mutex> lock(syncMutex_);
+    std::lock_guard<std::recursive_mutex> lock(syncMutex_);
 
     if (level < settings_.logLevel_)
     {
