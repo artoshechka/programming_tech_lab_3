@@ -69,9 +69,10 @@ class ThreadSafeLogger : public ILogger
     /// @details Вызывается под syncMutex_. При выводе не в файл или пустом пути файл остаётся закрытым.
     void OpenLogFile();
 
-    std::ofstream logFile_;         ///< Открытый файл логов для записи
-    mutable std::mutex syncMutex_;  ///< Мьютекс для обеспечения потокобезопасности при записи в лог
-    LoggerSettings settings_;       ///< Текущие настройки логгера
+    std::ofstream logFile_;                   ///< Открытый файл логов для записи
+    mutable std::recursive_mutex syncMutex_;  ///< Рекурсивный мьютекс: допускает вложенный Log() из callback'ов
+                                              ///< внутри FormatMessage без дедлока.
+    LoggerSettings settings_;                 ///< Текущие настройки логгера
 };
 
 }  // namespace logger
