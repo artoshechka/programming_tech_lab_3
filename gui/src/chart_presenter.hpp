@@ -37,22 +37,25 @@ class ChartPresenter
     /// @param[in] source Источник данных (путь, опционально с "|таблица" для SQLite).
     /// @param[in] builder Имя построителя графика.
     /// @param[in] style Имя стиля графика.
+    /// @param[in] aggregate Включить агрегацию для построителей, которые её поддерживают.
     /// @return Построенный график.
     /// @throws parser::ParseException при ошибке парсинга.
-    QChart* load(const std::string& source, const std::string& builder, const std::string& style);
+    QChart* load(const std::string& source, const std::string& builder, const std::string& style, bool aggregate);
 
     /// @brief Пересобирает QChart из кэша (без IO).
     /// @param[in] builder Имя построителя графика.
     /// @param[in] style Имя стиля графика.
+    /// @param[in] aggregate Включить агрегацию для построителей, которые её поддерживают.
     /// @return Построенный график или nullptr если кэш пуст.
-    QChart* rebuild(const std::string& builder, const std::string& style);
+    QChart* rebuild(const std::string& builder, const std::string& style, bool aggregate);
 
    private:
     /// @brief Строит график из кэшированных данных по заданным построителю и стилю.
     /// @param[in] builder Имя построителя графика.
     /// @param[in] style Имя стиля графика.
+    /// @param[in] aggregate Включить агрегацию для построителей, которые её поддерживают.
     /// @return Построенный график.
-    QChart* buildChart(const std::string& builder, const std::string& style);
+    QChart* buildChart(const std::string& builder, const std::string& style, bool aggregate);
 
     BuilderFactory builders_;                                         ///< Фабрика построителей графиков.
     StyleFactory styles_;                                             ///< Фабрика стилей графиков.
