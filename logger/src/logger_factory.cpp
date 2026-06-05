@@ -26,13 +26,10 @@ std::shared_ptr<ILogger> CreateAppLogger()
 template <>
 std::shared_ptr<ILogger> GetLogger<AppLoggerTag>()
 {
-    static std::shared_ptr<ILogger> logger;
-    if (logger == nullptr)
-    {
-        logger = CreateAppLogger();
-    }
-
-    return logger;
+    // C++11 гарантирует потокобезопасную инициализацию static local — гонка между
+    // потоками при первом вызове GetLogger<> невозможна.
+    static const std::shared_ptr<ILogger> kLogger = CreateAppLogger();
+    return kLogger;
 }
 
 }  // namespace logger
