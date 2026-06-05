@@ -14,8 +14,9 @@ static constexpr int kMaxSlices = 10;
 
 std::unique_ptr<QChart> PieChartBuilder::Build(const data::TimelineData& raw)
 {
-    // агрегируем по месяцу если точек много
-    const data::TimelineData agg = (raw.points_.size() > kAggregateThreshold) ? Aggregate(raw) : raw;
+    // агрегация применяется только если включена флагом и точек больше порога
+    const data::TimelineData agg =
+        (aggregate_ && raw.points_.size() > kAggregateThreshold) ? Aggregate(raw) : raw;
 
     auto pts = agg.points_;
     std::sort(pts.begin(), pts.end(), [](const auto& a, const auto& b) { return a.value_ > b.value_; });
