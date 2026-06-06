@@ -45,9 +45,23 @@ void ThreadSafeLogger::OpenLogFile()
     if (!settings_.logFilePath_.has_value() || settings_.logFilePath_->empty()) return;
 
     const std::string& logFilePath = settings_.logFilePath_.value();
-    const auto parent = std::filesystem::path(logFilePath).parent_path();
-    if (!parent.empty()) std::filesystem::create_directories(parent);
-    logFile_.open(logFilePath, std::ios::app);
+    try
+    {
+        const auto parent = std::filesystem::path(logFilePath).parent_path();
+        if (!parent.empty()) std::filesystem::create_directories(parent);
+        logFile_.open(logFilePath, std::ios::app);
+        if (!logFile_.is_open())
+        {
+            throw std::ios_base::failure("ofstream::open returned closed stream");
+        }
+    } catch (const std::exception& ex)
+    {
+        // Отказ файлового вывода не должен ронять приложение и оставлять логгер
+        // в "File без файла" состоянии — переключаемся на консоль с уведомлением.
+        std::cerr << "[logger] Failed to open log file '" << logFilePath << "': " << ex.what()
+                  << ". Falling back to console output." << std::endl;
+        settings_.output_ = LogOutput::Console;
+    }
 }
 
 logger::LoggerSettings ThreadSafeLogger::GetSettings() const
