@@ -3,16 +3,33 @@
 /// @author Artemenko Anton
 
 #include <QApplication>
+#include <QMessageBox>
+#include <QString>
+#include <exception>
 #include <gui/src/app_compositor.hpp>
 #include <gui/src/mainwindow.hpp>
+#include <memory>
 
 /// @brief Точка входа приложения.
 /// @param[in] argc Количество аргументов командной строки.
 /// @param[in] argv Массив аргументов командной строки.
-/// @return Код возврата приложения.
+/// @return Код возврата приложения; 1 — std::exception на старте, 2 — неизвестное исключение.
 int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
-    gui::CreateMainWindow()->show();
-    return app.exec();
+    try
+    {
+        std::unique_ptr<gui::MainWindow> window(gui::CreateMainWindow());
+        window->show();
+        return app.exec();
+    } catch (const std::exception& ex)
+    {
+        QMessageBox::critical(nullptr, QObject::tr("Fatal error"), QString::fromUtf8(ex.what()));
+        return 1;
+    } catch (...)
+    {
+        QMessageBox::critical(nullptr, QObject::tr("Fatal error"),
+                              QObject::tr("Unknown exception during application startup."));
+        return 2;
+    }
 }
