@@ -2,11 +2,13 @@
 /// @brief Определение класса SqliteDB
 /// @author Artemenko Anton
 
+#include <QSqlError>
 #include <QSqlQuery>
 #include <QSqlRecord>
 #include <QString>
 #include <QVariant>
 #include <database_module/src/sqlite_db.hpp>
+#include <stdexcept>
 
 namespace database
 {
@@ -46,7 +48,10 @@ std::vector<std::string> SqliteDB::Tables() const
 void SqliteDB::Query(const std::string& sql, std::function<void(const std::string& col, const std::string& val)> rowFn)
 {
     QSqlQuery query(db_);
-    if (!query.exec(QString::fromStdString(sql))) return;
+    if (!query.exec(QString::fromStdString(sql)))
+    {
+        throw std::runtime_error("SQLite query failed: " + query.lastError().text().toStdString());
+    }
     const QSqlRecord rec = query.record();
     while (query.next())
     {

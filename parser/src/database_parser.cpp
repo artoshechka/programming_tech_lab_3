@@ -73,18 +73,24 @@ TimelineData DatabaseParser::Load(const std::string& source)
     // Визитор вызывается для каждой (col, val) в строке последовательно.
     // Начало новой строки детектируем по первой схемной колонке "Time".
     const std::string firstCol = "Time";
-    db->Query("SELECT * FROM \"" + QuoteIdent(table) + "\"", [&](const std::string& col, const std::string& val) {
-        if (col == firstCol) result.points_.push_back({});
-        if (result.points_.empty()) return;
-        TimePoint& pt = result.points_.back();
-        data::ForEachField(pt, [&](auto& field, const char* name) {
-            if (col != name) return;
-            if constexpr (std::is_same_v<std::decay_t<decltype(field)>, std::string>)
-                field = val;
-            else
-                field = val.empty() ? 0.0 : std::stod(val);
+    try
+    {
+        db->Query("SELECT * FROM \"" + QuoteIdent(table) + "\"", [&](const std::string& col, const std::string& val) {
+            if (col == firstCol) result.points_.push_back({});
+            if (result.points_.empty()) return;
+            TimePoint& pt = result.points_.back();
+            data::ForEachField(pt, [&](auto& field, const char* name) {
+                if (col != name) return;
+                if constexpr (std::is_same_v<std::decay_t<decltype(field)>, std::string>)
+                    field = val;
+                else
+                    field = val.empty() ? 0.0 : std::stod(val);
+            });
         });
-    });
+    } catch (const std::exception& ex)
+    {
+        throw ParseException("DB: query failed for table '" + table + "': " + ex.what());
+    }
 
     LogInfo(logger_) << "DB load done: '" << result.name_ << "', " << result.points_.size() << " points";
     return result;

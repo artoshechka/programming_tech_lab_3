@@ -44,6 +44,7 @@ class SqliteDB : public IDatabase
     ///          где col — имя столбца, val — строковое представление значения ячейки.
     ///          Для каждой строки результата выполняется серия вызовов по всем её столбцам;
     ///          переход к следующей строке начинает новую серию вызовов.
+    /// @throws std::runtime_error при сбое query.exec() с текстом QSqlError::text().
     void Query(const std::string& sql,
                std::function<void(const std::string& col, const std::string& val)> rowFn) override;
 
