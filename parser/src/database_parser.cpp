@@ -49,30 +49,23 @@ TimelineData DatabaseParser::Load(const std::string& source)
     const auto [path, requestedTable] = SplitSource(source);
     const std::string connName = "DBParser_" + std::to_string(nextConnId_++);
 
+    // Соединение закроется автоматически в ~SqliteDB при выходе db из scope —
+    // в том числе при пробросе исключения из Query() или ниже по коду.
     auto db = manager_->Create(connName);
     if (!db->Open(path)) throw ParseException("DB: cannot open: " + path);
 
     const auto tables = db->Tables();
-    if (tables.empty())
-    {
-        db->Close();
-        throw ParseException("DB: no tables in: " + path);
-    }
+    if (tables.empty()) throw ParseException("DB: no tables in: " + path);
 
     // Имя таблицы — недоверенный ввод (часть source). Разрешаем только реально
     // существующую таблицу: это закрывает SQL-инъекцию через интерполяцию имени.
     std::string table;
     if (requestedTable.empty())
-    {
         table = tables.front();
-    } else if (std::find(tables.begin(), tables.end(), requestedTable) != tables.end())
-    {
+    else if (std::find(tables.begin(), tables.end(), requestedTable) != tables.end())
         table = requestedTable;
-    } else
-    {
-        db->Close();
+    else
         throw ParseException("DB: no such table: " + requestedTable);
-    }
 
     TimelineData result;
     result.name_ = table;
@@ -93,7 +86,6 @@ TimelineData DatabaseParser::Load(const std::string& source)
         });
     });
 
-    db->Close();
     LogInfo(logger_) << "DB load done: '" << result.name_ << "', " << result.points_.size() << " points";
     return result;
 }
