@@ -7,6 +7,8 @@
 #include <database_module/idatabase.hpp>
 #include <gui/src/chart_presenter.hpp>
 #include <parser/iparser.hpp>
+#include <stdexcept>
+#include <system_error>
 
 namespace gui
 {
@@ -32,42 +34,63 @@ std::vector<std::string> ChartPresenter::listTables(const std::string& path)
 
     auto db = dbManager_->Create(connName);
     if (!db->Open(path)) return {};
-    auto tables = db->Tables();
-    db->Close();
-    return tables;
+    return db->Tables();
 }
 
 /// @brief Загружает файл, кэширует TimelineData, строит и возвращает QChart.
 QChart* ChartPresenter::load(const std::string& source, const std::string& builder, const std::string& style,
                              bool aggregate)
 {
-    auto ext = source.substr(0, source.find('|'));
-    ext = ext.substr(ext.rfind('.') + 1);
-    for (auto& c : ext) c = static_cast<char>(::tolower(c));
+    const std::string path = SourcePath(source);
 
-    auto parser = registry_->Get(ext);
-    if (!parser) throw std::invalid_argument("Unknown format: " + ext);
+    // Проверяем mtime файла-источника для инвалидации кэша при внешних изменениях.
+    std::error_code ec;
+    const auto mtime = std::filesystem::last_write_time(path, ec);
+    if (ec) throw std::invalid_argument("Cannot stat source: " + path + ": " + ec.message());
 
-    cached_ = parser->Load(source);  // throws ParseException on error
-    hasCached_ = true;
-    return buildChart(builder, style, aggregate);
+    const CacheEntry* entry = dataCache_.Find(source);
+    if (entry == nullptr || entry->mtime != mtime)
+    {
+        // Промах или устарело — определяем парсер по расширению и грузим заново.
+        auto ext = path.substr(path.rfind('.') + 1);
+        for (auto& c : ext) c = static_cast<char>(::tolower(c));
+
+        auto parser = registry_->Get(ext);
+        if (!parser) throw std::invalid_argument("Unknown format: " + ext);
+
+        dataCache_.Put(source, CacheEntry{parser->Load(source), mtime});  // throws ParseException
+        entry = dataCache_.Find(source);
+    }
+
+    lastSource_ = source;
+    return buildChart(entry->data, builder, style, aggregate);
 }
 
 /// @brief Пересобирает QChart из кэша (без IO).
 QChart* ChartPresenter::rebuild(const std::string& builder, const std::string& style, bool aggregate)
 {
-    if (!hasCached_) return nullptr;
-    return buildChart(builder, style, aggregate);
+    if (lastSource_.empty()) return nullptr;
+    const CacheEntry* entry = dataCache_.Find(lastSource_);
+    if (entry == nullptr) return nullptr;  // вытеснили из LRU — пользователь должен load() заново
+    return buildChart(entry->data, builder, style, aggregate);
 }
 
-/// @brief Строит график из кэшированных данных по заданным построителю и стилю.
-QChart* ChartPresenter::buildChart(const std::string& builder, const std::string& style, bool aggregate)
+/// @brief Строит график из заданных данных по заданным построителю и стилю.
+QChart* ChartPresenter::buildChart(const data::TimelineData& data, const std::string& builder, const std::string& style,
+                                   bool aggregate)
 {
     auto chartBuilder = builders_.at(builder)();
     if (auto* pie = dynamic_cast<chart::PieChartBuilder*>(chartBuilder.get())) pie->SetAggregate(aggregate);
-    std::unique_ptr<QChart> chart = chartBuilder->Build(cached_);
+    std::unique_ptr<QChart> chart = chartBuilder->Build(data);
     styles_.at(style)()->Apply(chart.get());
     return chart.release();  // владение переходит QChartView (см. MainWindow::setChart)
+}
+
+/// @brief Возвращает путь из source (вырезает "|table" хвост для SQLite).
+std::string ChartPresenter::SourcePath(const std::string& source)
+{
+    const auto pos = source.find('|');
+    return pos == std::string::npos ? source : source.substr(0, pos);
 }
 
 }  // namespace gui
