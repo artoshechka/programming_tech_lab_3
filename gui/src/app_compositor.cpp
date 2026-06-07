@@ -30,9 +30,13 @@ MainWindow* CreateMainWindow(QWidget* parent)
 
     auto dbManager = ioc.GetObject<database::manager::IDatabaseManager>();
 
+    // Декларативный список парсеров: одна строка на формат, как и в Builder/StyleFactory.
+    ParserFactory parsers;
+    parsers["json"] = [&ioc] { return ioc.GetObject<parser::JsonParser>(); };
+    parsers["sqlite"] = [&ioc] { return ioc.GetObject<parser::DatabaseParser>(); };
+
     auto parserRegistry = std::make_shared<parser::ParserRegistry>();
-    parserRegistry->Register("json", ioc.GetObject<parser::JsonParser>());
-    parserRegistry->Register("sqlite", ioc.GetObject<parser::DatabaseParser>());
+    for (const auto& [ext, factory] : parsers) parserRegistry->Register(ext, factory());
 
     BuilderFactory builders;
     builders["Pie"] = [] { return std::make_shared<chart::PieChartBuilder>(); };
