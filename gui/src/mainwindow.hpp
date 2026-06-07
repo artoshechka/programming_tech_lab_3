@@ -13,6 +13,7 @@
 #include <database_module/idatabase_manager.hpp>
 #include <functional>
 #include <map>
+#include <parser/iparser.hpp>
 #include <parser/iparser_registry.hpp>
 #include <string>
 #include <style/ichart_style.hpp>
@@ -26,6 +27,8 @@ namespace gui
 using BuilderFactory = std::map<std::string, std::function<std::shared_ptr<chart::IChartBuilder>()>>;
 /// @brief Фабрика стилей графиков: имя -> функция, создающая IChartStyle.
 using StyleFactory = std::map<std::string, std::function<std::shared_ptr<style::IChartStyle>()>>;
+/// @brief Фабрика парсеров: расширение -> функция, создающая IParser. Используется только в композиции.
+using ParserFactory = std::map<std::string, std::function<std::shared_ptr<parser::IParser>()>>;
 
 class ChartPresenter;
 
