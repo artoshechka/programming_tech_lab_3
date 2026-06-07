@@ -60,6 +60,13 @@ class ChartPresenter
         std::filesystem::file_time_type mtime;    ///< Время последней модификации исходного файла.
     };
 
+    /// @brief Запись кэша списка таблиц SQLite с отметкой mtime файла.
+    struct TablesCacheEntry
+    {
+        std::vector<std::string> tables;          ///< Имена таблиц.
+        std::filesystem::file_time_type mtime;    ///< Время последней модификации SQLite-файла.
+    };
+
     /// @brief Строит график из заданных данных по построителю и стилю.
     /// @param[in] data Данные временного ряда.
     /// @param[in] builder Имя построителя графика.
@@ -75,12 +82,16 @@ class ChartPresenter
     /// @brief Размер LRU-кэша распарсенных данных. ~8 файлов — компромисс между памятью и хитами.
     static constexpr std::size_t kDataCacheCapacity = 8;
 
-    BuilderFactory builders_;                                         ///< Фабрика построителей графиков.
-    StyleFactory styles_;                                             ///< Фабрика стилей графиков.
-    std::shared_ptr<parser::IParserRegistry> registry_;               ///< Реестр парсеров по расширению.
-    std::shared_ptr<database::manager::IDatabaseManager> dbManager_;  ///< Менеджер БД для инспекции SQLite.
-    LruCache<std::string, CacheEntry> dataCache_{kDataCacheCapacity}; ///< LRU-кэш парсенных данных по source.
-    std::string lastSource_;                                          ///< Source последнего успешного load (для rebuild).
+    /// @brief Размер LRU-кэша списков таблиц SQLite-файлов.
+    static constexpr std::size_t kTablesCacheCapacity = 16;
+
+    BuilderFactory builders_;                                                  ///< Фабрика построителей графиков.
+    StyleFactory styles_;                                                      ///< Фабрика стилей графиков.
+    std::shared_ptr<parser::IParserRegistry> registry_;                        ///< Реестр парсеров по расширению.
+    std::shared_ptr<database::manager::IDatabaseManager> dbManager_;           ///< Менеджер БД для инспекции SQLite.
+    LruCache<std::string, CacheEntry> dataCache_{kDataCacheCapacity};          ///< LRU-кэш парсенных данных по source.
+    LruCache<std::string, TablesCacheEntry> tablesCache_{kTablesCacheCapacity};///< LRU-кэш списков таблиц SQLite по пути.
+    std::string lastSource_;                                                   ///< Source последнего успешного load (для rebuild).
 };
 
 }  // namespace gui
