@@ -29,12 +29,26 @@ std::vector<std::string> ChartPresenter::listTables(const std::string& path)
 {
     if (!dbManager_) return {};
 
+    // Инвалидация по mtime: если файл изменился извне, кэш считаем устаревшим.
+    std::error_code ec;
+    const auto mtime = std::filesystem::last_write_time(path, ec);
+    if (!ec)
+    {
+        if (const TablesCacheEntry* hit = tablesCache_.Find(path); hit != nullptr && hit->mtime == mtime)
+        {
+            return hit->tables;
+        }
+    }
+
     static std::atomic<int> probeId{0};
     const std::string connName = "ChartPresenter_probe_" + std::to_string(probeId++);
 
     auto db = dbManager_->Create(connName);
     if (!db->Open(path)) return {};
-    return db->Tables();
+    auto tables = db->Tables();
+
+    if (!ec) tablesCache_.Put(path, TablesCacheEntry{tables, mtime});
+    return tables;
 }
 
 /// @brief Загружает файл, кэширует TimelineData, строит и возвращает QChart.
