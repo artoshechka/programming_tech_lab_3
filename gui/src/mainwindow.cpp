@@ -34,7 +34,8 @@ MainWindow::~MainWindow() = default;
 MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared_ptr<parser::IParserRegistry> registry,
                        std::shared_ptr<database::manager::IDatabaseManager> dbManager, QWidget* parent)
     : QMainWindow(parent),
-      presenter_(std::make_unique<ChartPresenter>(builders, styles, registry, std::move(dbManager)))
+      registry_(registry),
+      presenter_(std::make_unique<ChartPresenter>(builders, styles, std::move(registry), std::move(dbManager)))
 {
     auto* toolbar = addToolBar("Controls");
     toolbar->setMovable(true);
@@ -94,7 +95,11 @@ void MainWindow::setRoot(const QString& path)
     auto* old = qobject_cast<QFileSystemModel*>(treeView_->model());
     auto* model = new QFileSystemModel(this);
     model->setFilter(QDir::NoDotAndDotDot | QDir::AllDirs | QDir::Files);
-    model->setNameFilters({"*.sqlite", "*.json"});
+    QStringList filters;
+    if (registry_)
+        for (const auto& ext : registry_->SupportedExtensions())
+            filters << QString::fromStdString("*." + ext);
+    model->setNameFilters(filters);
     model->setNameFilterDisables(false);
     model->setRootPath(path);
     treeView_->setModel(model);
