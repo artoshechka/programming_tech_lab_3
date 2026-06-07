@@ -20,4 +20,12 @@ std::shared_ptr<IParser> ParserRegistry::Get(const std::string& extension) const
     return it != parsers_.end() ? it->second : nullptr;
 }
 
+std::vector<std::string> ParserRegistry::SupportedExtensions() const
+{
+    std::vector<std::string> exts;
+    exts.reserve(parsers_.size());
+    for (const auto& kv : parsers_) exts.push_back(kv.first);
+    return exts;
+}
+
 }  // namespace parser

@@ -25,6 +25,10 @@ class ParserRegistry : public IParserRegistry
     /// @return Парсер или nullptr, если расширение не зарегистрировано.
     std::shared_ptr<IParser> Get(const std::string& extension) const override;
 
+    /// @brief Возвращает все зарегистрированные расширения.
+    /// @return Расширения в нижнем регистре, без точки.
+    std::vector<std::string> SupportedExtensions() const override;
+
    private:
     std::map<std::string, std::shared_ptr<IParser>> parsers_;  ///< Соответствие расширение → парсер.
 };

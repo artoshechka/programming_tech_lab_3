@@ -67,6 +67,7 @@ class MainWindow : public QMainWindow
     /// @param[in] chart Новый график (владение передаётся представлению).
     void setChart(QChart* chart);
 
+    std::shared_ptr<parser::IParserRegistry> registry_;  ///< Реестр парсеров (для запроса поддерживаемых расширений).
     std::unique_ptr<ChartPresenter> presenter_;  ///< Презентер загрузки данных и построения графика.
 
     QTreeView* treeView_ = nullptr;        ///< Дерево файлов с данными.
