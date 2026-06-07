@@ -7,7 +7,10 @@
 #include <QtCharts/QChart>
 #include <data_model/src/timeline_data.hpp>
 #include <database_module/idatabase_manager.hpp>
+#include <filesystem>
+#include <gui/src/lru_cache.hpp>
 #include <gui/src/mainwindow.hpp>
+#include <string>
 #include <vector>
 
 QT_CHARTS_USE_NAMESPACE
@@ -50,19 +53,34 @@ class ChartPresenter
     QChart* rebuild(const std::string& builder, const std::string& style, bool aggregate);
 
    private:
-    /// @brief Строит график из кэшированных данных по заданным построителю и стилю.
+    /// @brief Запись кэша парсенных данных с отметкой mtime файла-источника.
+    struct CacheEntry
+    {
+        data::TimelineData data;                  ///< Распарсенные данные.
+        std::filesystem::file_time_type mtime;    ///< Время последней модификации исходного файла.
+    };
+
+    /// @brief Строит график из заданных данных по построителю и стилю.
+    /// @param[in] data Данные временного ряда.
     /// @param[in] builder Имя построителя графика.
     /// @param[in] style Имя стиля графика.
     /// @param[in] aggregate Включить агрегацию для построителей, которые её поддерживают.
     /// @return Построенный график.
-    QChart* buildChart(const std::string& builder, const std::string& style, bool aggregate);
+    QChart* buildChart(const data::TimelineData& data, const std::string& builder, const std::string& style,
+                       bool aggregate);
+
+    /// @brief Возвращает путь к файлу из source ("path" либо "path|table").
+    static std::string SourcePath(const std::string& source);
+
+    /// @brief Размер LRU-кэша распарсенных данных. ~8 файлов — компромисс между памятью и хитами.
+    static constexpr std::size_t kDataCacheCapacity = 8;
 
     BuilderFactory builders_;                                         ///< Фабрика построителей графиков.
     StyleFactory styles_;                                             ///< Фабрика стилей графиков.
     std::shared_ptr<parser::IParserRegistry> registry_;               ///< Реестр парсеров по расширению.
     std::shared_ptr<database::manager::IDatabaseManager> dbManager_;  ///< Менеджер БД для инспекции SQLite.
-    data::TimelineData cached_;                                       ///< Кэш последних загруженных данных.
-    bool hasCached_ = false;                                          ///< Признак наличия валидного кэша.
+    LruCache<std::string, CacheEntry> dataCache_{kDataCacheCapacity}; ///< LRU-кэш парсенных данных по source.
+    std::string lastSource_;                                          ///< Source последнего успешного load (для rebuild).
 };
 
 }  // namespace gui
