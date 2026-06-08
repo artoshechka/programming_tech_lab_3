@@ -18,7 +18,7 @@ class BarChartBuilder : public IChartBuilder
     ///          усредняются; ось значений масштабируется с отступом 15%.
     /// @param[in] data Входные данные временного ряда.
     /// @return Владеющий указатель на построенный QChart.
-    [[nodiscard]] std::unique_ptr<QChart> Build(const data::TimelineData& data) override;
+    [[nodiscard]] std::unique_ptr<QtCharts::QChart> Build(const data::TimelineData& data) override;
 };
 
 }  // namespace chart

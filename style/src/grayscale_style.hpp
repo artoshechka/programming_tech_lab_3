@@ -17,7 +17,7 @@ class GrayscaleStyle : public IChartStyle
     /// @details Элементам серий назначаются оттенки серого, равномерно
     ///          распределённые по градиенту от тёмного к светлому.
     /// @param[in,out] chart График, к которому применяется стиль.
-    void Apply(QChart* chart) override;
+    void Apply(QtCharts::QChart* chart) override;
 };
 
 }  // namespace style
