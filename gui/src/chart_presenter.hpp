@@ -41,16 +41,17 @@ class ChartPresenter
     /// @param[in] builder Имя построителя графика.
     /// @param[in] style Имя стиля графика.
     /// @param[in] aggregate Включить агрегацию для построителей, которые её поддерживают.
-    /// @return Построенный график.
+    /// @return Владеющий указатель на построенный график.
     /// @throws parser::ParseException при ошибке парсинга.
-    QChart* load(const std::string& source, const std::string& builder, const std::string& style, bool aggregate);
+    std::unique_ptr<QChart> load(const std::string& source, const std::string& builder, const std::string& style,
+                                 bool aggregate);
 
     /// @brief Пересобирает QChart из кэша (без IO).
     /// @param[in] builder Имя построителя графика.
     /// @param[in] style Имя стиля графика.
     /// @param[in] aggregate Включить агрегацию для построителей, которые её поддерживают.
-    /// @return Построенный график или nullptr если кэш пуст.
-    QChart* rebuild(const std::string& builder, const std::string& style, bool aggregate);
+    /// @return Владеющий указатель на построенный график; nullptr если кэш пуст.
+    std::unique_ptr<QChart> rebuild(const std::string& builder, const std::string& style, bool aggregate);
 
    private:
     /// @brief Запись кэша парсенных данных с отметкой mtime файла-источника.
@@ -72,9 +73,9 @@ class ChartPresenter
     /// @param[in] builder Имя построителя графика.
     /// @param[in] style Имя стиля графика.
     /// @param[in] aggregate Включить агрегацию для построителей, которые её поддерживают.
-    /// @return Построенный график.
-    QChart* buildChart(const data::TimelineData& data, const std::string& builder, const std::string& style,
-                       bool aggregate);
+    /// @return Владеющий указатель на построенный график.
+    std::unique_ptr<QChart> buildChart(const data::TimelineData& data, const std::string& builder,
+                                       const std::string& style, bool aggregate);
 
     /// @brief Возвращает путь к файлу из source ("path" либо "path|table").
     static std::string SourcePath(const std::string& source);

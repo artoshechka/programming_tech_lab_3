@@ -52,8 +52,8 @@ std::vector<std::string> ChartPresenter::listTables(const std::string& path)
 }
 
 /// @brief Загружает файл, кэширует TimelineData, строит и возвращает QChart.
-QChart* ChartPresenter::load(const std::string& source, const std::string& builder, const std::string& style,
-                             bool aggregate)
+std::unique_ptr<QChart> ChartPresenter::load(const std::string& source, const std::string& builder,
+                                             const std::string& style, bool aggregate)
 {
     const std::string path = SourcePath(source);
 
@@ -81,7 +81,7 @@ QChart* ChartPresenter::load(const std::string& source, const std::string& build
 }
 
 /// @brief Пересобирает QChart из кэша (без IO).
-QChart* ChartPresenter::rebuild(const std::string& builder, const std::string& style, bool aggregate)
+std::unique_ptr<QChart> ChartPresenter::rebuild(const std::string& builder, const std::string& style, bool aggregate)
 {
     if (lastSource_.empty()) return nullptr;
     const CacheEntry* entry = dataCache_.Find(lastSource_);
@@ -90,14 +90,14 @@ QChart* ChartPresenter::rebuild(const std::string& builder, const std::string& s
 }
 
 /// @brief Строит график из заданных данных по заданным построителю и стилю.
-QChart* ChartPresenter::buildChart(const data::TimelineData& data, const std::string& builder, const std::string& style,
-                                   bool aggregate)
+std::unique_ptr<QChart> ChartPresenter::buildChart(const data::TimelineData& data, const std::string& builder,
+                                                   const std::string& style, bool aggregate)
 {
     auto chartBuilder = builders_.at(builder)();
     chartBuilder->Configure(chart::BuilderOptions{aggregate});
     std::unique_ptr<QChart> chart = chartBuilder->Build(data);
     styles_.at(style)()->Apply(chart.get());
-    return chart.release();  // владение переходит QChartView (см. MainWindow::setChart)
+    return chart;  // владение передаётся вызывающему (MainWindow::setChart) через std::unique_ptr.
 }
 
 /// @brief Возвращает путь из source (вырезает "|table" хвост для SQLite).

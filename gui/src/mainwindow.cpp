@@ -51,7 +51,7 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
     toolbar->addSeparator();
 
     aggregateCheck_ = new QCheckBox("Агрегация");
-    aggregateCheck_->setChecked(false);
+    aggregateCheck_->setChecked(true);
     aggregateCheck_->setEnabled(chartCombo_->currentText() == "Pie");
     toolbar->addWidget(aggregateCheck_);
     toolbar->addSeparator();
@@ -127,9 +127,9 @@ void MainWindow::onRedraw()
     if (currentSource_.isEmpty()) return;
     try
     {
-        QChart* chart = presenter_->rebuild(chartCombo_->currentText().toStdString(),
-                                            styleCombo_->currentText().toStdString(), aggregateCheck_->isChecked());
-        if (chart) setChart(chart);
+        auto chart = presenter_->rebuild(chartCombo_->currentText().toStdString(),
+                                         styleCombo_->currentText().toStdString(), aggregateCheck_->isChecked());
+        if (chart) setChart(std::move(chart));
     } catch (const std::exception& e)
     {
         QMessageBox::critical(this, "Ошибка", QString::fromStdString(e.what()));
@@ -169,9 +169,9 @@ void MainWindow::loadFile(const QString& path)
     try
     {
         currentSource_ = QString::fromStdString(source);
-        QChart* chart = presenter_->load(source, chartCombo_->currentText().toStdString(),
-                                         styleCombo_->currentText().toStdString(), aggregateCheck_->isChecked());
-        setChart(chart);
+        auto chart = presenter_->load(source, chartCombo_->currentText().toStdString(),
+                                      styleCombo_->currentText().toStdString(), aggregateCheck_->isChecked());
+        setChart(std::move(chart));
         statusBar()->showMessage(path);
     } catch (const parser::ParseException& e)
     {
@@ -185,10 +185,12 @@ void MainWindow::loadFile(const QString& path)
 }
 
 /// @brief Заменяет текущий график в области отображения.
-void MainWindow::setChart(QChart* chart)
+void MainWindow::setChart(std::unique_ptr<QChart> chart)
 {
     auto* old = chartView_->chart();
-    chartView_->setChart(chart);
+    // QChartView::setChart забирает владение голым указателем — единственный release()
+    // в коде, на границе с Qt API.
+    chartView_->setChart(chart.release());
     delete old;
 }
 
