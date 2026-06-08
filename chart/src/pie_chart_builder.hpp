@@ -13,6 +13,10 @@ namespace chart
 class PieChartBuilder : public IChartBuilder
 {
    public:
+    /// @brief Применяет опции построения (использует BuilderOptions::aggregate).
+    /// @param[in] options Опции; aggregate=true включает группировку при превышении порога.
+    void Configure(const BuilderOptions& options) noexcept override { aggregate_ = options.aggregate; }
+
     /// @brief Строит круговую диаграмму на основе данных.
     /// @details При включённом флаге агрегации точки группируются по префиксу ключа
     ///          (при превышении порога), затем оставляются до 10 крупнейших срезов;
@@ -21,10 +25,6 @@ class PieChartBuilder : public IChartBuilder
     /// @param[in] data Входные данные временного ряда.
     /// @return Владеющий указатель на построенный QChart.
     [[nodiscard]] std::unique_ptr<QChart> Build(const data::TimelineData& data) override;
-
-    /// @brief Включает или отключает агрегацию входных точек.
-    /// @param[in] enabled true — агрегировать при превышении порога; false — оставлять как есть.
-    void SetAggregate(bool enabled) noexcept { aggregate_ = enabled; }
 
    private:
     bool aggregate_ = false;  ///< Флаг включения агрегации входных точек.
