@@ -67,8 +67,8 @@ class MainWindow : public QMainWindow
     /// @param[in] path Путь к папке.
     void setRoot(const QString& path);
     /// @brief Заменяет текущий график в области отображения.
-    /// @param[in] chart Новый график (владение передаётся представлению).
-    void setChart(QChart* chart);
+    /// @param[in] chart Новый график; владение передаётся представлению через std::move.
+    void setChart(std::unique_ptr<QChart> chart);
 
     std::shared_ptr<parser::IParserRegistry> registry_;  ///< Реестр парсеров (для запроса поддерживаемых расширений).
     std::unique_ptr<ChartPresenter> presenter_;  ///< Презентер загрузки данных и построения графика.
