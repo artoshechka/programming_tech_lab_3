@@ -1,5 +1,6 @@
 #include "pie_chart_builder.hpp"
 
+#include <QtCharts/QChart>
 #include <QtCharts/QPieSeries>
 #include <QtCharts/QPieSlice>
 #include <algorithm>
@@ -12,7 +13,7 @@ namespace chart
 
 static constexpr int kMaxSlices = 10;
 
-std::unique_ptr<QChart> PieChartBuilder::Build(const data::TimelineData& raw)
+std::unique_ptr<QtCharts::QChart> PieChartBuilder::Build(const data::TimelineData& raw)
 {
     // агрегация и сжатие хвоста в "Other" применяются только при включённом флаге
     const data::TimelineData agg =

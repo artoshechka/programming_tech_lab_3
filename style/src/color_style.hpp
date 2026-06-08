@@ -17,7 +17,7 @@ class ColorStyle : public IChartStyle
     /// @details Каждому сектору круговой и каждому набору столбчатой диаграммы
     ///          назначается цвет из встроенной палитры по циклическому индексу.
     /// @param[in,out] chart График, к которому применяется стиль.
-    void Apply(QChart* chart) override;
+    void Apply(QtCharts::QChart* chart) override;
 };
 
 }  // namespace style

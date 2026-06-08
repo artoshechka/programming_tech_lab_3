@@ -4,11 +4,16 @@
 #ifndef GUID_a1b2c3d4_e5f6_7890_abcd_ef1234567890
 #define GUID_a1b2c3d4_e5f6_7890_abcd_ef1234567890
 
-#include <QtCharts/QChart>
 #include <data_model/src/timeline_data.hpp>
 #include <memory>
 
-QT_CHARTS_USE_NAMESPACE
+// Опережающее объявление: интерфейс не тянет тяжёлый <QtCharts/QChart> в потребителей,
+// которые видят лишь сигнатуры; полный тип нужен только реализациям (в .cpp) и тем,
+// кто фактически уничтожает unique_ptr<QChart> (см. правило ptl3-qt-scope).
+namespace QtCharts
+{
+class QChart;
+}
 
 namespace chart
 {
@@ -38,7 +43,7 @@ class IChartBuilder
     /// @brief Строит и возвращает QChart на основе данных.
     /// @param[in] data Входные данные временного ряда.
     /// @return Владеющий указатель на построенный QChart.
-    [[nodiscard]] virtual std::unique_ptr<QChart> Build(const data::TimelineData& data) = 0;
+    [[nodiscard]] virtual std::unique_ptr<QtCharts::QChart> Build(const data::TimelineData& data) = 0;
 };
 
 }  // namespace chart

@@ -24,7 +24,7 @@ class PieChartBuilder : public IChartBuilder
     ///          все срезы без агрегации и без "Other". Метки выводятся снаружи.
     /// @param[in] data Входные данные временного ряда.
     /// @return Владеющий указатель на построенный QChart.
-    [[nodiscard]] std::unique_ptr<QChart> Build(const data::TimelineData& data) override;
+    [[nodiscard]] std::unique_ptr<QtCharts::QChart> Build(const data::TimelineData& data) override;
 
    private:
     bool aggregate_ = false;  ///< Флаг включения агрегации входных точек.

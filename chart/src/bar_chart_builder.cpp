@@ -3,6 +3,7 @@
 #include <QtCharts/QBarCategoryAxis>
 #include <QtCharts/QBarSeries>
 #include <QtCharts/QBarSet>
+#include <QtCharts/QChart>
 #include <QtCharts/QValueAxis>
 #include <chart/aggregate.hpp>
 
@@ -11,7 +12,7 @@ QT_CHARTS_USE_NAMESPACE
 namespace chart
 {
 
-std::unique_ptr<QChart> BarChartBuilder::Build(const data::TimelineData& raw)
+std::unique_ptr<QtCharts::QChart> BarChartBuilder::Build(const data::TimelineData& raw)
 {
     // агрегируем по месяцу если точек много, иначе берём как есть
     const data::TimelineData agg_ = (raw.points_.size() > kAggregateThreshold) ? Aggregate(raw) : raw;

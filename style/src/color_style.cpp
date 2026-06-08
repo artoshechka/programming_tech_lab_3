@@ -3,6 +3,7 @@
 #include <QtCharts/QAbstractAxis>
 #include <QtCharts/QBarSeries>
 #include <QtCharts/QBarSet>
+#include <QtCharts/QChart>
 #include <QtCharts/QPieSeries>
 #include <QtCharts/QPieSlice>
 
@@ -17,7 +18,7 @@ static const QList<QColor> kPalette = {
     {0x9c, 0x75, 0x5f}, {0xba, 0xb0, 0xac}, {0x43, 0x9a, 0xcc},
 };
 
-void ColorStyle::Apply(QChart* chart)
+void ColorStyle::Apply(QtCharts::QChart* chart)
 {
     for (auto* series : chart->series())
     {

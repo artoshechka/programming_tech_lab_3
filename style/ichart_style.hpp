@@ -4,9 +4,12 @@
 #ifndef GUID_b2c3d4e5_f6a7_8901_bcde_f12345678901
 #define GUID_b2c3d4e5_f6a7_8901_bcde_f12345678901
 
-#include <QtCharts/QChart>
-
-QT_CHARTS_USE_NAMESPACE
+// Опережающее объявление: интерфейс не тянет <QtCharts/QChart> в потребителей,
+// которые видят только сигнатуру; полный тип нужен только реализациям (в .cpp).
+namespace QtCharts
+{
+class QChart;
+}
 
 namespace style
 {
@@ -20,7 +23,7 @@ class IChartStyle
 
     /// @brief Применяет стиль к переданному графику.
     /// @param[in,out] chart График, к которому применяется стиль.
-    virtual void Apply(QChart* chart) = 0;
+    virtual void Apply(QtCharts::QChart* chart) = 0;
 };
 
 }  // namespace style

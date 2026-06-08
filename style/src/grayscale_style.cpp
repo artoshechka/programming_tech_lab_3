@@ -2,6 +2,7 @@
 
 #include <QtCharts/QBarSeries>
 #include <QtCharts/QBarSet>
+#include <QtCharts/QChart>
 #include <QtCharts/QPieSeries>
 #include <QtCharts/QPieSlice>
 
@@ -10,7 +11,7 @@ QT_CHARTS_USE_NAMESPACE
 namespace style
 {
 
-void GrayscaleStyle::Apply(QChart* chart)
+void GrayscaleStyle::Apply(QtCharts::QChart* chart)
 {
     chart->setTheme(QChart::ChartThemeLight);
     chart->setBackgroundBrush(Qt::white);
