@@ -93,10 +93,11 @@ std::unique_ptr<QChart> ChartPresenter::rebuild(const std::string& builder, cons
 std::unique_ptr<QChart> ChartPresenter::buildChart(const data::TimelineData& data, const std::string& builder,
                                                    const std::string& style, bool aggregate)
 {
+    auto chartStyle = styles_.at(style)();
     auto chartBuilder = builders_.at(builder)();
-    chartBuilder->Configure(chart::BuilderOptions{aggregate});
+    chartBuilder->Configure(chart::BuilderOptions{aggregate, chartStyle.get()});
     std::unique_ptr<QChart> chart = chartBuilder->Build(data);
-    styles_.at(style)()->Apply(chart.get());
+    chartStyle->Apply(chart.get());  // общие настройки графика (тема/фон)
     return chart;  // владение передаётся вызывающему (MainWindow::setChart) через std::unique_ptr.
 }
 

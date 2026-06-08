@@ -13,12 +13,19 @@ namespace chart
 class BarChartBuilder : public IChartBuilder
 {
    public:
+    /// @brief Применяет опции построения (использует только palette).
+    /// @param[in] options Опции; palette — необязательная палитра для покраски наборов.
+    void Configure(const BuilderOptions& options) noexcept override { palette_ = options.palette; }
+
     /// @brief Строит столбчатую диаграмму на основе данных.
     /// @details При числе точек выше порога агрегации данные предварительно
     ///          усредняются; ось значений масштабируется с отступом 15%.
     /// @param[in] data Входные данные временного ряда.
     /// @return Владеющий указатель на построенный QChart.
     [[nodiscard]] std::unique_ptr<QtCharts::QChart> Build(const data::TimelineData& data) override;
+
+   private:
+    const style::IPalette* palette_ = nullptr; ///< Палитра для покраски барсетов (опционально).
 };
 
 }  // namespace chart

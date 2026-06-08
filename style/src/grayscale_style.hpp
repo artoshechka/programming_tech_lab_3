@@ -4,18 +4,23 @@
 #ifndef GUID_f6a7b8c9_d0e1_2345_fabc_456789012345
 #define GUID_f6a7b8c9_d0e1_2345_fabc_456789012345
 
+#include <QColor>
 #include <style/ichart_style.hpp>
 
 namespace style
 {
 
-/// @brief Чёрно-белый стиль.
+/// @brief Чёрно-белый стиль с равномерным градиентом серого.
 class GrayscaleStyle : public IChartStyle
 {
    public:
-    /// @brief Применяет градации серого к сериям графика.
-    /// @details Элементам серий назначаются оттенки серого, равномерно
-    ///          распределённые по градиенту от тёмного к светлому.
+    /// @brief Возвращает оттенок серого по индексу элемента.
+    /// @param[in] index Индекс элемента (0..total-1).
+    /// @param[in] total Общее число элементов; определяет шаг градиента.
+    /// @return Цвет градации серого.
+    QColor ColorFor(int index, int total) const override;
+
+    /// @brief Применяет к графику светлую тему и белый фон; покраска идёт через ColorFor().
     /// @param[in,out] chart График, к которому применяется стиль.
     void Apply(QtCharts::QChart* chart) override;
 };
