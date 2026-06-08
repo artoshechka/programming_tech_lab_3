@@ -3,7 +3,7 @@
 /// @author Artemenko Anton
 
 #include <atomic>
-#include <chart/src/pie_chart_builder.hpp>
+#include <chart/ichart_builder.hpp>
 #include <database_module/idatabase.hpp>
 #include <gui/src/chart_presenter.hpp>
 #include <parser/iparser.hpp>
@@ -94,7 +94,7 @@ QChart* ChartPresenter::buildChart(const data::TimelineData& data, const std::st
                                    bool aggregate)
 {
     auto chartBuilder = builders_.at(builder)();
-    if (auto* pie = dynamic_cast<chart::PieChartBuilder*>(chartBuilder.get())) pie->SetAggregate(aggregate);
+    chartBuilder->Configure(chart::BuilderOptions{aggregate});
     std::unique_ptr<QChart> chart = chartBuilder->Build(data);
     styles_.at(style)()->Apply(chart.get());
     return chart.release();  // владение переходит QChartView (см. MainWindow::setChart)
