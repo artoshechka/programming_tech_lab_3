@@ -1,11 +1,7 @@
 #include "color_style.hpp"
 
-#include <QtCharts/QAbstractAxis>
-#include <QtCharts/QBarSeries>
-#include <QtCharts/QBarSet>
+#include <QList>
 #include <QtCharts/QChart>
-#include <QtCharts/QPieSeries>
-#include <QtCharts/QPieSlice>
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -18,25 +14,16 @@ static const QList<QColor> kPalette = {
     {0x9c, 0x75, 0x5f}, {0xba, 0xb0, 0xac}, {0x43, 0x9a, 0xcc},
 };
 
+QColor ColorStyle::ColorFor(int index, int total) const
+{
+    (void)total;
+    return kPalette[index % kPalette.size()];
+}
+
 void ColorStyle::Apply(QtCharts::QChart* chart)
 {
-    for (auto* series : chart->series())
-    {
-        if (auto* pie = qobject_cast<QPieSeries*>(series))
-        {
-            auto slices = pie->slices();
-            for (int i = 0; i < slices.size(); ++i)
-            {
-                slices[i]->setColor(kPalette[i % kPalette.size()]);
-                slices[i]->setBorderColor(Qt::white);
-                slices[i]->setLabelColor(Qt::black);
-            }
-        } else if (auto* bar = qobject_cast<QBarSeries*>(series))
-        {
-            auto sets = bar->barSets();
-            for (int i = 0; i < sets.size(); ++i) sets[i]->setColor(kPalette[i % kPalette.size()]);
-        }
-    }
+    // Покраска серий идёт через ColorFor() в builder'ах; здесь только общая тема.
+    chart->setTheme(QChart::ChartThemeLight);
 }
 
 }  // namespace style

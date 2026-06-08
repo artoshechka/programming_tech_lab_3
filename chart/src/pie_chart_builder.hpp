@@ -13,9 +13,14 @@ namespace chart
 class PieChartBuilder : public IChartBuilder
 {
    public:
-    /// @brief Применяет опции построения (использует BuilderOptions::aggregate).
-    /// @param[in] options Опции; aggregate=true включает группировку при превышении порога.
-    void Configure(const BuilderOptions& options) noexcept override { aggregate_ = options.aggregate; }
+    /// @brief Применяет опции построения (использует BuilderOptions::aggregate и palette).
+    /// @param[in] options Опции; aggregate=true включает группировку при превышении порога,
+    ///                    palette — необязательная палитра для покраски срезов.
+    void Configure(const BuilderOptions& options) noexcept override
+    {
+        aggregate_ = options.aggregate;
+        palette_ = options.palette;
+    }
 
     /// @brief Строит круговую диаграмму на основе данных.
     /// @details При включённом флаге агрегации точки группируются по префиксу ключа
@@ -27,7 +32,8 @@ class PieChartBuilder : public IChartBuilder
     [[nodiscard]] std::unique_ptr<QtCharts::QChart> Build(const data::TimelineData& data) override;
 
    private:
-    bool aggregate_ = false;  ///< Флаг включения агрегации входных точек.
+    bool aggregate_ = false;                   ///< Флаг включения агрегации входных точек.
+    const style::IPalette* palette_ = nullptr; ///< Палитра для покраски срезов (опционально).
 };
 
 }  // namespace chart

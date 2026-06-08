@@ -6,6 +6,7 @@
 #include <QtCharts/QChart>
 #include <QtCharts/QValueAxis>
 #include <chart/aggregate.hpp>
+#include <style/ipalette.hpp>
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -36,6 +37,9 @@ std::unique_ptr<QtCharts::QChart> BarChartBuilder::Build(const data::TimelineDat
             maxVal = std::max(maxVal, v);
         }
     }
+
+    // Bar-чарт использует один QBarSet — палитра выдаёт единственный цвет с total=1.
+    if (palette_ != nullptr) set->setColor(palette_->ColorFor(0, 1));
 
     auto* series = new QBarSeries();
     series->append(set);

@@ -15,6 +15,11 @@ namespace QtCharts
 class QChart;
 }
 
+namespace style
+{
+class IPalette;
+}
+
 namespace chart
 {
 
@@ -24,7 +29,8 @@ namespace chart
 ///          в иерархию IChartBuilder и без касания вызывающих, которые их не используют.
 struct BuilderOptions
 {
-    bool aggregate = false;  ///< Включить агрегацию входных точек (актуально для Pie).
+    bool aggregate = false;             ///< Включить агрегацию входных точек (актуально для Pie).
+    const style::IPalette* palette = nullptr;  ///< Палитра для покраски элементов; nullptr — без покраски.
 };
 
 /// @brief Интерфейс построителя графика из временного ряда.

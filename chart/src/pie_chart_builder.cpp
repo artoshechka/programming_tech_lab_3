@@ -5,6 +5,7 @@
 #include <QtCharts/QPieSlice>
 #include <algorithm>
 #include <chart/aggregate.hpp>
+#include <style/ipalette.hpp>
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -41,6 +42,19 @@ std::unique_ptr<QtCharts::QChart> PieChartBuilder::Build(const data::TimelineDat
 
     series->setLabelsVisible(true);
     series->setLabelsPosition(QPieSlice::LabelOutside);
+
+    // Покраска срезов делегирована палитре стиля; без палитры — оставляем Qt-дефолт.
+    if (palette_ != nullptr)
+    {
+        const auto slices = series->slices();
+        const int n = slices.size();
+        for (int i = 0; i < n; ++i)
+        {
+            slices[i]->setColor(palette_->ColorFor(i, n));
+            slices[i]->setBorderColor(Qt::white);
+            slices[i]->setLabelColor(Qt::black);
+        }
+    }
 
     auto chart = std::make_unique<QChart>();
     chart->addSeries(series);
