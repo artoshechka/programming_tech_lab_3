@@ -29,7 +29,7 @@ namespace chart
 ///          в иерархию IChartBuilder и без касания вызывающих, которые их не используют.
 struct BuilderOptions
 {
-    bool aggregate = false;             ///< Включить агрегацию входных точек (актуально для Pie).
+    bool aggregate = true;              ///< Включить агрегацию входных точек (актуально для Pie; по умолчанию включена).
     const style::IPalette* palette = nullptr;  ///< Палитра для покраски элементов; nullptr — без покраски.
 };
 

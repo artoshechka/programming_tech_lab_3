@@ -21,8 +21,8 @@ class PieChartBuilder : public IChartBuilder
     explicit PieChartBuilder(std::shared_ptr<logger::ILogger> logger = nullptr) : logger_(std::move(logger)) {}
 
     /// @brief Применяет опции построения (использует BuilderOptions::aggregate и palette).
-    /// @param[in] options Опции; aggregate=true включает группировку при превышении порога,
-    ///                    palette — необязательная палитра для покраски срезов.
+    /// @param[in] options Опции; aggregate=true (значение по умолчанию) включает группировку
+    ///                    при превышении порога, palette — необязательная палитра для покраски срезов.
     void Configure(const BuilderOptions& options) noexcept override
     {
         aggregate_ = options.aggregate;
@@ -39,7 +39,7 @@ class PieChartBuilder : public IChartBuilder
     [[nodiscard]] std::unique_ptr<QtCharts::QChart> Build(const data::TimelineData& data) override;
 
    private:
-    bool aggregate_ = false;                   ///< Флаг включения агрегации входных точек.
+    bool aggregate_ = true;                    ///< Флаг включения агрегации входных точек (по умолчанию включён).
     const style::IPalette* palette_ = nullptr; ///< Палитра для покраски срезов (опционально).
     std::shared_ptr<logger::ILogger> logger_;  ///< Логгер для диагностики (может быть nullptr).
 };
