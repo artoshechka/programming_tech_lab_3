@@ -8,8 +8,8 @@
 #include <data_model/src/timeline_data.hpp>
 #include <database_module/idatabase_manager.hpp>
 #include <filesystem>
-#include <gui/src/lru_cache.hpp>
 #include <gui/src/mainwindow.hpp>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -54,18 +54,20 @@ class ChartPresenter
     std::unique_ptr<QChart> rebuild(const std::string& builder, const std::string& style, bool aggregate);
 
    private:
-    /// @brief Запись кэша парсенных данных с отметкой mtime файла-источника.
-    struct CacheEntry
+    /// @brief Единственный слот кэша распарсенных данных последнего источника.
+    struct DataSlot
     {
+        std::string source;                       ///< Source, для которого закэшированы данные.
+        std::filesystem::file_time_type mtime;    ///< Время последней модификации исходного файла на момент парсинга.
         data::TimelineData data;                  ///< Распарсенные данные.
-        std::filesystem::file_time_type mtime;    ///< Время последней модификации исходного файла.
     };
 
-    /// @brief Запись кэша списка таблиц SQLite с отметкой mtime файла.
-    struct TablesCacheEntry
+    /// @brief Единственный слот кэша списка таблиц последнего SQLite-файла.
+    struct TablesSlot
     {
+        std::string path;                         ///< Путь к SQLite-файлу, для которого закэширован список.
+        std::filesystem::file_time_type mtime;    ///< Время последней модификации файла на момент чтения.
         std::vector<std::string> tables;          ///< Имена таблиц.
-        std::filesystem::file_time_type mtime;    ///< Время последней модификации SQLite-файла.
     };
 
     /// @brief Строит график из заданных данных по построителю и стилю.
@@ -80,19 +82,12 @@ class ChartPresenter
     /// @brief Возвращает путь к файлу из source ("path" либо "path|table").
     static std::string SourcePath(const std::string& source);
 
-    /// @brief Размер LRU-кэша распарсенных данных. ~8 файлов — компромисс между памятью и хитами.
-    static constexpr std::size_t kDataCacheCapacity = 8;
-
-    /// @brief Размер LRU-кэша списков таблиц SQLite-файлов.
-    static constexpr std::size_t kTablesCacheCapacity = 16;
-
-    BuilderFactory builders_;                                                  ///< Фабрика построителей графиков.
-    StyleFactory styles_;                                                      ///< Фабрика стилей графиков.
-    std::shared_ptr<parser::IParserRegistry> registry_;                        ///< Реестр парсеров по расширению.
-    std::shared_ptr<database::manager::IDatabaseManager> dbManager_;           ///< Менеджер БД для инспекции SQLite.
-    LruCache<std::string, CacheEntry> dataCache_{kDataCacheCapacity};          ///< LRU-кэш парсенных данных по source.
-    LruCache<std::string, TablesCacheEntry> tablesCache_{kTablesCacheCapacity};///< LRU-кэш списков таблиц SQLite по пути.
-    std::string lastSource_;                                                   ///< Source последнего успешного load (для rebuild).
+    BuilderFactory builders_;                                          ///< Фабрика построителей графиков.
+    StyleFactory styles_;                                              ///< Фабрика стилей графиков.
+    std::shared_ptr<parser::IParserRegistry> registry_;               ///< Реестр парсеров по расширению.
+    std::shared_ptr<database::manager::IDatabaseManager> dbManager_;   ///< Менеджер БД для инспекции SQLite.
+    std::optional<DataSlot> dataSlot_;                                 ///< Кэш данных последнего источника (один слот).
+    std::optional<TablesSlot> tablesSlot_;                            ///< Кэш списка таблиц последнего SQLite-файла.
 };
 
 }  // namespace gui

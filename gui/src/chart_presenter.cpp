@@ -29,15 +29,12 @@ std::vector<std::string> ChartPresenter::listTables(const std::string& path)
 {
     if (!dbManager_) return {};
 
-    // Инвалидация по mtime: если файл изменился извне, кэш считаем устаревшим.
+    // Инвалидация по mtime: пока путь и время модификации совпадают — отдаём из слота, БД не открываем.
     std::error_code ec;
     const auto mtime = std::filesystem::last_write_time(path, ec);
-    if (!ec)
+    if (!ec && tablesSlot_ && tablesSlot_->path == path && tablesSlot_->mtime == mtime)
     {
-        if (const TablesCacheEntry* hit = tablesCache_.Find(path); hit != nullptr && hit->mtime == mtime)
-        {
-            return hit->tables;
-        }
+        return tablesSlot_->tables;
     }
 
     static std::atomic<int> probeId{0};
@@ -47,7 +44,8 @@ std::vector<std::string> ChartPresenter::listTables(const std::string& path)
     if (!db->Open(path)) return {};
     auto tables = db->Tables();
 
-    if (!ec) tablesCache_.Put(path, TablesCacheEntry{tables, mtime});
+    // Перечитали — затираем слот свежим значением (если удалось получить mtime).
+    if (!ec) tablesSlot_ = TablesSlot{path, mtime, tables};
     return tables;
 }
 
@@ -62,31 +60,28 @@ std::unique_ptr<QChart> ChartPresenter::load(const std::string& source, const st
     const auto mtime = std::filesystem::last_write_time(path, ec);
     if (ec) throw std::invalid_argument("Cannot stat source: " + path + ": " + ec.message());
 
-    const CacheEntry* entry = dataCache_.Find(source);
-    if (entry == nullptr || entry->mtime != mtime)
+    // Совпали source и mtime — данные не перечитываем и не парсим, берём из слота.
+    if (!dataSlot_ || dataSlot_->source != source || dataSlot_->mtime != mtime)
     {
-        // Промах или устарело — определяем парсер по расширению и грузим заново.
+        // Другой источник, файл изменился извне или слот пуст — определяем парсер и грузим заново.
         auto ext = path.substr(path.rfind('.') + 1);
         for (auto& c : ext) c = static_cast<char>(::tolower(c));
 
         auto parser = registry_->Get(ext);
         if (!parser) throw std::invalid_argument("Unknown format: " + ext);
 
-        dataCache_.Put(source, CacheEntry{parser->Load(source), mtime});  // throws ParseException
-        entry = dataCache_.Find(source);
+        // Затираем слот свежими данными. parser->Load бросает ParseException — старый слот остаётся нетронутым.
+        dataSlot_ = DataSlot{source, mtime, parser->Load(source)};
     }
 
-    lastSource_ = source;
-    return buildChart(entry->data, builder, style, aggregate);
+    return buildChart(dataSlot_->data, builder, style, aggregate);
 }
 
 /// @brief Пересобирает QChart из кэша (без IO).
 std::unique_ptr<QChart> ChartPresenter::rebuild(const std::string& builder, const std::string& style, bool aggregate)
 {
-    if (lastSource_.empty()) return nullptr;
-    const CacheEntry* entry = dataCache_.Find(lastSource_);
-    if (entry == nullptr) return nullptr;  // вытеснили из LRU — пользователь должен load() заново
-    return buildChart(entry->data, builder, style, aggregate);
+    if (!dataSlot_) return nullptr;  // ещё ни разу не грузили — пользователь должен сначала load()
+    return buildChart(dataSlot_->data, builder, style, aggregate);
 }
 
 /// @brief Строит график из заданных данных по заданным построителю и стилю.
