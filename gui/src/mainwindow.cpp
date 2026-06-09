@@ -17,6 +17,7 @@
 #include <QStatusBar>
 #include <QToolBar>
 #include <database_module/idatabase.hpp>
+#include <logger/logger_macros.hpp>
 #include <parser/parse_exception.hpp>
 
 #include "chart_presenter.hpp"
@@ -32,10 +33,12 @@ MainWindow::~MainWindow() = default;
 
 /// @brief Конструктор: создаёт панель инструментов, дерево файлов и область графика, связывает сигналы.
 MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared_ptr<parser::IParserRegistry> registry,
-                       std::shared_ptr<database::manager::IDatabaseManager> dbManager, QWidget* parent)
+                       std::shared_ptr<database::manager::IDatabaseManager> dbManager,
+                       std::shared_ptr<logger::ILogger> logger, QWidget* parent)
     : QMainWindow(parent),
       registry_(registry),
-      presenter_(std::make_unique<ChartPresenter>(builders, styles, std::move(registry), std::move(dbManager)))
+      logger_(logger),
+      presenter_(std::make_unique<ChartPresenter>(builders, styles, std::move(registry), std::move(dbManager), logger_))
 {
     auto* toolbar = addToolBar("Controls");
     toolbar->setMovable(true);
@@ -116,6 +119,7 @@ void MainWindow::onChooseFolder()
     const QString path = QFileDialog::getExistingDirectory(this, "Выберите папку с данными");
     if (!path.isEmpty())
     {
+        LogInfo(logger_) << "Working folder changed: " << path.toStdString();
         currentSource_.clear();
         setRoot(path);
     }
@@ -132,6 +136,7 @@ void MainWindow::onRedraw()
         if (chart) setChart(std::move(chart));
     } catch (const std::exception& e)
     {
+        LogError(logger_) << "Redraw failed: " << e.what();
         QMessageBox::critical(this, "Ошибка", QString::fromStdString(e.what()));
     }
 }
@@ -141,7 +146,9 @@ void MainWindow::onFileSelected(const QModelIndex& index)
 {
     auto* model = static_cast<QFileSystemModel*>(treeView_->model());
     if (model->isDir(index)) return;
-    loadFile(model->filePath(index));
+    const QString path = model->filePath(index);
+    LogInfo(logger_) << "File selected: " << path.toStdString();
+    loadFile(path);
 }
 
 /// @brief Загружает источник данных и строит график.
@@ -162,6 +169,7 @@ void MainWindow::loadFile(const QString& path)
             if (dlg.exec() != QDialog::Accepted) return;
             const QString selected = dlg.selectedTable();
             if (selected.isEmpty()) return;
+            LogInfo(logger_) << "Table selected: " << selected.toStdString();
             source += "|" + selected.toStdString();
         }
     }
@@ -175,10 +183,12 @@ void MainWindow::loadFile(const QString& path)
         statusBar()->showMessage(path);
     } catch (const parser::ParseException& e)
     {
+        LogError(logger_) << "Parse failed for '" << source << "': " << e.what();
         currentSource_.clear();
         QMessageBox::critical(this, "Ошибка загрузки", QString::fromStdString(e.what()));
     } catch (const std::exception& e)
     {
+        LogError(logger_) << "Load failed for '" << source << "': " << e.what();
         currentSource_.clear();
         QMessageBox::critical(this, "Ошибка", QString::fromStdString(e.what()));
     }
@@ -204,6 +214,7 @@ void MainWindow::onSavePdf()
     QPainter painter(&writer);
     chartView_->render(&painter);
     painter.end();
+    LogInfo(logger_) << "Chart saved to PDF: " << path.toStdString();
     statusBar()->showMessage("Сохранено: " + path);
 }
 

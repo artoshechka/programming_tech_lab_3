@@ -10,4 +10,4 @@ add_library(${PROJECT_NAME} STATIC
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR})
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Sql)
+target_link_libraries(${PROJECT_NAME} PUBLIC logger PRIVATE Qt5::Sql)
