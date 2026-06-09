@@ -5,7 +5,6 @@
 #include "mainwindow.hpp"
 
 #include <QFileDialog>
-#include <QFileInfo>
 #include <QFileSystemModel>
 #include <QMenuBar>
 #include <QMessageBox>
@@ -34,12 +33,11 @@ MainWindow::~MainWindow() = default;
 
 /// @brief Конструктор: создаёт панель инструментов, дерево файлов и область графика, связывает сигналы.
 MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared_ptr<parser::IParserRegistry> registry,
-                       std::shared_ptr<database::manager::IDatabaseManager> dbManager,
                        std::shared_ptr<logger::ILogger> logger, QWidget* parent)
     : QMainWindow(parent),
       registry_(registry),
       logger_(logger),
-      presenter_(std::make_unique<ChartPresenter>(builders, styles, std::move(registry), std::move(dbManager), logger_))
+      presenter_(std::make_unique<ChartPresenter>(builders, styles, std::move(registry), logger_))
 {
     auto* toolbar = addToolBar(ui::kToolbarTitle);
     toolbar->setMovable(true);
@@ -157,22 +155,19 @@ void MainWindow::loadFile(const QString& path)
 {
     std::string source = path.toStdString();
 
-    // Для SQLite с несколькими таблицами — спросить у пользователя.
-    // Инспекция источника делегирована презентеру; здесь остаётся только диалог.
-    if (QFileInfo(path).suffix().toLower() == "sqlite")
+    // Если формат имеет несколько под-источников (таблицы SQLite и т.п.) — спросить у пользователя.
+    // Инспекция делегирована презентеру/парсеру; здесь остаётся только диалог, без знания формата.
+    const auto subSources = presenter_->listSubSources(source);
+    if (subSources.size() > 1)
     {
-        const auto tables = presenter_->listTables(source);
-        if (tables.size() > 1)
-        {
-            QStringList qTables;
-            for (const auto& t : tables) qTables << QString::fromStdString(t);
-            TableSelectDialog dlg(qTables, this);
-            if (dlg.exec() != QDialog::Accepted) return;
-            const QString selected = dlg.selectedTable();
-            if (selected.isEmpty()) return;
-            LogInfo(logger_) << "Table selected: " << selected.toStdString();
-            source += "|" + selected.toStdString();
-        }
+        QStringList qTables;
+        for (const auto& t : subSources) qTables << QString::fromStdString(t);
+        TableSelectDialog dlg(qTables, this);
+        if (dlg.exec() != QDialog::Accepted) return;
+        const QString selected = dlg.selectedTable();
+        if (selected.isEmpty()) return;
+        LogInfo(logger_) << "Sub-source selected: " << selected.toStdString();
+        source += "|" + selected.toStdString();
     }
 
     try

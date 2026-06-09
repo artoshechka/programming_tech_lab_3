@@ -10,7 +10,6 @@
 #include <QTreeView>
 #include <QtCharts/QChartView>
 #include <chart/ichart_builder.hpp>
-#include <database_module/idatabase_manager.hpp>
 #include <functional>
 #include <logger/ilogger.hpp>
 #include <map>
@@ -43,11 +42,9 @@ class MainWindow : public QMainWindow
     /// @param[in] builders Фабрика построителей графиков (имя -> создатель).
     /// @param[in] styles Фабрика стилей графиков (имя -> создатель).
     /// @param[in] registry Реестр парсеров для загрузки данных по расширению.
-    /// @param[in] dbManager Менеджер БД для работы с источниками SQLite.
     /// @param[in] logger Логгер для диагностики действий пользователя; допускается nullptr.
     /// @param[in] parent Родительский виджет (по умолчанию nullptr).
     explicit MainWindow(BuilderFactory builders, StyleFactory styles, std::shared_ptr<parser::IParserRegistry> registry,
-                        std::shared_ptr<database::manager::IDatabaseManager> dbManager,
                         std::shared_ptr<logger::ILogger> logger = nullptr, QWidget* parent = nullptr);
     /// @brief Виртуальный деструктор.
     ~MainWindow() override;

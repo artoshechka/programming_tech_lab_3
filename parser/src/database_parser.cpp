@@ -95,3 +95,18 @@ TimelineData DatabaseParser::Load(const std::string& source)
     LogInfo(logger_) << "DB load done: '" << result.name_ << "', " << result.points_.size() << " points";
     return result;
 }
+
+std::vector<std::string> DatabaseParser::ListSubSources(const std::string& path) const
+{
+    const std::string connName = "DBParser_" + std::to_string(nextConnId_++);
+
+    auto db = manager_->Create(connName);
+    if (!db->Open(path))
+    {
+        LogWarning(logger_) << "DB list tables: cannot open: " << path;
+        return {};
+    }
+    auto tables = db->Tables();
+    LogInfo(logger_) << "DB tables listed: " << path << " -> " << tables.size() << " tables";
+    return tables;
+}

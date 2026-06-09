@@ -2,9 +2,7 @@
 /// @brief Определение ChartPresenter
 /// @author Artemenko Anton
 
-#include <atomic>
 #include <chart/ichart_builder.hpp>
-#include <database_module/idatabase.hpp>
 #include <gui/src/chart_presenter.hpp>
 #include <logger/logger_macros.hpp>
 #include <parser/iparser.hpp>
@@ -18,42 +16,34 @@ namespace gui
 /// @brief Конструктор презентера.
 ChartPresenter::ChartPresenter(BuilderFactory builders, StyleFactory styles,
                                std::shared_ptr<parser::IParserRegistry> registry,
-                               std::shared_ptr<database::manager::IDatabaseManager> dbManager,
                                std::shared_ptr<logger::ILogger> logger)
     : builders_(std::move(builders)),
       styles_(std::move(styles)),
       registry_(std::move(registry)),
-      dbManager_(std::move(dbManager)),
       logger_(std::move(logger))
 {
 }
 
-/// @brief Возвращает список таблиц SQLite-файла.
-std::vector<std::string> ChartPresenter::listTables(const std::string& path)
+/// @brief Возвращает под-источники файла, делегируя парсеру формата.
+std::vector<std::string> ChartPresenter::listSubSources(const std::string& path)
 {
-    if (!dbManager_) return {};
-
-    // Инвалидация по mtime: пока путь и время модификации совпадают — отдаём из слота, БД не открываем.
+    // Инвалидация по mtime: пока путь и время модификации совпадают — отдаём из слота, файл не читаем.
     std::error_code ec;
     const auto mtime = std::filesystem::last_write_time(path, ec);
     if (!ec && tablesSlot_ && tablesSlot_->path == path && tablesSlot_->mtime == mtime)
     {
-        LogDebug(logger_) << "Tables cache hit: " << path << " (" << tablesSlot_->tables.size() << " tables)";
+        LogDebug(logger_) << "Sub-sources cache hit: " << path << " (" << tablesSlot_->tables.size() << ")";
         return tablesSlot_->tables;
     }
-    LogDebug(logger_) << "Tables cache miss: " << path << ", probing SQLite";
 
-    static std::atomic<int> probeId{0};
-    const std::string connName = "ChartPresenter_probe_" + std::to_string(probeId++);
+    auto ext = path.substr(path.rfind('.') + 1);
+    for (auto& c : ext) c = static_cast<char>(::tolower(c));
+    auto parser = registry_->Get(ext);
+    if (!parser) return {};
 
-    auto db = dbManager_->Create(connName);
-    if (!db->Open(path))
-    {
-        LogWarning(logger_) << "Tables probe failed to open: " << path;
-        return {};
-    }
-    auto tables = db->Tables();
-    LogInfo(logger_) << "Tables listed: " << path << " -> " << tables.size() << " tables";
+    LogDebug(logger_) << "Sub-sources cache miss: " << path << ", probing via parser '" << ext << "'";
+    auto tables = parser->ListSubSources(path);
+    LogInfo(logger_) << "Sub-sources listed: " << path << " -> " << tables.size();
 
     // Перечитали — затираем слот свежим значением (если удалось получить mtime).
     if (!ec) tablesSlot_ = TablesSlot{path, mtime, tables};
