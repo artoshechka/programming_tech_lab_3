@@ -8,6 +8,7 @@
 #include <exception>
 #include <gui/src/app_compositor.hpp>
 #include <gui/src/mainwindow.hpp>
+#include <gui/src/ui_strings.hpp>
 #include <logger/logger_factory.hpp>
 #include <logger/logger_macros.hpp>
 #include <memory>
@@ -28,13 +29,12 @@ int main(int argc, char* argv[])
     } catch (const std::exception& ex)
     {
         LogFatal(logger) << "Fatal std::exception during startup: " << ex.what();
-        QMessageBox::critical(nullptr, QObject::tr("Fatal error"), QString::fromUtf8(ex.what()));
+        QMessageBox::critical(nullptr, gui::ui::kFatalErrorTitle, QString::fromUtf8(ex.what()));
         return 1;
     } catch (...)
     {
         LogFatal(logger) << "Fatal unknown exception during startup";
-        QMessageBox::critical(nullptr, QObject::tr("Fatal error"),
-                              QObject::tr("Unknown exception during application startup."));
+        QMessageBox::critical(nullptr, gui::ui::kFatalErrorTitle, gui::ui::kUnknownStartupError);
         return 2;
     }
 }
