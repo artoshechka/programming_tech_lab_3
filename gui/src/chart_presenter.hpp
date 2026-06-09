@@ -6,7 +6,6 @@
 
 #include <QtCharts/QChart>
 #include <data_model/src/timeline_data.hpp>
-#include <database_module/idatabase_manager.hpp>
 #include <filesystem>
 #include <gui/src/mainwindow.hpp>
 #include <logger/ilogger.hpp>
@@ -28,16 +27,15 @@ class ChartPresenter
     /// @param[in] builders Фабрика построителей графиков (имя -> создатель).
     /// @param[in] styles Фабрика стилей графиков (имя -> создатель).
     /// @param[in] registry Реестр парсеров для выбора парсера по расширению.
-    /// @param[in] dbManager Менеджер БД для инспекции источников SQLite.
     /// @param[in] logger Логгер для диагностики загрузки и кэширования; допускается nullptr.
     ChartPresenter(BuilderFactory builders, StyleFactory styles, std::shared_ptr<parser::IParserRegistry> registry,
-                   std::shared_ptr<database::manager::IDatabaseManager> dbManager,
                    std::shared_ptr<logger::ILogger> logger = nullptr);
 
-    /// @brief Возвращает список таблиц SQLite-файла (для выбора таблицы пользователем).
-    /// @param[in] path Путь к файлу базы данных.
-    /// @return Имена таблиц; пустой вектор, если файл не открылся или таблиц нет.
-    std::vector<std::string> listTables(const std::string& path);
+    /// @brief Возвращает под-источники файла (таблицы и т.п.) для выбора пользователем.
+    /// @param[in] path Путь к файлу-источнику.
+    /// @return Имена под-источников; пустой вектор, если их нет или формат одиночный.
+    /// @details Делегирует парсеру формата (по расширению) — презентер не знает о SQLite.
+    std::vector<std::string> listSubSources(const std::string& path);
 
     /// @brief Загружает файл, кэширует TimelineData, строит и возвращает QChart.
     /// @details Расширение извлекается из части source до символа '|' (формат "путь" либо "путь|таблица").
@@ -66,12 +64,12 @@ class ChartPresenter
         data::TimelineData data;                  ///< Распарсенные данные.
     };
 
-    /// @brief Единственный слот кэша списка таблиц последнего SQLite-файла.
+    /// @brief Единственный слот кэша списка под-источников последнего файла.
     struct TablesSlot
     {
-        std::string path;                         ///< Путь к SQLite-файлу, для которого закэширован список.
+        std::string path;                         ///< Путь к файлу, для которого закэширован список.
         std::filesystem::file_time_type mtime;    ///< Время последней модификации файла на момент чтения.
-        std::vector<std::string> tables;          ///< Имена таблиц.
+        std::vector<std::string> tables;          ///< Имена под-источников (таблицы и т.п.).
     };
 
     /// @brief Строит график из заданных данных по построителю и стилю.
@@ -89,9 +87,8 @@ class ChartPresenter
     BuilderFactory builders_;                                          ///< Фабрика построителей графиков.
     StyleFactory styles_;                                              ///< Фабрика стилей графиков.
     std::shared_ptr<parser::IParserRegistry> registry_;               ///< Реестр парсеров по расширению.
-    std::shared_ptr<database::manager::IDatabaseManager> dbManager_;   ///< Менеджер БД для инспекции SQLite.
     std::optional<DataSlot> dataSlot_;                                 ///< Кэш данных последнего источника (один слот).
-    std::optional<TablesSlot> tablesSlot_;                            ///< Кэш списка таблиц последнего SQLite-файла.
+    std::optional<TablesSlot> tablesSlot_;                            ///< Кэш под-источников последнего файла.
     std::shared_ptr<logger::ILogger> logger_;                         ///< Логгер для диагностики (может быть nullptr).
 };
 

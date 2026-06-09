@@ -32,9 +32,6 @@ MainWindow* CreateMainWindow(QWidget* parent)
     ioc.RegisterFactory<parser::DatabaseParser, parser::DatabaseParser, logger::ILogger,
                         database::manager::IDatabaseManager>();
 
-    auto dbManager = ioc.GetObject<database::manager::IDatabaseManager>();
-    if (!dbManager) LogError(appLogger) << "IoC: failed to resolve IDatabaseManager";
-
     // Декларативный список парсеров: одна строка на формат, как и в Builder/StyleFactory.
     ParserFactory parsers;
     parsers["json"] = [&ioc] { return ioc.GetObject<parser::JsonParser>(); };
@@ -59,7 +56,7 @@ MainWindow* CreateMainWindow(QWidget* parent)
 
     LogInfo(appLogger) << "Composition root: ready (" << parserRegistry->SupportedExtensions().size()
                        << " parsers, " << builders.size() << " builders, " << styles.size() << " styles)";
-    return new MainWindow(std::move(builders), std::move(styles), parserRegistry, dbManager, appLogger, parent);
+    return new MainWindow(std::move(builders), std::move(styles), parserRegistry, appLogger, parent);
 }
 
 }  // namespace gui

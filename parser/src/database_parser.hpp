@@ -34,6 +34,11 @@ class DatabaseParser : public ParserBase
     /// @throws ParseException при ошибке открытия или разбора.
     data::TimelineData Load(const std::string& source) override;
 
+    /// @brief Перечислить таблицы SQLite-файла.
+    /// @param[in] path Путь к файлу базы данных.
+    /// @return Имена таблиц; пустой вектор, если файл не открылся или таблиц нет.
+    std::vector<std::string> ListSubSources(const std::string& path) const override;
+
    private:
     std::shared_ptr<database::manager::IDatabaseManager> manager_;  ///< Фабрика соединений с БД.
 
