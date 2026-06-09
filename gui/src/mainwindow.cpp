@@ -22,6 +22,7 @@
 
 #include "chart_presenter.hpp"
 #include "table_select_dialog.hpp"
+#include "ui_strings.hpp"
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -40,7 +41,7 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
       logger_(logger),
       presenter_(std::make_unique<ChartPresenter>(builders, styles, std::move(registry), std::move(dbManager), logger_))
 {
-    auto* toolbar = addToolBar("Controls");
+    auto* toolbar = addToolBar(ui::kToolbarTitle);
     toolbar->setMovable(true);
 
     chartCombo_ = new QComboBox();
@@ -53,14 +54,14 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
     toolbar->addWidget(styleCombo_);
     toolbar->addSeparator();
 
-    aggregateCheck_ = new QCheckBox("Агрегация");
+    aggregateCheck_ = new QCheckBox(ui::kAggregateCheckbox);
     aggregateCheck_->setChecked(true);
     aggregateCheck_->setEnabled(chartCombo_->currentText() == "Pie");
     toolbar->addWidget(aggregateCheck_);
     toolbar->addSeparator();
 
-    auto* folderBtn = new QPushButton("Папка");
-    auto* pdfBtn = new QPushButton("Сохранить PDF");
+    auto* folderBtn = new QPushButton(ui::kFolderButton);
+    auto* pdfBtn = new QPushButton(ui::kSavePdfButton);
     toolbar->addWidget(folderBtn);
     toolbar->addWidget(pdfBtn);
 
@@ -76,7 +77,7 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
     splitter->setStretchFactor(1, 3);
     setCentralWidget(splitter);
 
-    const QString root = QFileDialog::getExistingDirectory(this, "Выберите папку с данными");
+    const QString root = QFileDialog::getExistingDirectory(this, ui::kChooseFolderTitle);
     if (!root.isEmpty()) setRoot(root);
 
     connect(treeView_, &QTreeView::clicked, this, &MainWindow::onFileSelected);
@@ -116,7 +117,7 @@ void MainWindow::setRoot(const QString& path)
 /// @brief Слот выбора рабочей папки с данными.
 void MainWindow::onChooseFolder()
 {
-    const QString path = QFileDialog::getExistingDirectory(this, "Выберите папку с данными");
+    const QString path = QFileDialog::getExistingDirectory(this, ui::kChooseFolderTitle);
     if (!path.isEmpty())
     {
         LogInfo(logger_) << "Working folder changed: " << path.toStdString();
@@ -137,7 +138,7 @@ void MainWindow::onRedraw()
     } catch (const std::exception& e)
     {
         LogError(logger_) << "Redraw failed: " << e.what();
-        QMessageBox::critical(this, "Ошибка", QString::fromStdString(e.what()));
+        QMessageBox::critical(this, ui::kErrorTitle, QString::fromStdString(e.what()));
     }
 }
 
@@ -185,12 +186,12 @@ void MainWindow::loadFile(const QString& path)
     {
         LogError(logger_) << "Parse failed for '" << source << "': " << e.what();
         currentSource_.clear();
-        QMessageBox::critical(this, "Ошибка загрузки", QString::fromStdString(e.what()));
+        QMessageBox::critical(this, ui::kLoadErrorTitle, QString::fromStdString(e.what()));
     } catch (const std::exception& e)
     {
         LogError(logger_) << "Load failed for '" << source << "': " << e.what();
         currentSource_.clear();
-        QMessageBox::critical(this, "Ошибка", QString::fromStdString(e.what()));
+        QMessageBox::critical(this, ui::kErrorTitle, QString::fromStdString(e.what()));
     }
 }
 
@@ -207,7 +208,7 @@ void MainWindow::setChart(std::unique_ptr<QChart> chart)
 /// @brief Слот сохранения текущего графика в PDF.
 void MainWindow::onSavePdf()
 {
-    const QString path = QFileDialog::getSaveFileName(this, "Сохранить PDF", {}, "PDF (*.pdf)");
+    const QString path = QFileDialog::getSaveFileName(this, ui::kSavePdfDialogTitle, {}, ui::kPdfFilter);
     if (path.isEmpty()) return;
     QPdfWriter writer(path);
     writer.setPageSize(QPageSize(QPageSize::A4));
@@ -215,7 +216,7 @@ void MainWindow::onSavePdf()
     chartView_->render(&painter);
     painter.end();
     LogInfo(logger_) << "Chart saved to PDF: " << path.toStdString();
-    statusBar()->showMessage("Сохранено: " + path);
+    statusBar()->showMessage(ui::kSavedPrefix + path);
 }
 
 }  // namespace gui

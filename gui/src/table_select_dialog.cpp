@@ -5,6 +5,7 @@
 #include <QDialogButtonBox>
 #include <QVBoxLayout>
 #include <gui/src/table_select_dialog.hpp>
+#include <gui/src/ui_strings.hpp>
 
 namespace gui
 {
@@ -13,7 +14,7 @@ namespace gui
 TableSelectDialog::TableSelectDialog(const QStringList& tables, QWidget* parent)
     : QDialog(parent), list_(new QListWidget(this))
 {
-    setWindowTitle("Выберите таблицу");
+    setWindowTitle(ui::kSelectTableTitle);
     list_->addItems(tables);
     if (!tables.isEmpty()) list_->setCurrentRow(0);
 
