@@ -5,8 +5,11 @@
 #ifndef GUID_b8c9d0e1_f2a3_4567_bcde_678901234567
 #define GUID_b8c9d0e1_f2a3_4567_bcde_678901234567
 
+#include <logger/ilogger.hpp>
 #include <map>
+#include <memory>
 #include <parser/iparser_registry.hpp>
+#include <utility>
 
 namespace parser
 {
@@ -15,6 +18,10 @@ namespace parser
 class ParserRegistry : public IParserRegistry
 {
    public:
+    /// @brief Конструктор реестра.
+    /// @param[in] logger Логгер для диагностики регистрации/резолва; допускается nullptr.
+    explicit ParserRegistry(std::shared_ptr<logger::ILogger> logger = nullptr) : logger_(std::move(logger)) {}
+
     /// @brief Регистрирует парсер для указанного расширения.
     /// @param[in] extension Расширение файла (регистр игнорируется, приводится к нижнему).
     /// @param[in] parser Парсер, связываемый с расширением.
@@ -31,6 +38,7 @@ class ParserRegistry : public IParserRegistry
 
    private:
     std::map<std::string, std::shared_ptr<IParser>> parsers_;  ///< Соответствие расширение → парсер.
+    std::shared_ptr<logger::ILogger> logger_;                  ///< Логгер для диагностики (может быть nullptr).
 };
 
 }  // namespace parser

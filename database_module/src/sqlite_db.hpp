@@ -7,6 +7,8 @@
 
 #include <QSqlDatabase>
 #include <database_module/idatabase.hpp>
+#include <logger/ilogger.hpp>
+#include <memory>
 #include <string>
 
 namespace database
@@ -17,9 +19,10 @@ class SqliteDB : public IDatabase
    public:
     /// @brief Создаёт соединение SQLite с заданным именем.
     /// @param[in] connectionName Уникальное имя Qt-соединения.
+    /// @param[in] logger Логгер для диагностики открытия и запросов; допускается nullptr.
     /// @details Имя connectionName используется при регистрации соединения в Qt SQL
     ///          и должно быть уникальным в пределах процесса.
-    explicit SqliteDB(const std::string& connectionName);
+    explicit SqliteDB(const std::string& connectionName, std::shared_ptr<logger::ILogger> logger = nullptr);
 
     /// @brief Виртуальный деструктор.
     /// @details Закрывает соединение и удаляет его из реестра Qt SQL.
@@ -49,7 +52,8 @@ class SqliteDB : public IDatabase
                std::function<void(const std::string& col, const std::string& val)> rowFn) override;
 
    private:
-    QSqlDatabase db_;  ///< Qt-объект соединения с базой данных SQLite.
+    QSqlDatabase db_;                          ///< Qt-объект соединения с базой данных SQLite.
+    std::shared_ptr<logger::ILogger> logger_;  ///< Логгер для диагностики (может быть nullptr).
 };
 }  // namespace database
 #endif  // GUID_652d92c5_34e4_4c88_9e56_d4bf9ed33d6d

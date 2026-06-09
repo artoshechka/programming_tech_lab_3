@@ -12,7 +12,9 @@
 #include <chart/ichart_builder.hpp>
 #include <database_module/idatabase_manager.hpp>
 #include <functional>
+#include <logger/ilogger.hpp>
 #include <map>
+#include <memory>
 #include <parser/iparser.hpp>
 #include <parser/iparser_registry.hpp>
 #include <string>
@@ -42,9 +44,11 @@ class MainWindow : public QMainWindow
     /// @param[in] styles Фабрика стилей графиков (имя -> создатель).
     /// @param[in] registry Реестр парсеров для загрузки данных по расширению.
     /// @param[in] dbManager Менеджер БД для работы с источниками SQLite.
+    /// @param[in] logger Логгер для диагностики действий пользователя; допускается nullptr.
     /// @param[in] parent Родительский виджет (по умолчанию nullptr).
     explicit MainWindow(BuilderFactory builders, StyleFactory styles, std::shared_ptr<parser::IParserRegistry> registry,
-                        std::shared_ptr<database::manager::IDatabaseManager> dbManager, QWidget* parent = nullptr);
+                        std::shared_ptr<database::manager::IDatabaseManager> dbManager,
+                        std::shared_ptr<logger::ILogger> logger = nullptr, QWidget* parent = nullptr);
     /// @brief Виртуальный деструктор.
     ~MainWindow() override;
 
@@ -71,6 +75,7 @@ class MainWindow : public QMainWindow
     void setChart(std::unique_ptr<QChart> chart);
 
     std::shared_ptr<parser::IParserRegistry> registry_;  ///< Реестр парсеров (для запроса поддерживаемых расширений).
+    std::shared_ptr<logger::ILogger> logger_;    ///< Логгер для диагностики (может быть nullptr).
     std::unique_ptr<ChartPresenter> presenter_;  ///< Презентер загрузки данных и построения графика.
 
     QTreeView* treeView_ = nullptr;        ///< Дерево файлов с данными.

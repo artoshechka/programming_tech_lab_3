@@ -2,6 +2,7 @@
 
 #include <QtCharts/QChart>
 #include <algorithm>
+#include <logger/logger_macros.hpp>
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -18,6 +19,7 @@ void GrayscaleStyle::Apply(QtCharts::QChart* chart)
 {
     chart->setTheme(QChart::ChartThemeLight);
     chart->setBackgroundBrush(Qt::white);
+    LogInfo(logger_) << "GrayscaleStyle applied: light theme, white background";
 }
 
 }  // namespace style

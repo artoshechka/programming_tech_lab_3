@@ -9,6 +9,8 @@
 #include <database_module/idatabase_manager.hpp>
 #include <filesystem>
 #include <gui/src/mainwindow.hpp>
+#include <logger/ilogger.hpp>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
@@ -27,8 +29,10 @@ class ChartPresenter
     /// @param[in] styles Фабрика стилей графиков (имя -> создатель).
     /// @param[in] registry Реестр парсеров для выбора парсера по расширению.
     /// @param[in] dbManager Менеджер БД для инспекции источников SQLite.
+    /// @param[in] logger Логгер для диагностики загрузки и кэширования; допускается nullptr.
     ChartPresenter(BuilderFactory builders, StyleFactory styles, std::shared_ptr<parser::IParserRegistry> registry,
-                   std::shared_ptr<database::manager::IDatabaseManager> dbManager);
+                   std::shared_ptr<database::manager::IDatabaseManager> dbManager,
+                   std::shared_ptr<logger::ILogger> logger = nullptr);
 
     /// @brief Возвращает список таблиц SQLite-файла (для выбора таблицы пользователем).
     /// @param[in] path Путь к файлу базы данных.
@@ -88,6 +92,7 @@ class ChartPresenter
     std::shared_ptr<database::manager::IDatabaseManager> dbManager_;   ///< Менеджер БД для инспекции SQLite.
     std::optional<DataSlot> dataSlot_;                                 ///< Кэш данных последнего источника (один слот).
     std::optional<TablesSlot> tablesSlot_;                            ///< Кэш списка таблиц последнего SQLite-файла.
+    std::shared_ptr<logger::ILogger> logger_;                         ///< Логгер для диагностики (может быть nullptr).
 };
 
 }  // namespace gui
