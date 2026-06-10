@@ -5,15 +5,15 @@
 #include <QDialogButtonBox>
 #include <QVBoxLayout>
 #include <gui/src/table_select_dialog.hpp>
+#include <gui/src/ui_strings.hpp>
 
 namespace gui
 {
 
-/// @brief Конструктор: наполняет список таблиц и добавляет кнопки OK/Cancel.
 TableSelectDialog::TableSelectDialog(const QStringList& tables, QWidget* parent)
     : QDialog(parent), list_(new QListWidget(this))
 {
-    setWindowTitle("Выберите таблицу");
+    setWindowTitle(ui::kSelectTableTitle);
     list_->addItems(tables);
     if (!tables.isEmpty()) list_->setCurrentRow(0);
 
@@ -26,7 +26,6 @@ TableSelectDialog::TableSelectDialog(const QStringList& tables, QWidget* parent)
     layout->addWidget(buttons);
 }
 
-/// @brief Возвращает выбранное пользователем имя таблицы.
 QString TableSelectDialog::selectedTable() const
 {
     auto* item = list_->currentItem();

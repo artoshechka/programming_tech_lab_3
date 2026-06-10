@@ -1,18 +1,23 @@
 /// @file sqlite_db_manager.cpp
-/// @brief Определение класса SqliteDBManager
+/// @brief Реализация методов SqliteDBManager.
 /// @author Artemenko Anton
 
 #include <database_module/src/sqlite_db.hpp>
 #include <database_module/src/sqlite_db_manager.hpp>
+#include <utility>
 
 namespace database
 {
 namespace manager
 {
 
+SqliteDBManager::SqliteDBManager(std::shared_ptr<logger::ILogger> logger) : logger_(std::move(logger))
+{
+}
+
 std::shared_ptr<database::IDatabase> SqliteDBManager::Create(const std::string& connectionName)
 {
-    return std::make_shared<SqliteDB>(connectionName);
+    return std::make_shared<SqliteDB>(connectionName, logger_);
 }
 
 }  // namespace manager

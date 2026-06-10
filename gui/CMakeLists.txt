@@ -7,7 +7,7 @@ find_package(Qt5 REQUIRED COMPONENTS Widgets Charts PrintSupport)
 
 add_library(${PROJECT_NAME} STATIC
     src/mainwindow.cpp
-    src/chart_presenter.cpp
+    src/chart_model.cpp
     src/table_select_dialog.cpp
     src/app_compositor.cpp
 )

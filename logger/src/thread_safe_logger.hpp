@@ -45,8 +45,7 @@ class ThreadSafeLogger : public ILogger
              const char* function = nullptr) override;
 
    protected:
-    /// @brief Форматирует итоговую строку лога для конкретного типа логгера
-    /// @details Переопределяется в производных классах для специфического формата сообщений
+    /// @brief Форматирует итоговую строку лога; определяет формат конкретного логгера.
     /// @param[in] level Уровень логирования
     /// @param[in] message Текст сообщения
     /// @param[in] file Имя файла источника
@@ -62,16 +61,17 @@ class ThreadSafeLogger : public ILogger
     static std::string LogLevelToString(LogLevel level);
 
    protected:
-    std::string componentName_;  ///< Имя компонента логирования для идентификации в формате сообщений
+    std::string componentName_;  ///< Имя компонента для вставки в строку лога.
 
    private:
     /// @brief Открывает (или переоткрывает) файл лога согласно текущим настройкам.
     /// @details Вызывается под syncMutex_. При выводе не в файл или пустом пути файл остаётся закрытым.
     void OpenLogFile();
 
-    std::ofstream logFile_;         ///< Открытый файл логов для записи
-    mutable std::mutex syncMutex_;  ///< Мьютекс для обеспечения потокобезопасности при записи в лог
-    LoggerSettings settings_;       ///< Текущие настройки логгера
+    std::ofstream logFile_;                   ///< Открытый файл логов для записи
+    mutable std::recursive_mutex syncMutex_;  ///< Рекурсивный мьютекс: допускает вложенный Log() из callback'ов
+                                              ///< внутри FormatMessage без дедлока.
+    LoggerSettings settings_;                 ///< Текущие настройки логгера
 };
 
 }  // namespace logger

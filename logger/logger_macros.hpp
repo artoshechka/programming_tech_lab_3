@@ -8,38 +8,32 @@
 
 namespace logger
 {
-/// @brief Макрос для логирования с уровнем Trace
-/// @details Автоматически добавляет информацию о файле, строке и функции
+/// @brief Логирование на уровне Trace; прикрепляет файл/строку/функцию.
 /// @param[in] loggerPtr Указатель на логгер
 #define LogTrace(loggerPtr) \
     logger::detail::LogEntryStream((loggerPtr), logger::LogLevel::Trace, __FILE__, __LINE__, __FUNCTION__)
 
-/// @brief Макрос для логирования с уровнем Debug
-/// @details Автоматически добавляет информацию о файле, строке и функции
+/// @brief Логирование на уровне Debug; прикрепляет файл/строку/функцию.
 /// @param[in] loggerPtr Указатель на логгер
 #define LogDebug(loggerPtr) \
     logger::detail::LogEntryStream((loggerPtr), logger::LogLevel::Debug, __FILE__, __LINE__, __FUNCTION__)
 
-/// @brief Макрос для логирования с уровнем Info
-/// @details Автоматически добавляет информацию о файле, строке и функции
+/// @brief Логирование на уровне Info; прикрепляет файл/строку/функцию.
 /// @param[in] loggerPtr Указатель на логгер
 #define LogInfo(loggerPtr) \
     logger::detail::LogEntryStream((loggerPtr), logger::LogLevel::Info, __FILE__, __LINE__, __FUNCTION__)
 
-/// @brief Макрос для логирования с уровнем Warning
-/// @details Автоматически добавляет информацию о файле, строке и функции
+/// @brief Логирование на уровне Warning; прикрепляет файл/строку/функцию.
 /// @param[in] loggerPtr Указатель на логгер
 #define LogWarning(loggerPtr) \
     logger::detail::LogEntryStream((loggerPtr), logger::LogLevel::Warning, __FILE__, __LINE__, __FUNCTION__)
 
-/// @brief Макрос для логирования с уровнем Error
-/// @details Автоматически добавляет информацию о файле, строке и функции
+/// @brief Логирование на уровне Error; прикрепляет файл/строку/функцию.
 /// @param[in] loggerPtr Указатель на логгер
 #define LogError(loggerPtr) \
     logger::detail::LogEntryStream((loggerPtr), logger::LogLevel::Error, __FILE__, __LINE__, __FUNCTION__)
 
-/// @brief Макрос для логирования с уровнем Fatal
-/// @details Автоматически добавляет информацию о файле, строке и функции
+/// @brief Логирование на уровне Fatal; прикрепляет файл/строку/функцию.
 /// @param[in] loggerPtr Указатель на логгер
 #define LogFatal(loggerPtr) \
     logger::detail::LogEntryStream((loggerPtr), logger::LogLevel::Fatal, __FILE__, __LINE__, __FUNCTION__)

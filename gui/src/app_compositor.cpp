@@ -9,6 +9,7 @@
 #include <gui/src/mainwindow.hpp>
 #include <ioc_container/IOC_Contaner.hpp>
 #include <logger/logger_factory.hpp>
+#include <logger/logger_macros.hpp>
 #include <parser/src/database_parser.hpp>
 #include <parser/src/json_parser.hpp>
 #include <parser/src/parser_registry.hpp>
@@ -21,28 +22,41 @@ namespace gui
 MainWindow* CreateMainWindow(QWidget* parent)
 {
     // IoC: singletons live as instances, parsers are auto-wired from their deps.
+    auto appLogger = logger::GetLogger<logger::AppLoggerTag>();
+    LogInfo(appLogger) << "Composition root: wiring application";
+
     ioc::container::IOCContainer ioc;
-    ioc.RegisterInstance<logger::ILogger>(logger::GetLogger<logger::AppLoggerTag>());
-    ioc.RegisterInstance<database::manager::IDatabaseManager, database::manager::SqliteDBManager>();
+    ioc.RegisterInstance<logger::ILogger>(appLogger);
+    ioc.RegisterInstance<database::manager::IDatabaseManager, database::manager::SqliteDBManager, logger::ILogger>();
     ioc.RegisterFactory<parser::JsonParser, parser::JsonParser, logger::ILogger>();
     ioc.RegisterFactory<parser::DatabaseParser, parser::DatabaseParser, logger::ILogger,
                         database::manager::IDatabaseManager>();
 
-    auto dbManager = ioc.GetObject<database::manager::IDatabaseManager>();
+    // Декларативный список парсеров: одна строка на формат, как и в Builder/StyleFactory.
+    ParserFactory parsers;
+    parsers["json"] = [&ioc] { return ioc.GetObject<parser::JsonParser>(); };
+    parsers["sqlite"] = [&ioc] { return ioc.GetObject<parser::DatabaseParser>(); };
 
-    auto parserRegistry = std::make_shared<parser::ParserRegistry>();
-    parserRegistry->Register("json", ioc.GetObject<parser::JsonParser>());
-    parserRegistry->Register("sqlite", ioc.GetObject<parser::DatabaseParser>());
+    auto parserRegistry = std::make_shared<parser::ParserRegistry>(appLogger);
+    for (const auto& [ext, factory] : parsers)
+    {
+        auto p = factory();
+        if (!p) LogError(appLogger) << "IoC: failed to resolve parser for '" << ext << "'";
+        parserRegistry->Register(ext, std::move(p));
+    }
 
+    // Билдеры и стили получают логгер через захват в фабриках.
     BuilderFactory builders;
-    builders["Pie"] = [] { return std::make_shared<chart::PieChartBuilder>(); };
-    builders["Bar"] = [] { return std::make_shared<chart::BarChartBuilder>(); };
+    builders["Pie"] = [appLogger] { return std::make_shared<chart::PieChartBuilder>(appLogger); };
+    builders["Bar"] = [appLogger] { return std::make_shared<chart::BarChartBuilder>(appLogger); };
 
     StyleFactory styles;
-    styles["Color"] = [] { return std::make_shared<style::ColorStyle>(); };
-    styles["Grayscale"] = [] { return std::make_shared<style::GrayscaleStyle>(); };
+    styles["Color"] = [appLogger] { return std::make_shared<style::ColorStyle>(appLogger); };
+    styles["Grayscale"] = [appLogger] { return std::make_shared<style::GrayscaleStyle>(appLogger); };
 
-    return new MainWindow(std::move(builders), std::move(styles), parserRegistry, dbManager, parent);
+    LogInfo(appLogger) << "Composition root: ready (" << parserRegistry->SupportedExtensions().size()
+                       << " parsers, " << builders.size() << " builders, " << styles.size() << " styles)";
+    return new MainWindow(std::move(builders), std::move(styles), parserRegistry, appLogger, parent);
 }
 
 }  // namespace gui

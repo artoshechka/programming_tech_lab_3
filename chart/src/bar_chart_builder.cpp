@@ -3,18 +3,29 @@
 #include <QtCharts/QBarCategoryAxis>
 #include <QtCharts/QBarSeries>
 #include <QtCharts/QBarSet>
+#include <QtCharts/QChart>
 #include <QtCharts/QValueAxis>
 #include <chart/aggregate.hpp>
+#include <logger/logger_macros.hpp>
+#include <style/ipalette.hpp>
 
 QT_CHARTS_USE_NAMESPACE
 
 namespace chart
 {
 
-std::unique_ptr<QChart> BarChartBuilder::Build(const data::TimelineData& raw)
+std::unique_ptr<QtCharts::QChart> BarChartBuilder::Build(const data::TimelineData& raw)
 {
+    if (raw.points_.empty()) LogWarning(logger_) << "Bar build: empty timeline '" << raw.name_ << "'";
+    LogTrace(logger_) << "Bar build: enter, " << raw.points_.size() << " points";
+
+    const bool willAggregate = raw.points_.size() > kAggregateThreshold;
+    LogDebug(logger_) << "Bar options: points=" << raw.points_.size() << ", threshold=" << kAggregateThreshold
+                      << " -> aggregating=" << willAggregate;
+    if (palette_ == nullptr) LogWarning(logger_) << "Bar build: no palette, falling back to Qt default colors";
+
     // агрегируем по месяцу если точек много, иначе берём как есть
-    const data::TimelineData agg_ = (raw.points_.size() > kAggregateThreshold) ? Aggregate(raw) : raw;
+    const data::TimelineData agg_ = willAggregate ? Aggregate(raw) : raw;
     const data::TimelineData& data = agg_;
 
     auto* set = new QBarSet(QString::fromStdString(data.name_));
@@ -36,6 +47,9 @@ std::unique_ptr<QChart> BarChartBuilder::Build(const data::TimelineData& raw)
         }
     }
 
+    // Bar-чарт использует один QBarSet — палитра выдаёт единственный цвет с total=1.
+    if (palette_ != nullptr) set->setColor(palette_->ColorFor(0, 1));
+
     auto* series = new QBarSeries();
     series->append(set);
 
@@ -56,6 +70,7 @@ std::unique_ptr<QChart> BarChartBuilder::Build(const data::TimelineData& raw)
     series->attachAxis(axisX);
     series->attachAxis(axisY);
     chart->legend()->setVisible(false);
+    LogInfo(logger_) << "Bar chart built: '" << data.name_ << "', " << data.points_.size() << " bars";
     return chart;
 }
 
