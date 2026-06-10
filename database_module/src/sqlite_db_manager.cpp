@@ -1,5 +1,5 @@
 /// @file sqlite_db_manager.cpp
-/// @brief Определение класса SqliteDBManager
+/// @brief Реализация методов SqliteDBManager.
 /// @author Artemenko Anton
 
 #include <database_module/src/sqlite_db.hpp>

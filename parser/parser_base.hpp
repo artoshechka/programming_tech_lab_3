@@ -24,7 +24,7 @@ class ParserBase : public IParser
     }
 
    protected:
-    std::shared_ptr<logger::ILogger> logger_;  ///< Логгер для записи диагностических сообщений.
+    std::shared_ptr<logger::ILogger> logger_;  ///< Логгер.
 };
 }  // namespace parser
 #endif  // GUID_3a7f1d20_8c4e_4b6a_9f01_2d5e7c9a4b13

@@ -1,5 +1,5 @@
 /// @file sqlite_db_manager.hpp
-/// @brief Объявление класса SqliteDBManager
+/// @brief Фабрика SQLite-соединений, реализует IDatabaseManager.
 /// @author Artemenko Anton
 
 #ifndef GUID_5551891a_c619_4650_901b_b7244fbe8b95

@@ -22,7 +22,7 @@ class TableSelectDialog : public QDialog
     explicit TableSelectDialog(const QStringList& tables, QWidget* parent = nullptr);
 
     /// @brief Возвращает выбранное пользователем имя таблицы.
-    /// @return Выбранное имя таблицы или пустую строку если отменено.
+    /// @return Выбранное имя таблицы или пустую строку, если отменено.
     QString selectedTable() const;
 
    private:

@@ -13,7 +13,6 @@
 namespace gui
 {
 
-/// @brief Конструктор презентера.
 ChartPresenter::ChartPresenter(BuilderFactory builders, StyleFactory styles,
                                std::shared_ptr<parser::IParserRegistry> registry,
                                std::shared_ptr<logger::ILogger> logger)
@@ -24,7 +23,6 @@ ChartPresenter::ChartPresenter(BuilderFactory builders, StyleFactory styles,
 {
 }
 
-/// @brief Возвращает под-источники файла, делегируя парсеру формата.
 std::vector<std::string> ChartPresenter::listSubSources(const std::string& path)
 {
     // Инвалидация по mtime: пока путь и время модификации совпадают — отдаём из слота, файл не читаем.
@@ -50,7 +48,6 @@ std::vector<std::string> ChartPresenter::listSubSources(const std::string& path)
     return tables;
 }
 
-/// @brief Загружает файл, кэширует TimelineData, строит и возвращает QChart.
 std::unique_ptr<QChart> ChartPresenter::load(const std::string& source, const std::string& builder,
                                              const std::string& style, bool aggregate)
 {
@@ -92,7 +89,6 @@ std::unique_ptr<QChart> ChartPresenter::load(const std::string& source, const st
     return buildChart(dataSlot_->data, builder, style, aggregate);
 }
 
-/// @brief Пересобирает QChart из кэша (без IO).
 std::unique_ptr<QChart> ChartPresenter::rebuild(const std::string& builder, const std::string& style, bool aggregate)
 {
     if (!dataSlot_)
@@ -105,7 +101,6 @@ std::unique_ptr<QChart> ChartPresenter::rebuild(const std::string& builder, cons
     return buildChart(dataSlot_->data, builder, style, aggregate);
 }
 
-/// @brief Строит график из заданных данных по заданным построителю и стилю.
 std::unique_ptr<QChart> ChartPresenter::buildChart(const data::TimelineData& data, const std::string& builder,
                                                    const std::string& style, bool aggregate)
 {
@@ -117,7 +112,6 @@ std::unique_ptr<QChart> ChartPresenter::buildChart(const data::TimelineData& dat
     return chart;  // владение передаётся вызывающему (MainWindow::setChart) через std::unique_ptr.
 }
 
-/// @brief Возвращает путь из source (вырезает "|table" хвост для SQLite).
 std::string ChartPresenter::SourcePath(const std::string& source)
 {
     const auto pos = source.find('|');

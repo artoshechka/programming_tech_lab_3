@@ -41,12 +41,12 @@ class LogEntryStream final
     }
 
    private:
-    std::shared_ptr<ILogger> logger_;  ///< Умный указатель на целевой логгер
+    std::shared_ptr<ILogger> logger_;  ///< Целевой логгер.
     LogLevel level_;                   ///< Уровень логирования сообщения
     const char* file_;                 ///< Имя файла источника
     int line_;                         ///< Номер строки источника
     const char* function_;             ///< Имя функции источника
-    std::ostringstream stream_;        ///< Поток формирования сообщения через operator<<
+    std::ostringstream stream_;        ///< Буфер накопления текста сообщения.
 };
 
 }  // namespace detail

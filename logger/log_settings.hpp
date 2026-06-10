@@ -20,7 +20,7 @@ enum class LogOutput {
 struct LoggerSettings
 {
     /// @brief Конструктор настроек логгера
-    /// @param[in] logFilePath Путь к файлу лога (пустая строка означает отсутствие файла)
+    /// @param[in] logFilePath Путь к файлу лога; nullopt — файл не используется
     /// @param[in] logLevel Минимальный уровень логирования
     /// @param[in] output Режим вывода логов
     LoggerSettings(const std::optional<std::string>& logFilePath = std::nullopt, LogLevel logLevel = LogLevel::Debug,

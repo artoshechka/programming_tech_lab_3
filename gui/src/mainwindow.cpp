@@ -28,10 +28,9 @@ QT_CHARTS_USE_NAMESPACE
 namespace gui
 {
 
-/// @brief Виртуальный деструктор.
 MainWindow::~MainWindow() = default;
 
-/// @brief Конструктор: создаёт панель инструментов, дерево файлов и область графика, связывает сигналы.
+/// @brief Строит UI: тулбар с комбобоксами и кнопками, дерево файлов, область графика; связывает сигналы.
 MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared_ptr<parser::IParserRegistry> registry,
                        std::shared_ptr<logger::ILogger> logger, QWidget* parent)
     : QMainWindow(parent),
@@ -91,7 +90,7 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
     connect(aggregateCheck_, &QCheckBox::stateChanged, this, &MainWindow::onRedraw);
 }
 
-/// @brief Устанавливает корневую папку дерева файлов.
+/// @brief Пересоздаёт QFileSystemModel с фильтрами по реестру парсеров и задаёт корень дерева.
 void MainWindow::setRoot(const QString& path)
 {
     auto* old = qobject_cast<QFileSystemModel*>(treeView_->model());
@@ -112,7 +111,7 @@ void MainWindow::setRoot(const QString& path)
     statusBar()->showMessage(path);
 }
 
-/// @brief Слот выбора рабочей папки с данными.
+/// @brief Открывает диалог выбора папки; сбрасывает текущий источник и обновляет дерево.
 void MainWindow::onChooseFolder()
 {
     const QString path = QFileDialog::getExistingDirectory(this, ui::kChooseFolderTitle);
@@ -124,7 +123,7 @@ void MainWindow::onChooseFolder()
     }
 }
 
-/// @brief Слот перерисовки графика при смене построителя или стиля.
+/// @brief Пересобирает график из кэша при смене построителя, стиля или флага агрегации.
 void MainWindow::onRedraw()
 {
     if (currentSource_.isEmpty()) return;
@@ -140,7 +139,7 @@ void MainWindow::onRedraw()
     }
 }
 
-/// @brief Слот выбора файла в дереве.
+/// @brief Обрабатывает клик по элементу дерева: пропускает папки, загружает файл.
 void MainWindow::onFileSelected(const QModelIndex& index)
 {
     auto* model = static_cast<QFileSystemModel*>(treeView_->model());
@@ -150,7 +149,7 @@ void MainWindow::onFileSelected(const QModelIndex& index)
     loadFile(path);
 }
 
-/// @brief Загружает источник данных и строит график.
+/// @brief Запрашивает под-источники, при необходимости показывает диалог выбора, затем строит график.
 void MainWindow::loadFile(const QString& path)
 {
     std::string source = path.toStdString();
@@ -190,7 +189,7 @@ void MainWindow::loadFile(const QString& path)
     }
 }
 
-/// @brief Заменяет текущий график в области отображения.
+/// @brief Передаёт новый график в QChartView, удаляя предыдущий.
 void MainWindow::setChart(std::unique_ptr<QChart> chart)
 {
     auto* old = chartView_->chart();
@@ -200,7 +199,7 @@ void MainWindow::setChart(std::unique_ptr<QChart> chart)
     delete old;
 }
 
-/// @brief Слот сохранения текущего графика в PDF.
+/// @brief Открывает диалог сохранения, рендерит текущий график в PDF через QPdfWriter.
 void MainWindow::onSavePdf()
 {
     const QString path = QFileDialog::getSaveFileName(this, ui::kSavePdfDialogTitle, {}, ui::kPdfFilter);

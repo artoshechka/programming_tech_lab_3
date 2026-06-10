@@ -50,25 +50,25 @@ class MainWindow : public QMainWindow
     ~MainWindow() override;
 
    private slots:
-    /// @brief Слот выбора файла в дереве.
+    /// @brief Обрабатывает клик по элементу дерева: пропускает папки, загружает файл.
     /// @param[in] index Индекс выбранного элемента модели файловой системы.
     void onFileSelected(const QModelIndex& index);
-    /// @brief Слот сохранения текущего графика в PDF.
+    /// @brief Открывает диалог сохранения, рендерит текущий график в PDF через QPdfWriter.
     void onSavePdf();
-    /// @brief Слот перерисовки графика при смене построителя или стиля.
+    /// @brief Пересобирает график из кэша при смене построителя, стиля или флага агрегации.
     void onRedraw();
-    /// @brief Слот выбора рабочей папки с данными.
+    /// @brief Открывает диалог выбора папки; сбрасывает текущий источник и обновляет дерево.
     void onChooseFolder();
 
    private:
-    /// @brief Загружает источник данных и строит график.
+    /// @brief Запрашивает под-источники, при необходимости показывает диалог выбора, затем строит график.
     /// @param[in] path Путь к файлу данных.
     void loadFile(const QString& path);
-    /// @brief Устанавливает корневую папку дерева файлов.
+    /// @brief Пересоздаёт QFileSystemModel с фильтрами по реестру парсеров и задаёт корень дерева.
     /// @param[in] path Путь к папке.
     void setRoot(const QString& path);
-    /// @brief Заменяет текущий график в области отображения.
-    /// @param[in] chart Новый график; владение передаётся представлению через std::move.
+    /// @brief Передаёт новый график в QChartView, удаляя предыдущий.
+    /// @param[in] chart Новый график; владение передаётся QChartView через release().
     void setChart(std::unique_ptr<QChart> chart);
 
     std::shared_ptr<parser::IParserRegistry> registry_;  ///< Реестр парсеров (для запроса поддерживаемых расширений).

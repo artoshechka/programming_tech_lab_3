@@ -1,5 +1,5 @@
 /// @file sqlite_db.hpp
-/// @brief Объявление класса SqliteDB
+/// @brief Реализация IDatabase для SQLite через Qt SQL.
 /// @author Artemenko Anton
 
 #ifndef GUID_652d92c5_34e4_4c88_9e56_d4bf9ed33d6d
@@ -43,10 +43,6 @@ class SqliteDB : public IDatabase
     /// @brief Выполняет SQL-запрос и передаёт каждую ячейку результата через визитор.
     /// @param[in] sql Текст SQL-запроса.
     /// @param[in] rowFn Визитор, вызываемый для каждой ячейки строки результата.
-    /// @details Сигнатура визитора: void(const std::string& col, const std::string& val),
-    ///          где col — имя столбца, val — строковое представление значения ячейки.
-    ///          Для каждой строки результата выполняется серия вызовов по всем её столбцам;
-    ///          переход к следующей строке начинает новую серию вызовов.
     /// @throws std::runtime_error при сбое query.exec() с текстом QSqlError::text().
     void Query(const std::string& sql,
                std::function<void(const std::string& col, const std::string& val)> rowFn) override;
