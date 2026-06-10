@@ -15,13 +15,13 @@
 #include <QSplitter>
 #include <QStatusBar>
 #include <QToolBar>
-#include <database_module/idatabase.hpp>
 #include <logger/logger_macros.hpp>
-#include <parser/parse_exception.hpp>
 
-#include "chart_presenter.hpp"
+#include "chart_model.hpp"
 #include "table_select_dialog.hpp"
 #include "ui_strings.hpp"
+
+#include <chart/ichart_builder.hpp>
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -34,20 +34,22 @@ MainWindow::~MainWindow() = default;
 MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared_ptr<parser::IParserRegistry> registry,
                        std::shared_ptr<logger::ILogger> logger, QWidget* parent)
     : QMainWindow(parent),
+      builders_(std::move(builders)),
+      styles_(std::move(styles)),
       registry_(registry),
       logger_(logger),
-      presenter_(std::make_unique<ChartPresenter>(builders, styles, std::move(registry), logger_))
+      model_(std::make_unique<ChartModel>(std::move(registry), logger_))
 {
     auto* toolbar = addToolBar(ui::kToolbarTitle);
     toolbar->setMovable(true);
 
     chartCombo_ = new QComboBox();
-    for (const auto& [name, _] : builders) chartCombo_->addItem(QString::fromStdString(name));
+    for (const auto& [name, _] : builders_) chartCombo_->addItem(QString::fromStdString(name));
     toolbar->addWidget(chartCombo_);
     toolbar->addSeparator();
 
     styleCombo_ = new QComboBox();
-    for (const auto& [name, _] : styles) styleCombo_->addItem(QString::fromStdString(name));
+    for (const auto& [name, _] : styles_) styleCombo_->addItem(QString::fromStdString(name));
     toolbar->addWidget(styleCombo_);
     toolbar->addSeparator();
 
@@ -74,20 +76,33 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
     splitter->setStretchFactor(1, 3);
     setCentralWidget(splitter);
 
+    // Начальная синхронизация модели с виджетами до подключения сигналов: модель должна знать
+    // builder/style/aggregate ещё до первой загрузки источника.
+    model_->setBuilder(chartCombo_->currentText().toStdString());
+    model_->setStyle(styleCombo_->currentText().toStdString());
+    model_->setAggregate(aggregateCheck_->isChecked());
+
     const QString root = QFileDialog::getExistingDirectory(this, ui::kChooseFolderTitle);
     if (!root.isEmpty()) setRoot(root);
 
+    // Сигналы модели -> представление: модель уведомляет, View перестраивает график / показывает ошибку.
+    connect(model_.get(), &ChartModel::dataChanged, this, &MainWindow::refresh);
+    connect(model_.get(), &ChartModel::renderOptionsChanged, this, &MainWindow::refresh);
+    connect(model_.get(), &ChartModel::errorOccurred, this, &MainWindow::onError);
+
+    // Сигналы виджетов -> слоты-мутаторы модели (роль контроллера в Qt Model/View).
     connect(treeView_, &QTreeView::clicked, this, &MainWindow::onFileSelected);
     connect(folderBtn, &QPushButton::clicked, this, &MainWindow::onChooseFolder);
     connect(pdfBtn, &QPushButton::clicked, this, &MainWindow::onSavePdf);
-    connect(chartCombo_, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
-            [this]
+    connect(chartCombo_, &QComboBox::currentTextChanged, this,
+            [this](const QString& name)
             {
-                aggregateCheck_->setEnabled(chartCombo_->currentText() == "Pie");
-                onRedraw();
+                aggregateCheck_->setEnabled(name == "Pie");
+                model_->setBuilder(name.toStdString());
             });
-    connect(styleCombo_, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onRedraw);
-    connect(aggregateCheck_, &QCheckBox::stateChanged, this, &MainWindow::onRedraw);
+    connect(styleCombo_, &QComboBox::currentTextChanged, this,
+            [this](const QString& name) { model_->setStyle(name.toStdString()); });
+    connect(aggregateCheck_, &QCheckBox::toggled, this, [this](bool on) { model_->setAggregate(on); });
 }
 
 /// @brief Пересоздаёт QFileSystemModel с фильтрами по реестру парсеров и задаёт корень дерева.
@@ -111,32 +126,28 @@ void MainWindow::setRoot(const QString& path)
     statusBar()->showMessage(path);
 }
 
-/// @brief Открывает диалог выбора папки; сбрасывает текущий источник и обновляет дерево.
+/// @brief Открывает диалог выбора папки; обновляет дерево.
 void MainWindow::onChooseFolder()
 {
     const QString path = QFileDialog::getExistingDirectory(this, ui::kChooseFolderTitle);
     if (!path.isEmpty())
     {
         LogInfo(logger_) << "Working folder changed: " << path.toStdString();
-        currentSource_.clear();
         setRoot(path);
     }
 }
 
-/// @brief Пересобирает график из кэша при смене построителя, стиля или флага агрегации.
-void MainWindow::onRedraw()
+/// @brief Перестраивает график из текущего состояния модели (реакция на сигналы модели).
+void MainWindow::refresh()
 {
-    if (currentSource_.isEmpty()) return;
-    try
-    {
-        auto chart = presenter_->rebuild(chartCombo_->currentText().toStdString(),
-                                         styleCombo_->currentText().toStdString(), aggregateCheck_->isChecked());
-        if (chart) setChart(std::move(chart));
-    } catch (const std::exception& e)
-    {
-        LogError(logger_) << "Redraw failed: " << e.what();
-        QMessageBox::critical(this, ui::kErrorTitle, QString::fromStdString(e.what()));
-    }
+    if (!model_->hasData()) return;  // данные ещё не загружены — строить нечего
+    setChart(buildChart(model_->data()));
+}
+
+/// @brief Показывает пользователю ошибку, пришедшую сигналом модели.
+void MainWindow::onError(const QString& message)
+{
+    QMessageBox::critical(this, ui::kLoadErrorTitle, message);
 }
 
 /// @brief Обрабатывает клик по элементу дерева: пропускает папки, загружает файл.
@@ -149,14 +160,14 @@ void MainWindow::onFileSelected(const QModelIndex& index)
     loadFile(path);
 }
 
-/// @brief Запрашивает под-источники, при необходимости показывает диалог выбора, затем строит график.
+/// @brief Запрашивает под-источники, при необходимости показывает диалог выбора, затем задаёт источник модели.
 void MainWindow::loadFile(const QString& path)
 {
     std::string source = path.toStdString();
 
     // Если формат имеет несколько под-источников (таблицы SQLite и т.п.) — спросить у пользователя.
-    // Инспекция делегирована презентеру/парсеру; здесь остаётся только диалог, без знания формата.
-    const auto subSources = presenter_->listSubSources(source);
+    // Инспекция делегирована модели/парсеру; здесь остаётся только диалог, без знания формата.
+    const auto subSources = model_->listSubSources(source);
     if (subSources.size() > 1)
     {
         QStringList qTables;
@@ -169,24 +180,20 @@ void MainWindow::loadFile(const QString& path)
         source += "|" + selected.toStdString();
     }
 
-    try
-    {
-        currentSource_ = QString::fromStdString(source);
-        auto chart = presenter_->load(source, chartCombo_->currentText().toStdString(),
-                                      styleCombo_->currentText().toStdString(), aggregateCheck_->isChecked());
-        setChart(std::move(chart));
-        statusBar()->showMessage(path);
-    } catch (const parser::ParseException& e)
-    {
-        LogError(logger_) << "Parse failed for '" << source << "': " << e.what();
-        currentSource_.clear();
-        QMessageBox::critical(this, ui::kLoadErrorTitle, QString::fromStdString(e.what()));
-    } catch (const std::exception& e)
-    {
-        LogError(logger_) << "Load failed for '" << source << "': " << e.what();
-        currentSource_.clear();
-        QMessageBox::critical(this, ui::kErrorTitle, QString::fromStdString(e.what()));
-    }
+    // Мутация модели; дальше всё идёт через сигналы: dataChanged() -> refresh(), errorOccurred() -> onError().
+    statusBar()->showMessage(path);
+    model_->setSource(source);
+}
+
+/// @brief Строит QChart из данных по текущим builder/style/aggregate модели.
+std::unique_ptr<QChart> MainWindow::buildChart(const data::TimelineData& data)
+{
+    auto chartStyle = styles_.at(model_->style())();
+    auto chartBuilder = builders_.at(model_->builder())();
+    chartBuilder->Configure(chart::BuilderOptions{model_->aggregate(), chartStyle.get()});
+    std::unique_ptr<QChart> chart = chartBuilder->Build(data);
+    chartStyle->Apply(chart.get());  // общие настройки графика (тема/фон)
+    return chart;
 }
 
 /// @brief Передаёт новый график в QChartView, удаляя предыдущий.
