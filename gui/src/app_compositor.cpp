@@ -54,8 +54,8 @@ MainWindow* CreateMainWindow(QWidget* parent)
     styles["Color"] = [appLogger] { return std::make_shared<style::ColorStyle>(appLogger); };
     styles["Grayscale"] = [appLogger] { return std::make_shared<style::GrayscaleStyle>(appLogger); };
 
-    LogInfo(appLogger) << "Composition root: ready (" << parserRegistry->SupportedExtensions().size()
-                       << " parsers, " << builders.size() << " builders, " << styles.size() << " styles)";
+    LogInfo(appLogger) << "Composition root: ready (" << parserRegistry->SupportedExtensions().size() << " parsers, "
+                       << builders.size() << " builders, " << styles.size() << " styles)";
     return new MainWindow(std::move(builders), std::move(styles), parserRegistry, appLogger, parent);
 }
 

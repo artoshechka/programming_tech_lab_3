@@ -15,13 +15,12 @@
 #include <QSplitter>
 #include <QStatusBar>
 #include <QToolBar>
+#include <chart/ichart_builder.hpp>
 #include <logger/logger_macros.hpp>
 
 #include "chart_model.hpp"
 #include "table_select_dialog.hpp"
 #include "ui_strings.hpp"
-
-#include <chart/ichart_builder.hpp>
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -94,12 +93,10 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
     connect(treeView_, &QTreeView::clicked, this, &MainWindow::onFileSelected);
     connect(folderBtn, &QPushButton::clicked, this, &MainWindow::onChooseFolder);
     connect(pdfBtn, &QPushButton::clicked, this, &MainWindow::onSavePdf);
-    connect(chartCombo_, &QComboBox::currentTextChanged, this,
-            [this](const QString& name)
-            {
-                aggregateCheck_->setEnabled(name == "Pie");
-                model_->setBuilder(name.toStdString());
-            });
+    connect(chartCombo_, &QComboBox::currentTextChanged, this, [this](const QString& name) {
+        aggregateCheck_->setEnabled(name == "Pie");
+        model_->setBuilder(name.toStdString());
+    });
     connect(styleCombo_, &QComboBox::currentTextChanged, this,
             [this](const QString& name) { model_->setStyle(name.toStdString()); });
     connect(aggregateCheck_, &QCheckBox::toggled, this, [this](bool on) { model_->setAggregate(on); });
@@ -113,8 +110,7 @@ void MainWindow::setRoot(const QString& path)
     model->setFilter(QDir::NoDotAndDotDot | QDir::AllDirs | QDir::Files);
     QStringList filters;
     if (registry_)
-        for (const auto& ext : registry_->SupportedExtensions())
-            filters << QString::fromStdString("*." + ext);
+        for (const auto& ext : registry_->SupportedExtensions()) filters << QString::fromStdString("*." + ext);
     model->setNameFilters(filters);
     model->setNameFilterDisables(false);
     model->setRootPath(path);

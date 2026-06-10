@@ -20,7 +20,9 @@ class ParserRegistry : public IParserRegistry
    public:
     /// @brief Конструктор реестра.
     /// @param[in] logger Логгер для диагностики регистрации/резолва; допускается nullptr.
-    explicit ParserRegistry(std::shared_ptr<logger::ILogger> logger = nullptr) : logger_(std::move(logger)) {}
+    explicit ParserRegistry(std::shared_ptr<logger::ILogger> logger = nullptr) : logger_(std::move(logger))
+    {
+    }
 
     /// @brief Регистрирует парсер для указанного расширения.
     /// @param[in] extension Расширение файла (регистр игнорируется, приводится к нижнему).

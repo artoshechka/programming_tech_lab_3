@@ -18,11 +18,16 @@ class BarChartBuilder : public IChartBuilder
    public:
     /// @brief Конструктор построителя.
     /// @param[in] logger Логгер для диагностики построения; допускается nullptr.
-    explicit BarChartBuilder(std::shared_ptr<logger::ILogger> logger = nullptr) : logger_(std::move(logger)) {}
+    explicit BarChartBuilder(std::shared_ptr<logger::ILogger> logger = nullptr) : logger_(std::move(logger))
+    {
+    }
 
     /// @brief Применяет опции построения (использует только palette).
     /// @param[in] options Опции; palette — необязательная палитра для покраски наборов.
-    void Configure(const BuilderOptions& options) noexcept override { palette_ = options.palette; }
+    void Configure(const BuilderOptions& options) noexcept override
+    {
+        palette_ = options.palette;
+    }
 
     /// @brief Строит столбчатую диаграмму на основе данных.
     /// @details При числе точек выше порога агрегации данные предварительно
@@ -32,8 +37,8 @@ class BarChartBuilder : public IChartBuilder
     [[nodiscard]] std::unique_ptr<QtCharts::QChart> Build(const data::TimelineData& data) override;
 
    private:
-    const style::IPalette* palette_ = nullptr; ///< Палитра для покраски барсетов (опционально).
-    std::shared_ptr<logger::ILogger> logger_;  ///< Логгер для диагностики (может быть nullptr).
+    const style::IPalette* palette_ = nullptr;  ///< Палитра для покраски барсетов (опционально).
+    std::shared_ptr<logger::ILogger> logger_;   ///< Логгер для диагностики (может быть nullptr).
 };
 
 }  // namespace chart

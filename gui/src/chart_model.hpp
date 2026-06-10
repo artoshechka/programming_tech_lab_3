@@ -37,13 +37,25 @@ class ChartModel : public QObject
     /// @return Ссылка на данные; вызывать только при hasData() == true.
     const data::TimelineData& data() const;
     /// @brief Есть ли загруженные данные.
-    [[nodiscard]] bool hasData() const { return dataSlot_.has_value(); }
+    [[nodiscard]] bool hasData() const
+    {
+        return dataSlot_.has_value();
+    }
     /// @brief Текущее имя построителя графика.
-    [[nodiscard]] const std::string& builder() const { return builder_; }
+    [[nodiscard]] const std::string& builder() const
+    {
+        return builder_;
+    }
     /// @brief Текущее имя стиля графика.
-    [[nodiscard]] const std::string& style() const { return style_; }
+    [[nodiscard]] const std::string& style() const
+    {
+        return style_;
+    }
     /// @brief Включена ли агрегация.
-    [[nodiscard]] bool aggregate() const { return aggregate_; }
+    [[nodiscard]] bool aggregate() const
+    {
+        return aggregate_;
+    }
 
     /// @brief Возвращает под-источники файла (таблицы и т.п.) для выбора пользователем.
     /// @param[in] path Путь к файлу-источнику.

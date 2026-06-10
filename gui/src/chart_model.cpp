@@ -2,11 +2,11 @@
 /// @brief Определение ChartModel
 /// @author Artemenko Anton
 
+#include <exception>
 #include <gui/src/chart_model.hpp>
 #include <logger/logger_macros.hpp>
 #include <parser/iparser.hpp>
 #include <parser/parse_exception.hpp>
-#include <exception>
 #include <system_error>
 #include <utility>
 
