@@ -6,7 +6,7 @@
 
 #include <QObject>
 #include <QString>
-#include <data_model/src/timeline_data.hpp>
+#include <data_model/timeline_data.hpp>
 #include <filesystem>
 #include <logger/ilogger.hpp>
 #include <memory>

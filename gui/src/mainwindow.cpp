@@ -2,7 +2,7 @@
 /// @brief Определение MainWindow
 /// @author Artemenko Anton
 
-#include "mainwindow.hpp"
+#include <gui/mainwindow.hpp>
 
 #include <QFileDialog>
 #include <QFileSystemModel>
@@ -20,7 +20,7 @@
 
 #include "chart_model.hpp"
 #include "table_select_dialog.hpp"
-#include "ui_strings.hpp"
+#include <gui/ui_strings.hpp>
 
 QT_CHARTS_USE_NAMESPACE
 

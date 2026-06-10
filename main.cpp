@@ -6,9 +6,9 @@
 #include <QMessageBox>
 #include <QString>
 #include <exception>
-#include <gui/src/app_compositor.hpp>
-#include <gui/src/mainwindow.hpp>
-#include <gui/src/ui_strings.hpp>
+#include <gui/app_compositor.hpp>
+#include <gui/mainwindow.hpp>
+#include <gui/ui_strings.hpp>
 #include <logger/logger_factory.hpp>
 #include <logger/logger_macros.hpp>
 #include <memory>

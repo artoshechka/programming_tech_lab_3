@@ -5,7 +5,7 @@
 #define GUID_ee1a2b3c_4d5e_6f70_8192_a3b4c5d6e7f8
 
 #include <cmath>
-#include <data_model/src/timeline_data.hpp>
+#include <data_model/timeline_data.hpp>
 #include <map>
 #include <string>
 #include <vector>

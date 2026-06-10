@@ -5,8 +5,8 @@
 #include <chart/src/bar_chart_builder.hpp>
 #include <chart/src/pie_chart_builder.hpp>
 #include <database_module/src/sqlite_db_manager.hpp>
-#include <gui/src/app_compositor.hpp>
-#include <gui/src/mainwindow.hpp>
+#include <gui/app_compositor.hpp>
+#include <gui/mainwindow.hpp>
 #include <ioc_container/IOC_Contaner.hpp>
 #include <logger/logger_factory.hpp>
 #include <logger/logger_macros.hpp>

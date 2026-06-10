@@ -7,7 +7,7 @@
 
 #include <atomic>
 #include <database_module/idatabase_manager.hpp>
-#include <parser/parser_base.hpp>
+#include <parser/src/parser_base.hpp>
 
 namespace parser
 {
