@@ -22,7 +22,7 @@ class SqliteDB : public IDatabase
     /// @param[in] logger Логгер для диагностики открытия и запросов; допускается nullptr.
     /// @details Имя connectionName используется при регистрации соединения в Qt SQL
     ///          и должно быть уникальным в пределах процесса.
-    explicit SqliteDB(const std::string& connectionName, std::shared_ptr<logger::ILogger> logger = nullptr);
+    explicit SqliteDB(const std::string& connectionName, const std::shared_ptr<logger::ILogger>& logger = nullptr);
 
     /// @brief Виртуальный деструктор.
     /// @details Закрывает соединение и удаляет его из реестра Qt SQL.

@@ -15,8 +15,8 @@
 namespace database
 {
 
-SqliteDB::SqliteDB(const std::string& connectionName, std::shared_ptr<logger::ILogger> logger)
-    : db_(QSqlDatabase::addDatabase("QSQLITE", QString::fromStdString(connectionName))), logger_(std::move(logger))
+SqliteDB::SqliteDB(const std::string& connectionName, const std::shared_ptr<logger::ILogger>& logger)
+    : db_(QSqlDatabase::addDatabase("QSQLITE", QString::fromStdString(connectionName))), logger_(logger)
 {
 }
 

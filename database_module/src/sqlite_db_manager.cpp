@@ -11,7 +11,7 @@ namespace database
 namespace manager
 {
 
-SqliteDBManager::SqliteDBManager(std::shared_ptr<logger::ILogger> logger) : logger_(std::move(logger))
+SqliteDBManager::SqliteDBManager(const std::shared_ptr<logger::ILogger>& logger) : logger_(logger)
 {
 }
 

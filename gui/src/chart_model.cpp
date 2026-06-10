@@ -13,9 +13,9 @@
 namespace gui
 {
 
-ChartModel::ChartModel(std::shared_ptr<parser::IParserRegistry> registry, std::shared_ptr<logger::ILogger> logger,
+ChartModel::ChartModel(std::shared_ptr<parser::IParserRegistry> registry, const std::shared_ptr<logger::ILogger>& logger,
                        QObject* parent)
-    : QObject(parent), registry_(std::move(registry)), logger_(std::move(logger))
+    : QObject(parent), registry_(std::move(registry)), logger_(logger)
 {
 }
 

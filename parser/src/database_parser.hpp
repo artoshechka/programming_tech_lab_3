@@ -19,9 +19,9 @@ class DatabaseParser : public ParserBase
     /// @brief Конструктор парсера базы данных.
     /// @param[in] logger Логгер для записи диагностических сообщений.
     /// @param[in] manager Фабрика соединений с БД.
-    DatabaseParser(std::shared_ptr<logger::ILogger> logger,
+    DatabaseParser(const std::shared_ptr<logger::ILogger>& logger,
                    std::shared_ptr<database::manager::IDatabaseManager> manager)
-        : ParserBase(std::move(logger)), manager_(std::move(manager))
+        : ParserBase(logger), manager_(std::move(manager))
     {
     }
 

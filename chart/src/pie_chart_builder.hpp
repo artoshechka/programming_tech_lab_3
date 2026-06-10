@@ -18,7 +18,7 @@ class PieChartBuilder : public IChartBuilder
    public:
     /// @brief Конструктор построителя.
     /// @param[in] logger Логгер для диагностики построения; допускается nullptr.
-    explicit PieChartBuilder(std::shared_ptr<logger::ILogger> logger = nullptr) : logger_(std::move(logger))
+    explicit PieChartBuilder(const std::shared_ptr<logger::ILogger>& logger = nullptr) : logger_(logger)
     {
     }
 

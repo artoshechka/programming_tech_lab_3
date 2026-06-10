@@ -48,7 +48,7 @@ class MainWindow : public QMainWindow
     /// @param[in] logger Логгер для диагностики действий пользователя; допускается nullptr.
     /// @param[in] parent Родительский виджет (по умолчанию nullptr).
     explicit MainWindow(BuilderFactory builders, StyleFactory styles, std::shared_ptr<parser::IParserRegistry> registry,
-                        std::shared_ptr<logger::ILogger> logger = nullptr, QWidget* parent = nullptr);
+                        const std::shared_ptr<logger::ILogger>& logger = nullptr, QWidget* parent = nullptr);
     /// @brief Виртуальный деструктор.
     ~MainWindow() override;
 

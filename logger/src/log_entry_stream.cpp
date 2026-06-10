@@ -6,9 +6,9 @@
 
 using logger::detail::LogEntryStream;
 
-LogEntryStream::LogEntryStream(std::shared_ptr<logger::ILogger> logger, logger::LogLevel level, const char* file,
+LogEntryStream::LogEntryStream(const std::shared_ptr<logger::ILogger>& logger, logger::LogLevel level, const char* file,
                                int line, const char* function)
-    : logger_(std::move(logger)), level_(level), file_(file), line_(line), function_(function)
+    : logger_(logger), level_(level), file_(file), line_(line), function_(function)
 {
 }
 

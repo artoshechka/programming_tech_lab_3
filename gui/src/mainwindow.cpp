@@ -31,7 +31,7 @@ MainWindow::~MainWindow() = default;
 
 /// @brief Строит UI: тулбар с комбобоксами и кнопками, дерево файлов, область графика; связывает сигналы.
 MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared_ptr<parser::IParserRegistry> registry,
-                       std::shared_ptr<logger::ILogger> logger, QWidget* parent)
+                       const std::shared_ptr<logger::ILogger>& logger, QWidget* parent)
     : QMainWindow(parent),
       builders_(std::move(builders)),
       styles_(std::move(styles)),

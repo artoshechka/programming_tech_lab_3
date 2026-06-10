@@ -16,7 +16,7 @@ class JsonParser : public ParserBase
    public:
     /// @brief Конструктор парсера JSON.
     /// @param[in] logger Логгер для записи диагностических сообщений.
-    explicit JsonParser(std::shared_ptr<logger::ILogger> logger) : ParserBase(std::move(logger))
+    explicit JsonParser(const std::shared_ptr<logger::ILogger>& logger) : ParserBase(logger)
     {
     }
 

@@ -19,7 +19,7 @@ class GrayscaleStyle : public IChartStyle
    public:
     /// @brief Конструктор стиля.
     /// @param[in] logger Логгер для диагностики применения стиля; допускается nullptr.
-    explicit GrayscaleStyle(std::shared_ptr<logger::ILogger> logger = nullptr) : logger_(std::move(logger))
+    explicit GrayscaleStyle(const std::shared_ptr<logger::ILogger>& logger = nullptr) : logger_(logger)
     {
     }
 
