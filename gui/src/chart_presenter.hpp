@@ -34,7 +34,7 @@ class ChartPresenter
     /// @brief Возвращает под-источники файла (таблицы и т.п.) для выбора пользователем.
     /// @param[in] path Путь к файлу-источнику.
     /// @return Имена под-источников; пустой вектор, если их нет или формат одиночный.
-    /// @details Делегирует парсеру формата (по расширению) — презентер не знает о SQLite.
+    /// @details Делегирует парсеру формата по расширению — презентер не зависит от конкретного формата.
     std::vector<std::string> listSubSources(const std::string& path);
 
     /// @brief Загружает файл, кэширует TimelineData, строит и возвращает QChart.
@@ -59,7 +59,7 @@ class ChartPresenter
     /// @brief Единственный слот кэша распарсенных данных последнего источника.
     struct DataSlot
     {
-        std::string source;                       ///< Source, для которого закэшированы данные.
+        std::string source;                       ///< Источник, для которого закэшированы данные.
         std::filesystem::file_time_type mtime;    ///< Время последней модификации исходного файла на момент парсинга.
         data::TimelineData data;                  ///< Распарсенные данные.
     };
@@ -81,7 +81,7 @@ class ChartPresenter
     std::unique_ptr<QChart> buildChart(const data::TimelineData& data, const std::string& builder,
                                        const std::string& style, bool aggregate);
 
-    /// @brief Возвращает путь к файлу из source ("path" либо "path|table").
+    /// @brief Извлекает путь к файлу из source ("путь" либо "путь|таблица").
     static std::string SourcePath(const std::string& source);
 
     BuilderFactory builders_;                                          ///< Фабрика построителей графиков.

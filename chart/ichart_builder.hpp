@@ -29,7 +29,7 @@ namespace chart
 ///          в иерархию IChartBuilder и без касания вызывающих, которые их не используют.
 struct BuilderOptions
 {
-    bool aggregate = true;              ///< Включить агрегацию входных точек (актуально для Pie; по умолчанию включена).
+    bool aggregate = true;              ///< Включить агрегацию входных точек; по умолчанию включена.
     const style::IPalette* palette = nullptr;  ///< Палитра для покраски элементов; nullptr — без покраски.
 };
 
@@ -43,7 +43,7 @@ class IChartBuilder
     /// @brief Применяет опции к билдеру.
     /// @param[in] options Опции построения; неприменимые поля игнорируются.
     /// @details Базовая реализация — no-op: билдер, не поддерживающий ни одной опции,
-    ///          не обязан её переопределять. Вызывается перед Build().
+    ///          не обязан переопределять метод. Вызывается перед Build().
     virtual void Configure(const BuilderOptions& options) noexcept { (void)options; }
 
     /// @brief Строит и возвращает QChart на основе данных.

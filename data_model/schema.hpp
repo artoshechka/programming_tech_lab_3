@@ -24,7 +24,7 @@ struct HasSchema<T, std::void_t<decltype(T::kSchema)>> : std::true_type
 {
 };
 
-/// @brief Удобный helper-флаг наличия схемы
+/// @brief true, если T имеет kSchema
 template <typename T>
 inline constexpr bool HasSchemaV = HasSchema<std::remove_reference_t<T>>::value;
 
@@ -41,7 +41,7 @@ struct IsVector<std::vector<U, A>> : std::true_type
 {
 };
 
-/// @brief Удобный helper-флаг вектора
+/// @brief true, если T является std::vector
 template <typename T>
 inline constexpr bool IsVectorV = IsVector<std::remove_reference_t<T>>::value;
 
@@ -59,12 +59,10 @@ void ForEachField(T& object, Fn&& fn)
                std::remove_reference_t<T>::kSchema);
 }
 
-/// @brief Обходит все поля const-объекта согласно его статической схеме kSchema
-/// @details Перегрузка для константного объекта: поля передаются визитору как const-ссылки и
-///          не могут быть изменены. Для каждого поля вызывает fn(значение_поля, строковое_имя).
+/// @brief Перегрузка ForEachField для константного объекта.
 /// @tparam T Тип объекта (должен иметь static kSchema)
 /// @tparam Fn Тип визитора с сигнатурой fn(const auto& field, const char* name)
-/// @param[in] object Константный объект, поля которого обходятся
+/// @param[in] object Объект, поля которого обходятся (read-only)
 /// @param[in] fn Визитор, применяемый к каждому полю
 template <typename T, typename Fn>
 void ForEachField(const T& object, Fn&& fn)

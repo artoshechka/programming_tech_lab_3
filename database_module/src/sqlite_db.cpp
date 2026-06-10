@@ -1,5 +1,5 @@
 /// @file sqlite_db.cpp
-/// @brief Определение класса SqliteDB
+/// @brief Реализация методов SqliteDB.
 /// @author Artemenko Anton
 
 #include <QSqlError>

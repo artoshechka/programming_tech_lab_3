@@ -23,8 +23,8 @@ struct TimePoint
         std::make_tuple(std::make_pair(&TimePoint::time_, "Time"), std::make_pair(&TimePoint::value_, "Value"));
 };
 
-/// @brief Класс для представления данных временной шкалы.
-/// @details Главный класс ряда: имя ряда и набор точек. Владеет вектором TimePoint.
+/// @brief Временной ряд: имя и набор точек.
+/// @details Владеет вектором TimePoint. Служит основной единицей обмена между парсером и GUI.
 class TimelineData
 {
    public:
