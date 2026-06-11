@@ -1,0 +1,73 @@
+%% Диаграмма классов: ключевые сущности и связи.
+%% Обозначения: ..|> реализация интерфейса, --|> наследование,
+%% o-- агрегация (ссылка/shared), *-- композиция (владение), --> использование.
+classDiagram
+    direction LR
+
+    %% ---- logger ----
+    class ILogger { <<interface>> +Log() +SetSettings() +GetSettings() }
+    class ThreadSafeLogger
+    class LogEntryStream
+    ThreadSafeLogger ..|> ILogger
+    LogEntryStream o-- ILogger
+
+    %% ---- data_model ----
+    class TimelineData { +string name_ +vector~TimePoint~ points_ }
+    class TimePoint { +string time_ +double value_ }
+    TimelineData *-- TimePoint
+
+    %% ---- parser ----
+    class IParser { <<interface>> +Load() +ListSubSources() }
+    class ParserBase
+    class JsonParser
+    class DatabaseParser
+    class IParserRegistry { <<interface>> +Get() +SupportedExtensions() }
+    class ParserRegistry
+    ParserBase ..|> IParser
+    JsonParser --|> ParserBase
+    DatabaseParser --|> ParserBase
+    ParserRegistry ..|> IParserRegistry
+    ParserRegistry o-- IParser
+    IParser --> TimelineData
+    DatabaseParser o-- IDatabaseManager
+
+    %% ---- database_module ----
+    class IDatabase { <<interface>> +Open() +Tables() +Query() }
+    class IDatabaseManager { <<interface>> +Create() }
+    class SqliteDB
+    class SqliteDBManager
+    SqliteDB ..|> IDatabase
+    SqliteDBManager ..|> IDatabaseManager
+    SqliteDBManager --> IDatabase : creates
+
+    %% ---- chart ----
+    class IChartBuilder { <<interface>> +Configure() +Build() }
+    class BarChartBuilder
+    class PieChartBuilder
+    BarChartBuilder ..|> IChartBuilder
+    PieChartBuilder ..|> IChartBuilder
+    IChartBuilder --> TimelineData
+    IChartBuilder --> IPalette
+
+    %% ---- style ----
+    class IPalette { <<interface>> +ColorFor() }
+    class IChartStyle { <<interface>> +Apply() }
+    class ColorStyle
+    class GrayscaleStyle
+    IChartStyle --|> IPalette
+    ColorStyle ..|> IChartStyle
+    GrayscaleStyle ..|> IChartStyle
+
+    %% ---- gui ----
+    class MainWindow
+    class ChartModel
+    MainWindow *-- ChartModel
+    MainWindow o-- IChartBuilder
+    MainWindow o-- IChartStyle
+    MainWindow o-- IParserRegistry
+    ChartModel o-- IParserRegistry
+    ChartModel *-- TimelineData
+
+    %% ---- общая зависимость ----
+    ChartModel o-- ILogger
+    MainWindow o-- ILogger
