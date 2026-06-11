@@ -5,6 +5,7 @@
 #include <QtCharts/QPieSlice>
 #include <algorithm>
 #include <chart/aggregate.hpp>
+#include <chart/src/render_constants.hpp>
 #include <logger/logger_macros.hpp>
 #include <style/ipalette.hpp>
 
@@ -12,8 +13,6 @@ QT_CHARTS_USE_NAMESPACE
 
 namespace chart
 {
-
-static constexpr int kMaxSlices = 10;
 
 std::unique_ptr<QtCharts::QChart> PieChartBuilder::Build(const data::TimelineData& raw)
 {

@@ -3,6 +3,7 @@
 #include <QtCharts/QChart>
 #include <algorithm>
 #include <logger/logger_macros.hpp>
+#include <style/src/style_palette.hpp>
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -11,7 +12,7 @@ namespace style
 
 QColor GrayscaleStyle::ColorFor(int index, int total) const
 {
-    const int gray = 60 + (index * 170) / std::max(total - 1, 1);
+    const int gray = kGrayBase + (index * kGrayRange) / std::max(total - 1, 1);
     return QColor(gray, gray, gray);
 }
 

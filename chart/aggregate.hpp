@@ -4,6 +4,7 @@
 #ifndef GUID_ee1a2b3c_4d5e_6f70_8192_a3b4c5d6e7f8
 #define GUID_ee1a2b3c_4d5e_6f70_8192_a3b4c5d6e7f8
 
+#include <chart/aggregation_constants.hpp>
 #include <cmath>
 #include <data_model/timeline_data.hpp>
 #include <map>
@@ -12,11 +13,6 @@
 
 namespace chart
 {
-
-constexpr int kAggregateThreshold = 50;  ///< Порог числа точек: при превышении применяется агрегация.
-constexpr int kAggKeyLen = 7;            ///< Длина ключа агрегации по умолчанию: 7 → "MM.YYYY", 4 → "YYYY".
-constexpr int kDayPrefixLen = 3;         ///< Длина префикса "DD." в формате "DD.MM.YYYY".
-constexpr double kRoundFactor = 100.0;   ///< Множитель округления среднего до двух знаков.
 
 /// @brief Агрегирует точки временного ряда по префиксу метки времени, вычисляя среднее.
 /// @details Если метка имеет формат "DD.MM.YYYY …" (третий символ — точка),
