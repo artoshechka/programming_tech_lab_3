@@ -6,7 +6,9 @@
 
 #include <QCheckBox>
 #include <QComboBox>
+#include <QLabel>
 #include <QMainWindow>
+#include <QToolButton>
 #include <QTreeView>
 #include <QtCharts/QChartView>
 #include <chart/ichart_builder.hpp>
@@ -65,6 +67,8 @@ class MainWindow : public QMainWindow
     /// @brief Показывает пользователю ошибку, пришедшую сигналом модели.
     /// @param[in] message Текст ошибки.
     void onError(const QString& message);
+    /// @brief Переключает светлую/тёмную тему оформления и обновляет подпись кнопки.
+    void toggleTheme();
 
    private:
     /// @brief Запрашивает под-источники, при необходимости показывает диалог выбора, затем задаёт источник модели.
@@ -92,6 +96,10 @@ class MainWindow : public QMainWindow
     QComboBox* chartCombo_ = nullptr;      ///< Выбор типа построителя графика.
     QComboBox* styleCombo_ = nullptr;      ///< Выбор стиля графика.
     QCheckBox* aggregateCheck_ = nullptr;  ///< Чекбокс включения агрегации (актуален для Pie).
+    QToolButton* themeButton_ = nullptr;   ///< Кнопка переключения светлой/тёмной темы.
+    QLabel* plotTitle_ = nullptr;          ///< Заголовок над областью графика (имя ряда).
+    QLabel* statusInfo_ = nullptr;         ///< Правый индикатор статус-бара (число точек ряда).
+    bool darkTheme_ = false;               ///< Активна ли тёмная тема.
 };
 
 }  // namespace gui

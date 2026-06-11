@@ -4,6 +4,7 @@
 
 #include <gui/mainwindow.hpp>
 
+#include <QApplication>
 #include <QFileDialog>
 #include <QFileSystemModel>
 #include <QMenuBar>
@@ -15,11 +16,14 @@
 #include <QSplitter>
 #include <QStatusBar>
 #include <QToolBar>
+#include <QVBoxLayout>
+#include <QWidget>
 #include <chart/ichart_builder.hpp>
 #include <logger/logger_macros.hpp>
 
 #include "chart_model.hpp"
 #include "table_select_dialog.hpp"
+#include <gui/src/theme.hpp>
 #include <gui/ui_strings.hpp>
 
 QT_CHARTS_USE_NAMESPACE
@@ -58,22 +62,49 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
     toolbar->addWidget(aggregateCheck_);
     toolbar->addSeparator();
 
+    // Распорка прижимает правую группу кнопок к краю тулбара (как в референс-дизайне).
+    auto* spacer = new QWidget();
+    spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    toolbar->addWidget(spacer);
+
     auto* folderBtn = new QPushButton(ui::kFolderButton);
+    folderBtn->setObjectName("primaryButton");
     auto* pdfBtn = new QPushButton(ui::kSavePdfButton);
+    pdfBtn->setObjectName("ghostButton");
+    themeButton_ = new QToolButton();
+    themeButton_->setObjectName("themeButton");
+    themeButton_->setText(ui::kThemeDarkButton);
     toolbar->addWidget(folderBtn);
     toolbar->addWidget(pdfBtn);
+    toolbar->addWidget(themeButton_);
 
     treeView_ = new QTreeView();
+    treeView_->setHeaderHidden(true);
     chartView_ = new QChartView();
     chartView_->setRenderHint(QPainter::Antialiasing);
     chartView_->setChart(new QChart());
 
+    // Контейнер графика: заголовок ряда над областью графика.
+    auto* plotContainer = new QWidget();
+    auto* plotLayout = new QVBoxLayout(plotContainer);
+    plotLayout->setContentsMargins(0, 0, 0, 0);
+    plotLayout->setSpacing(0);
+    plotTitle_ = new QLabel(ui::kPlotTitlePlaceholder);
+    plotTitle_->setObjectName("plotTitle");
+    plotTitle_->setAlignment(Qt::AlignCenter);
+    plotLayout->addWidget(plotTitle_);
+    plotLayout->addWidget(chartView_, 1);
+
     auto* splitter = new QSplitter(Qt::Horizontal);
     splitter->addWidget(treeView_);
-    splitter->addWidget(chartView_);
+    splitter->addWidget(plotContainer);
     splitter->setStretchFactor(0, 1);
     splitter->setStretchFactor(1, 3);
     setCentralWidget(splitter);
+
+    statusInfo_ = new QLabel();
+    statusBar()->addPermanentWidget(statusInfo_);
+    qApp->setStyleSheet(theme::StyleSheet(theme::Mode::Light));
 
     // Начальная синхронизация модели с виджетами до подключения сигналов: модель должна знать
     // builder/style/aggregate ещё до первой загрузки источника.
@@ -93,6 +124,7 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
     connect(treeView_, &QTreeView::clicked, this, &MainWindow::onFileSelected);
     connect(folderBtn, &QPushButton::clicked, this, &MainWindow::onChooseFolder);
     connect(pdfBtn, &QPushButton::clicked, this, &MainWindow::onSavePdf);
+    connect(themeButton_, &QToolButton::clicked, this, &MainWindow::toggleTheme);
     connect(chartCombo_, &QComboBox::currentTextChanged, this, [this](const QString& name) {
         aggregateCheck_->setEnabled(name == "Pie");
         model_->setBuilder(name.toStdString());
@@ -137,7 +169,19 @@ void MainWindow::onChooseFolder()
 void MainWindow::refresh()
 {
     if (!model_->hasData()) return;  // данные ещё не загружены — строить нечего
-    setChart(buildChart(model_->data()));
+    const auto& data = model_->data();
+    setChart(buildChart(data));
+    plotTitle_->setText(QString::fromStdString(data.name_));
+    statusInfo_->setText(QString::number(static_cast<qulonglong>(data.points_.size())) + ui::kPointsSuffix);
+}
+
+/// @brief Переключает светлую/тёмную тему оформления и обновляет подпись кнопки.
+void MainWindow::toggleTheme()
+{
+    darkTheme_ = !darkTheme_;
+    qApp->setStyleSheet(theme::StyleSheet(darkTheme_ ? theme::Mode::Dark : theme::Mode::Light));
+    themeButton_->setText(darkTheme_ ? ui::kThemeLightButton : ui::kThemeDarkButton);
+    LogInfo(logger_) << "Theme switched to " << (darkTheme_ ? "dark" : "light");
 }
 
 /// @brief Показывает пользователю ошибку, пришедшую сигналом модели.

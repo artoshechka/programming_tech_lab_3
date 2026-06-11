@@ -20,6 +20,14 @@ inline constexpr const char* kAggregateCheckbox = "Агрегация";
 inline constexpr const char* kFolderButton = "Папка";
 /// @brief Подпись кнопки сохранения графика в PDF.
 inline constexpr const char* kSavePdfButton = "Сохранить PDF";
+/// @brief Подпись кнопки переключения светлой темы.
+inline constexpr const char* kThemeLightButton = "☀ Светлая";
+/// @brief Подпись кнопки переключения тёмной темы.
+inline constexpr const char* kThemeDarkButton = "☾ Тёмная";
+/// @brief Текст-заглушка заголовка графика, пока данные не загружены.
+inline constexpr const char* kPlotTitlePlaceholder = "Выберите файл с данными";
+/// @brief Суффикс счётчика точек ряда в статус-баре.
+inline constexpr const char* kPointsSuffix = " точек";
 
 /// @brief Заголовок диалога выбора рабочей папки с данными.
 inline constexpr const char* kChooseFolderTitle = "Выберите папку с данными";
