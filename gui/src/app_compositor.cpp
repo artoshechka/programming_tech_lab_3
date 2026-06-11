@@ -15,6 +15,7 @@
 #include <parser/src/parser_registry.hpp>
 #include <style/src/color_style.hpp>
 #include <style/src/grayscale_style.hpp>
+#include <style/src/style_palette.hpp>
 
 namespace gui
 {
@@ -51,8 +52,12 @@ MainWindow* CreateMainWindow(QWidget* parent)
     builders["Bar"] = [appLogger] { return std::make_shared<chart::BarChartBuilder>(appLogger); };
 
     StyleFactory styles;
-    styles["Color"] = [appLogger] { return std::make_shared<style::ColorStyle>(appLogger); };
-    styles["Grayscale"] = [appLogger] { return std::make_shared<style::GrayscaleStyle>(appLogger); };
+    styles["Тёплая"] = [appLogger] { return std::make_shared<style::ColorStyle>(style::kWarmPalette, appLogger); };
+    styles["Холодная"] = [appLogger] { return std::make_shared<style::ColorStyle>(style::kCoolPalette, appLogger); };
+    styles["Классика"] = [appLogger] { return std::make_shared<style::ColorStyle>(style::kBrandPalette, appLogger); };
+    styles["Яркая"] = [appLogger] { return std::make_shared<style::ColorStyle>(style::kVividPalette, appLogger); };
+    styles["Пастель"] = [appLogger] { return std::make_shared<style::ColorStyle>(style::kPastelPalette, appLogger); };
+    styles["Оттенки серого"] = [appLogger] { return std::make_shared<style::GrayscaleStyle>(appLogger); };
 
     LogInfo(appLogger) << "Composition root: ready (" << parserRegistry->SupportedExtensions().size() << " parsers, "
                        << builders.size() << " builders, " << styles.size() << " styles)";

@@ -7,23 +7,34 @@
 #include <QApplication>
 #include <QFileDialog>
 #include <QFileSystemModel>
+#include <QGridLayout>
+#include <QHBoxLayout>
+#include <QIcon>
+#include <QLabel>
+#include <QMargins>
+#include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QPageSize>
 #include <QPainter>
 #include <QPdfWriter>
+#include <QPixmap>
 #include <QPushButton>
 #include <QSplitter>
 #include <QStatusBar>
 #include <QToolBar>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <QWidgetAction>
+#include <QtCharts/QAbstractAxis>
+#include <QtCharts/QLegend>
 #include <chart/ichart_builder.hpp>
 #include <logger/logger_macros.hpp>
 
 #include "chart_model.hpp"
 #include "table_select_dialog.hpp"
 #include <gui/src/theme.hpp>
+#include <gui/src/toggle_switch.hpp>
 #include <gui/ui_strings.hpp>
 
 QT_CHARTS_USE_NAMESPACE
@@ -51,19 +62,33 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
     toolbar->addWidget(chartCombo_);
     toolbar->addSeparator();
 
-    styleCombo_ = new QComboBox();
-    for (const auto& [name, _] : styles_) styleCombo_->addItem(QString::fromStdString(name));
-    toolbar->addWidget(styleCombo_);
+    // Палитра: кнопка со свотчем открывает поповер выбора палитры.
+    buildPalettePopover();
+    paletteButton_ = new QToolButton();
+    paletteButton_->setObjectName("paletteButton");
+    paletteButton_->setText(ui::kPaletteButton);
+    paletteButton_->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    paletteButton_->setPopupMode(QToolButton::InstantPopup);
+    paletteButton_->setMenu(paletteMenu_);
+    toolbar->addWidget(paletteButton_);
     toolbar->addSeparator();
 
-    aggregateCheck_ = new QCheckBox(ui::kAggregateCheckbox);
-    aggregateCheck_->setChecked(true);
-    aggregateCheck_->setEnabled(chartCombo_->currentText() == "Pie");
-    toolbar->addWidget(aggregateCheck_);
+    // Агрегация: ползунок-переключатель с подписью.
+    aggregateSwitch_ = new ToggleSwitch();
+    aggregateSwitch_->setChecked(true);
+    aggregateSwitch_->setEnabled(chartCombo_->currentText() == "Pie");
+    auto* aggWrap = new QWidget();
+    auto* aggRow = new QHBoxLayout(aggWrap);
+    aggRow->setContentsMargins(4, 0, 4, 0);
+    aggRow->setSpacing(8);
+    aggRow->addWidget(aggregateSwitch_);
+    aggRow->addWidget(new QLabel(ui::kAggregateCheckbox));
+    toolbar->addWidget(aggWrap);
     toolbar->addSeparator();
 
     // Распорка прижимает правую группу кнопок к краю тулбара (как в референс-дизайне).
     auto* spacer = new QWidget();
+    spacer->setObjectName("toolbarSpacer");
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     toolbar->addWidget(spacer);
 
@@ -109,8 +134,14 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
     // Начальная синхронизация модели с виджетами до подключения сигналов: модель должна знать
     // builder/style/aggregate ещё до первой загрузки источника.
     model_->setBuilder(chartCombo_->currentText().toStdString());
-    model_->setStyle(styleCombo_->currentText().toStdString());
-    model_->setAggregate(aggregateCheck_->isChecked());
+    std::string initialStyle = ui::kDefaultStyleName;
+    if (styles_.find(initialStyle) == styles_.end() && !styles_.empty()) initialStyle = styles_.begin()->first;
+    if (auto it = styles_.find(initialStyle); it != styles_.end())
+    {
+        model_->setStyle(initialStyle);
+        updatePaletteButton(it->second()->ColorFor(0, 8));
+    }
+    model_->setAggregate(aggregateSwitch_->isChecked());
 
     const QString root = QFileDialog::getExistingDirectory(this, ui::kChooseFolderTitle);
     if (!root.isEmpty()) setRoot(root);
@@ -126,12 +157,10 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
     connect(pdfBtn, &QPushButton::clicked, this, &MainWindow::onSavePdf);
     connect(themeButton_, &QToolButton::clicked, this, &MainWindow::toggleTheme);
     connect(chartCombo_, &QComboBox::currentTextChanged, this, [this](const QString& name) {
-        aggregateCheck_->setEnabled(name == "Pie");
+        aggregateSwitch_->setEnabled(name == "Pie");
         model_->setBuilder(name.toStdString());
     });
-    connect(styleCombo_, &QComboBox::currentTextChanged, this,
-            [this](const QString& name) { model_->setStyle(name.toStdString()); });
-    connect(aggregateCheck_, &QCheckBox::toggled, this, [this](bool on) { model_->setAggregate(on); });
+    connect(aggregateSwitch_, &ToggleSwitch::toggled, this, [this](bool on) { model_->setAggregate(on); });
 }
 
 /// @brief Пересоздаёт QFileSystemModel с фильтрами по реестру парсеров и задаёт корень дерева.
@@ -181,7 +210,89 @@ void MainWindow::toggleTheme()
     darkTheme_ = !darkTheme_;
     qApp->setStyleSheet(theme::StyleSheet(darkTheme_ ? theme::Mode::Dark : theme::Mode::Light));
     themeButton_->setText(darkTheme_ ? ui::kThemeLightButton : ui::kThemeDarkButton);
+    applyChartTheme(chartView_->chart());
     LogInfo(logger_) << "Theme switched to " << (darkTheme_ ? "dark" : "light");
+}
+
+/// @brief Строит выпадающий поповер выбора палитры со свотчами по доступным стилям.
+void MainWindow::buildPalettePopover()
+{
+    paletteMenu_ = new QMenu(this);
+    auto* popup = new QWidget(paletteMenu_);
+    auto* col = new QVBoxLayout(popup);
+    col->setContentsMargins(12, 12, 12, 12);
+    col->setSpacing(10);
+
+    auto* header = new QLabel(ui::kPaletteHeader);
+    header->setObjectName("popoverHeader");
+    col->addWidget(header);
+
+    auto* grid = new QGridLayout();
+    grid->setSpacing(8);
+    int idx = 0;
+    for (const auto& [name, factory] : styles_)
+    {
+        const QColor color = factory()->ColorFor(0, 8);
+        auto* sw = new QToolButton(popup);
+        sw->setObjectName("swatch");
+        sw->setFixedSize(30, 30);
+        sw->setToolTip(QString::fromStdString(name));
+        sw->setStyleSheet(QStringLiteral("QToolButton#swatch{background:%1;border-radius:8px;border:2px solid transparent;}"
+                                         "QToolButton#swatch:hover{border:2px solid #c0281a;}")
+                              .arg(color.name()));
+        const std::string styleName = name;
+        connect(sw, &QToolButton::clicked, this, [this, styleName, color] {
+            model_->setStyle(styleName);
+            updatePaletteButton(color);
+            paletteMenu_->hide();
+        });
+        grid->addWidget(sw, idx / 3, idx % 3);
+        ++idx;
+    }
+    col->addLayout(grid);
+
+    auto* action = new QWidgetAction(paletteMenu_);
+    action->setDefaultWidget(popup);
+    paletteMenu_->addAction(action);
+}
+
+/// @brief Обновляет цветной свотч на кнопке палитры.
+void MainWindow::updatePaletteButton(const QColor& color)
+{
+    QPixmap pm(14, 14);
+    pm.fill(Qt::transparent);
+    QPainter p(&pm);
+    p.setRenderHint(QPainter::Antialiasing);
+    p.setPen(Qt::NoPen);
+    p.setBrush(color);
+    p.drawRoundedRect(0, 0, 14, 14, 4, 4);
+    p.end();
+    paletteButton_->setIcon(QIcon(pm));
+}
+
+/// @brief Согласует оформление самого графика с активной темой приложения.
+void MainWindow::applyChartTheme(QChart* chart)
+{
+    if (chart == nullptr) return;
+    chart->setTitle({});  // имя ряда показывает plotTitle_, чтобы не дублировать заголовок
+    chart->setBackgroundRoundness(12);
+    chart->setMargins(QMargins(8, 8, 8, 8));
+
+    const QColor bg = darkTheme_ ? QColor(0x2e, 0x2e, 0x34) : QColor(0xff, 0xff, 0xff);
+    const QColor txt = darkTheme_ ? QColor(0xec, 0xec, 0xee) : QColor(0x2b, 0x2b, 0x30);
+    const QColor grid = darkTheme_ ? QColor(0x3a, 0x3a, 0x42) : QColor(0xe4, 0xe3, 0xe1);
+
+    chart->setBackgroundBrush(bg);
+    chart->setBackgroundPen(Qt::NoPen);
+    chart->setPlotAreaBackgroundVisible(false);
+    if (chart->legend() != nullptr) chart->legend()->setLabelColor(txt);
+    for (auto* axis : chart->axes())
+    {
+        axis->setLabelsColor(txt);
+        axis->setTitleBrush(txt);
+        axis->setLinePenColor(grid);
+        axis->setGridLineColor(grid);
+    }
 }
 
 /// @brief Показывает пользователю ошибку, пришедшую сигналом модели.
@@ -239,6 +350,7 @@ std::unique_ptr<QChart> MainWindow::buildChart(const data::TimelineData& data)
 /// @brief Передаёт новый график в QChartView, удаляя предыдущий.
 void MainWindow::setChart(std::unique_ptr<QChart> chart)
 {
+    applyChartTheme(chart.get());
     auto* old = chartView_->chart();
     // QChartView::setChart забирает владение голым указателем — единственный release()
     // в коде, на границе с Qt API.

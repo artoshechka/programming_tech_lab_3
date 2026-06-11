@@ -14,8 +14,14 @@ namespace gui::ui
 
 /// @brief Заголовок панели инструментов.
 inline constexpr const char* kToolbarTitle = "Controls";
-/// @brief Подпись чекбокса включения агрегации.
+/// @brief Подпись переключателя включения агрегации.
 inline constexpr const char* kAggregateCheckbox = "Агрегация";
+/// @brief Подпись кнопки выбора палитры.
+inline constexpr const char* kPaletteButton = " Палитра";
+/// @brief Заголовок поповера выбора палитры.
+inline constexpr const char* kPaletteHeader = "Палитра";
+/// @brief Имя палитры/стиля по умолчанию (оранжевая — в стилистике приложения).
+inline constexpr const char* kDefaultStyleName = "Тёплая";
 /// @brief Подпись кнопки выбора рабочей папки.
 inline constexpr const char* kFolderButton = "Папка";
 /// @brief Подпись кнопки сохранения графика в PDF.

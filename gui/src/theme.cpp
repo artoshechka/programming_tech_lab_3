@@ -41,13 +41,24 @@ QCheckBox::indicator { width: 16px; height: 16px; border: 1.5px solid #c9c8c6; b
 QCheckBox::indicator:checked { background: #c0281a; border-color: #c0281a; }
 QCheckBox::indicator:disabled { background: #efeeec; border-color: #ddddda; }
 
-QTreeView { background: #f3f2f1; border: none; outline: 0; }
+QTreeView { background: #f3f2f1; border: none; outline: 0; show-decoration-selected: 1; }
 QTreeView::item { height: 28px; border-radius: 7px; }
 QTreeView::item:hover { background: #ebeae8; }
 QTreeView::item:selected { background: #f6ddd8; color: #8c1a0f; }
+QTreeView::branch { background: transparent; }
+QTreeView::branch:selected { background: #f6ddd8; }
 QHeaderView::section { background: #f3f2f1; border: none; color: #8a8a92; padding: 6px 4px; font-size: 11px; font-weight: 600; }
 
-QLabel#plotTitle { font-size: 15px; font-weight: 600; padding: 14px 0 6px; color: #2b2b30; }
+#toolbarSpacer { background: transparent; }
+
+QToolButton#paletteButton { background: #ffffff; border: 1px solid #e0dfdd; border-radius: 8px; padding: 6px 12px; color: #2b2b30; font-weight: 500; }
+QToolButton#paletteButton:hover { border-color: #c0281a; color: #a41f12; }
+QToolButton#paletteButton::menu-indicator { image: none; width: 0; }
+
+QMenu { background: #ffffff; border: 1px solid #e0dfdd; border-radius: 12px; padding: 6px; }
+QLabel#popoverHeader { color: #8a8a92; font-size: 11px; font-weight: 600; }
+
+QLabel#plotTitle { font-size: 16px; font-weight: 600; padding: 14px 0 8px; color: #2b2b30; letter-spacing: 0.01em; }
 QChartView { background: #ffffff; border: none; }
 
 QStatusBar { background: #f3f2f1; border-top: 1px solid #e4e3e1; color: #8a8a92; }
@@ -91,13 +102,24 @@ QCheckBox::indicator { width: 16px; height: 16px; border: 1.5px solid #55555f; b
 QCheckBox::indicator:checked { background: #d44530; border-color: #d44530; }
 QCheckBox::indicator:disabled { background: #2e2e34; border-color: #3a3a42; }
 
-QTreeView { background: #2e2e34; border: none; outline: 0; color: #ececee; }
+QTreeView { background: #2e2e34; border: none; outline: 0; color: #ececee; show-decoration-selected: 1; }
 QTreeView::item { height: 28px; border-radius: 7px; }
 QTreeView::item:hover { background: #383840; }
 QTreeView::item:selected { background: #4d211a; color: #f5b6a8; }
+QTreeView::branch { background: transparent; }
+QTreeView::branch:selected { background: #4d211a; }
 QHeaderView::section { background: #2e2e34; border: none; color: #9a9aa2; padding: 6px 4px; font-size: 11px; font-weight: 600; }
 
-QLabel#plotTitle { font-size: 15px; font-weight: 600; padding: 14px 0 6px; color: #ececee; }
+#toolbarSpacer { background: transparent; }
+
+QToolButton#paletteButton { background: #34343b; border: 1px solid #44444e; border-radius: 8px; padding: 6px 12px; color: #ececee; font-weight: 500; }
+QToolButton#paletteButton:hover { border-color: #d44530; color: #f5b6a8; }
+QToolButton#paletteButton::menu-indicator { image: none; width: 0; }
+
+QMenu { background: #2e2e34; border: 1px solid #44444e; border-radius: 12px; padding: 6px; }
+QLabel#popoverHeader { color: #9a9aa2; font-size: 11px; font-weight: 600; }
+
+QLabel#plotTitle { font-size: 16px; font-weight: 600; padding: 14px 0 8px; color: #ececee; letter-spacing: 0.01em; }
 QChartView { background: #2e2e34; border: none; }
 
 QStatusBar { background: #2e2e34; border-top: 1px solid #3a3a42; color: #9a9aa2; }
