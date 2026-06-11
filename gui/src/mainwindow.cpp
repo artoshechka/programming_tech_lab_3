@@ -5,7 +5,10 @@
 #include <gui/mainwindow.hpp>
 
 #include <QApplication>
+#include <QButtonGroup>
+#include <QDir>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QFileSystemModel>
 #include <QGridLayout>
 #include <QHBoxLayout>
@@ -28,11 +31,14 @@
 #include <QWidgetAction>
 #include <QtCharts/QAbstractAxis>
 #include <QtCharts/QLegend>
+#include <QtCharts/QPieSeries>
+#include <QtCharts/QPieSlice>
 #include <chart/ichart_builder.hpp>
 #include <logger/logger_macros.hpp>
 
 #include "chart_model.hpp"
 #include "table_select_dialog.hpp"
+#include <gui/src/file_item_delegate.hpp>
 #include <gui/src/theme.hpp>
 #include <gui/src/toggle_switch.hpp>
 #include <gui/ui_strings.hpp>
@@ -54,12 +60,49 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
       logger_(logger),
       model_(std::make_unique<ChartModel>(std::move(registry), logger_))
 {
-    auto* toolbar = addToolBar(ui::kToolbarTitle);
-    toolbar->setMovable(true);
+    // Бренд-бар сверху: марка + название слева, путь к файлу по центру.
+    auto* brandBar = new QWidget();
+    brandBar->setObjectName("brandBar");
+    auto* brandRow = new QHBoxLayout(brandBar);
+    brandRow->setContentsMargins(80, 6, 16, 6);  // отступ слева под нативные кнопки окна macOS
+    brandRow->setSpacing(8);
+    auto* brandMark = new QLabel();
+    brandMark->setObjectName("brandMark");
+    brandMark->setFixedSize(16, 16);
+    auto* brandName = new QLabel("DataPlot");
+    brandName->setObjectName("brandName");
+    brandRow->addWidget(brandMark);
+    brandRow->addWidget(brandName);
+    brandRow->addStretch();
+    pathLabel_ = new QLabel();
+    pathLabel_->setObjectName("brandPath");
+    brandRow->addWidget(pathLabel_);
+    brandRow->addStretch();
+    setMenuWidget(brandBar);
 
-    chartCombo_ = new QComboBox();
-    for (const auto& [name, _] : builders_) chartCombo_->addItem(QString::fromStdString(name));
-    toolbar->addWidget(chartCombo_);
+    auto* toolbar = addToolBar(ui::kToolbarTitle);
+    toolbar->setMovable(false);
+
+    // Тип графика: сегмент-контрол с иконками (по одной кнопке на построитель).
+    auto* segWrap = new QWidget();
+    segWrap->setObjectName("segmented");
+    auto* segRow = new QHBoxLayout(segWrap);
+    segRow->setContentsMargins(3, 3, 3, 3);
+    segRow->setSpacing(3);
+    chartTypeGroup_ = new QButtonGroup(this);
+    chartTypeGroup_->setExclusive(true);
+    for (const auto& [name, _] : builders_)
+    {
+        auto* seg = new QToolButton();
+        seg->setObjectName("segButton");
+        seg->setCheckable(true);
+        seg->setIconSize(QSize(18, 18));
+        seg->setToolTip(QString::fromStdString(name));
+        seg->setProperty("builderName", QString::fromStdString(name));
+        segRow->addWidget(seg);
+        chartTypeGroup_->addButton(seg);
+    }
+    toolbar->addWidget(segWrap);
     toolbar->addSeparator();
 
     // Палитра: кнопка со свотчем открывает поповер выбора палитры.
@@ -76,7 +119,7 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
     // Агрегация: ползунок-переключатель с подписью.
     aggregateSwitch_ = new ToggleSwitch();
     aggregateSwitch_->setChecked(true);
-    aggregateSwitch_->setEnabled(chartCombo_->currentText() == "Pie");
+    aggregateSwitch_->setEnabled(false);  // корректное состояние выставит начальная синхронизация ниже
     auto* aggWrap = new QWidget();
     auto* aggRow = new QHBoxLayout(aggWrap);
     aggRow->setContentsMargins(4, 0, 4, 0);
@@ -105,6 +148,8 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
 
     treeView_ = new QTreeView();
     treeView_->setHeaderHidden(true);
+    fileDelegate_ = new FileItemDelegate(this);
+    treeView_->setItemDelegate(fileDelegate_);
     chartView_ = new QChartView();
     chartView_->setRenderHint(QPainter::Antialiasing);
     chartView_->setChart(new QChart());
@@ -133,7 +178,16 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
 
     // Начальная синхронизация модели с виджетами до подключения сигналов: модель должна знать
     // builder/style/aggregate ещё до первой загрузки источника.
-    model_->setBuilder(chartCombo_->currentText().toStdString());
+    QString initialBuilder;
+    if (!chartTypeGroup_->buttons().isEmpty())
+    {
+        auto* first = chartTypeGroup_->buttons().first();
+        first->setChecked(true);
+        initialBuilder = first->property("builderName").toString();
+    }
+    model_->setBuilder(initialBuilder.toStdString());
+    aggregateSwitch_->setEnabled(initialBuilder == "Pie");
+    updateSegmentIcons();
     std::string initialStyle = ui::kDefaultStyleName;
     if (styles_.find(initialStyle) == styles_.end() && !styles_.empty()) initialStyle = styles_.begin()->first;
     if (auto it = styles_.find(initialStyle); it != styles_.end())
@@ -156,9 +210,12 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
     connect(folderBtn, &QPushButton::clicked, this, &MainWindow::onChooseFolder);
     connect(pdfBtn, &QPushButton::clicked, this, &MainWindow::onSavePdf);
     connect(themeButton_, &QToolButton::clicked, this, &MainWindow::toggleTheme);
-    connect(chartCombo_, &QComboBox::currentTextChanged, this, [this](const QString& name) {
+    connect(chartTypeGroup_, QOverload<QAbstractButton*>::of(&QButtonGroup::buttonClicked), this,
+            [this](QAbstractButton* button) {
+        const QString name = button->property("builderName").toString();
         aggregateSwitch_->setEnabled(name == "Pie");
         model_->setBuilder(name.toStdString());
+        updateSegmentIcons();
     });
     connect(aggregateSwitch_, &ToggleSwitch::toggled, this, [this](bool on) { model_->setAggregate(on); });
 }
@@ -211,6 +268,9 @@ void MainWindow::toggleTheme()
     qApp->setStyleSheet(theme::StyleSheet(darkTheme_ ? theme::Mode::Dark : theme::Mode::Light));
     themeButton_->setText(darkTheme_ ? ui::kThemeLightButton : ui::kThemeDarkButton);
     applyChartTheme(chartView_->chart());
+    fileDelegate_->setDark(darkTheme_);
+    treeView_->viewport()->update();
+    updateSegmentIcons();
     LogInfo(logger_) << "Theme switched to " << (darkTheme_ ? "dark" : "light");
 }
 
@@ -270,12 +330,65 @@ void MainWindow::updatePaletteButton(const QColor& color)
     paletteButton_->setIcon(QIcon(pm));
 }
 
+/// @brief Рисует иконку типа графика заданным цветом.
+QIcon MainWindow::builderIcon(const QString& name, const QColor& color) const
+{
+    QPixmap pm(18, 18);
+    pm.fill(Qt::transparent);
+    QPainter p(&pm);
+    p.setRenderHint(QPainter::Antialiasing);
+    p.setPen(Qt::NoPen);
+    p.setBrush(color);
+    if (name == "Bar")
+    {
+        p.drawRoundedRect(QRectF(2.0, 8.0, 3.2, 8.0), 1.0, 1.0);
+        p.drawRoundedRect(QRectF(7.4, 3.0, 3.2, 13.0), 1.0, 1.0);
+        p.drawRoundedRect(QRectF(12.8, 10.0, 3.2, 6.0), 1.0, 1.0);
+    }
+    else if (name == "Pie")
+    {
+        p.drawEllipse(QRectF(2.0, 2.0, 14.0, 14.0));
+        QPen pen(QColor(255, 255, 255, 170));
+        pen.setWidthF(1.2);
+        p.setPen(pen);
+        const QPointF c(9.0, 9.0);
+        p.drawLine(c, QPointF(9.0, 2.0));
+        p.drawLine(c, QPointF(15.0, 11.0));
+    }
+    else
+    {
+        QPen pen(color);
+        pen.setWidthF(1.8);
+        pen.setCapStyle(Qt::RoundCap);
+        pen.setJoinStyle(Qt::RoundJoin);
+        p.setPen(pen);
+        p.setBrush(Qt::NoBrush);
+        p.drawLine(QPointF(2, 13), QPointF(7, 7));
+        p.drawLine(QPointF(7, 7), QPointF(10, 10));
+        p.drawLine(QPointF(10, 10), QPointF(16, 3));
+    }
+    p.end();
+    return QIcon(pm);
+}
+
+/// @brief Перекрашивает иконки сегмент-контрола под выбор и тему.
+void MainWindow::updateSegmentIcons()
+{
+    const QColor on(0xff, 0xff, 0xff);
+    const QColor off = darkTheme_ ? QColor(0x9a, 0x9a, 0xa2) : QColor(0x6a, 0x6a, 0x72);
+    for (auto* button : chartTypeGroup_->buttons())
+    {
+        const QString name = button->property("builderName").toString();
+        button->setIcon(builderIcon(name, button->isChecked() ? on : off));
+    }
+}
+
 /// @brief Согласует оформление самого графика с активной темой приложения.
 void MainWindow::applyChartTheme(QChart* chart)
 {
     if (chart == nullptr) return;
     chart->setTitle({});  // имя ряда показывает plotTitle_, чтобы не дублировать заголовок
-    chart->setBackgroundRoundness(12);
+    chart->setBackgroundRoundness(0);  // плоский фон без «карточки» — однородно с QChartView
     chart->setMargins(QMargins(8, 8, 8, 8));
 
     const QColor bg = darkTheme_ ? QColor(0x2e, 0x2e, 0x34) : QColor(0xff, 0xff, 0xff);
@@ -292,6 +405,12 @@ void MainWindow::applyChartTheme(QChart* chart)
         axis->setTitleBrush(txt);
         axis->setLinePenColor(grid);
         axis->setGridLineColor(grid);
+    }
+    // Подписи секторов круговой диаграммы — под цвет темы (иначе тёмные на тёмном фоне).
+    for (auto* series : chart->series())
+    {
+        if (auto* pie = qobject_cast<QtCharts::QPieSeries*>(series))
+            for (auto* slice : pie->slices()) slice->setLabelColor(txt);
     }
 }
 
@@ -314,6 +433,8 @@ void MainWindow::onFileSelected(const QModelIndex& index)
 /// @brief Запрашивает под-источники, при необходимости показывает диалог выбора, затем задаёт источник модели.
 void MainWindow::loadFile(const QString& path)
 {
+    const QFileInfo info(path);
+    pathLabel_->setText(info.dir().dirName() + " — " + info.fileName());
     std::string source = path.toStdString();
 
     // Если формат имеет несколько под-источников (таблицы SQLite и т.п.) — спросить у пользователя.

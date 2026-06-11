@@ -4,7 +4,8 @@
 #ifndef GUID_c9d0e1f2_a3b4_5678_cdef_789012345678
 #define GUID_c9d0e1f2_a3b4_5678_cdef_789012345678
 
-#include <QComboBox>
+#include <QColor>
+#include <QIcon>
 #include <QLabel>
 #include <QMainWindow>
 #include <QToolButton>
@@ -12,6 +13,7 @@
 #include <QtCharts/QChartView>
 
 class QMenu;
+class QButtonGroup;
 #include <chart/ichart_builder.hpp>
 #include <functional>
 #include <logger/ilogger.hpp>
@@ -36,6 +38,7 @@ using ParserFactory = std::map<std::string, std::function<std::shared_ptr<parser
 
 class ChartModel;
 class ToggleSwitch;
+class FileItemDelegate;
 
 /// @brief Главное окно — представление (View) в Qt Model/View.
 /// @details Сигналы виджетов связаны со слотами-мутаторами ChartModel (роль контроллера),
@@ -94,6 +97,13 @@ class MainWindow : public QMainWindow
     void updatePaletteButton(const QColor& color);
     /// @brief Строит выпадающий поповер выбора палитры со свотчами по доступным стилям.
     void buildPalettePopover();
+    /// @brief Рисует иконку типа графика заданным цветом.
+    /// @param[in] name Имя построителя ("Bar", "Pie", …).
+    /// @param[in] color Цвет иконки.
+    /// @return Иконка 18×18.
+    QIcon builderIcon(const QString& name, const QColor& color) const;
+    /// @brief Перекрашивает иконки сегмент-контрола: выбранная — белая, прочие — приглушённые.
+    void updateSegmentIcons();
 
     BuilderFactory builders_;                            ///< Фабрика построителей графиков (рендер во View).
     StyleFactory styles_;                                ///< Фабрика стилей графиков (рендер во View).
@@ -103,13 +113,15 @@ class MainWindow : public QMainWindow
 
     QTreeView* treeView_ = nullptr;          ///< Дерево файлов с данными.
     QChartView* chartView_ = nullptr;        ///< Область отображения графика.
-    QComboBox* chartCombo_ = nullptr;        ///< Выбор типа построителя графика.
+    QButtonGroup* chartTypeGroup_ = nullptr;  ///< Сегмент-контрол выбора типа графика.
     QToolButton* paletteButton_ = nullptr;   ///< Кнопка-открыватель поповера выбора палитры.
     QMenu* paletteMenu_ = nullptr;           ///< Поповер со свотчами палитр.
     ToggleSwitch* aggregateSwitch_ = nullptr;  ///< Переключатель агрегации (актуален для Pie).
     QToolButton* themeButton_ = nullptr;     ///< Кнопка переключения светлой/тёмной темы.
     QLabel* plotTitle_ = nullptr;            ///< Заголовок над областью графика (имя ряда).
     QLabel* statusInfo_ = nullptr;           ///< Правый индикатор статус-бара (число точек ряда).
+    QLabel* pathLabel_ = nullptr;            ///< Путь к текущему файлу в бренд-баре.
+    FileItemDelegate* fileDelegate_ = nullptr;  ///< Делегат двухстрочной отрисовки файлов.
     bool darkTheme_ = false;                 ///< Активна ли тёмная тема.
 };
 
