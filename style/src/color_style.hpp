@@ -5,6 +5,7 @@
 #define GUID_e5f6a7b8_c9d0_1234_efab_345678901234
 
 #include <QColor>
+#include <QList>
 #include <logger/ilogger.hpp>
 #include <memory>
 #include <style/ichart_style.hpp>
@@ -13,13 +14,15 @@
 namespace style
 {
 
-/// @brief Цветной стиль — циклическая палитра из 11 цветов.
+/// @brief Цветной стиль — циклическая палитра заданных цветов.
 class ColorStyle : public IChartStyle
 {
    public:
     /// @brief Конструктор стиля.
+    /// @param[in] palette Палитра цветов для циклической раскраски серий.
     /// @param[in] logger Логгер для диагностики применения стиля; допускается nullptr.
-    explicit ColorStyle(std::shared_ptr<logger::ILogger> logger = nullptr) : logger_(std::move(logger))
+    explicit ColorStyle(QList<QColor> palette, const std::shared_ptr<logger::ILogger>& logger = nullptr)
+        : palette_(std::move(palette)), logger_(logger)
     {
     }
 
@@ -34,6 +37,7 @@ class ColorStyle : public IChartStyle
     void Apply(QtCharts::QChart* chart) override;
 
    private:
+    QList<QColor> palette_;                     ///< Палитра цветов для раскраски серий.
     std::shared_ptr<logger::ILogger> logger_;  ///< Логгер для диагностики (может быть nullptr).
 };
 

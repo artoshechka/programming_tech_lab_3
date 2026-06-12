@@ -12,6 +12,7 @@
 #include <logger/logger_macros.hpp>
 #include <parser/parse_exception.hpp>
 #include <parser/src/json_parser.hpp>
+#include <parser/src/parser_limits.hpp>
 #include <string>
 #include <type_traits>
 
@@ -88,7 +89,6 @@ TimelineData JsonParser::Load(const std::string& source)
     QFile file(QString::fromStdString(source));
     if (!file.open(QIODevice::ReadOnly)) throw ParseException("JSON: cannot open file: " + source);
 
-    constexpr qint64 kMaxJsonBytes = 256LL * 1024 * 1024;
     if (file.size() > kMaxJsonBytes) throw ParseException("JSON: file too large: " + source);
 
     const QByteArray raw = file.readAll();

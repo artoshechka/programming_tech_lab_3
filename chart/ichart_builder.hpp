@@ -4,7 +4,7 @@
 #ifndef GUID_a1b2c3d4_e5f6_7890_abcd_ef1234567890
 #define GUID_a1b2c3d4_e5f6_7890_abcd_ef1234567890
 
-#include <data_model/src/timeline_data.hpp>
+#include <data_model/timeline_data.hpp>
 #include <memory>
 
 // Опережающее объявление: интерфейс не тянет тяжёлый <QtCharts/QChart> в потребителей,

@@ -5,7 +5,7 @@
 #ifndef GUID_9b1c8a7e_5c3d_4c8a_9a12_6b3f8d0e71c5
 #define GUID_9b1c8a7e_5c3d_4c8a_9a12_6b3f8d0e71c5
 
-#include <data_model/src/timeline_data.hpp>
+#include <data_model/timeline_data.hpp>
 #include <string>
 #include <vector>
 

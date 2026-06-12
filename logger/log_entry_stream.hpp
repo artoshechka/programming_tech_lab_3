@@ -23,7 +23,7 @@ class LogEntryStream final
     /// @param[in] file Имя файла
     /// @param[in] line Номер строки
     /// @param[in] function Имя функции
-    LogEntryStream(std::shared_ptr<ILogger> logger, LogLevel level, const char* file, int line, const char* function);
+    LogEntryStream(const std::shared_ptr<ILogger>& logger, LogLevel level, const char* file, int line, const char* function);
 
     /// @brief Деструктор, автоматически отправляет собранное сообщение в логгер
     ~LogEntryStream();

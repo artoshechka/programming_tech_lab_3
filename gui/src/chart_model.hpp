@@ -6,7 +6,7 @@
 
 #include <QObject>
 #include <QString>
-#include <data_model/src/timeline_data.hpp>
+#include <data_model/timeline_data.hpp>
 #include <filesystem>
 #include <logger/ilogger.hpp>
 #include <memory>
@@ -31,7 +31,7 @@ class ChartModel : public QObject
     /// @param[in] logger Логгер для диагностики; допускается nullptr.
     /// @param[in] parent Родительский QObject (по умолчанию nullptr).
     explicit ChartModel(std::shared_ptr<parser::IParserRegistry> registry,
-                        std::shared_ptr<logger::ILogger> logger = nullptr, QObject* parent = nullptr);
+                        const std::shared_ptr<logger::ILogger>& logger = nullptr, QObject* parent = nullptr);
 
     /// @brief Возвращает закэшированные данные текущего источника.
     /// @return Ссылка на данные; вызывать только при hasData() == true.

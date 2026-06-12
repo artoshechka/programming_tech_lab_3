@@ -4,11 +4,18 @@
 #ifndef GUID_c9d0e1f2_a3b4_5678_cdef_789012345678
 #define GUID_c9d0e1f2_a3b4_5678_cdef_789012345678
 
-#include <QCheckBox>
-#include <QComboBox>
+#include <QColor>
+#include <QIcon>
+#include <QLabel>
 #include <QMainWindow>
+#include <QToolButton>
 #include <QTreeView>
 #include <QtCharts/QChartView>
+
+class QMenu;
+class QButtonGroup;
+class QWidget;
+class QAction;
 #include <chart/ichart_builder.hpp>
 #include <functional>
 #include <logger/ilogger.hpp>
@@ -32,6 +39,8 @@ using StyleFactory = std::map<std::string, std::function<std::shared_ptr<style::
 using ParserFactory = std::map<std::string, std::function<std::shared_ptr<parser::IParser>()>>;
 
 class ChartModel;
+class ToggleSwitch;
+class FileItemDelegate;
 
 /// @brief Главное окно — представление (View) в Qt Model/View.
 /// @details Сигналы виджетов связаны со слотами-мутаторами ChartModel (роль контроллера),
@@ -48,7 +57,7 @@ class MainWindow : public QMainWindow
     /// @param[in] logger Логгер для диагностики действий пользователя; допускается nullptr.
     /// @param[in] parent Родительский виджет (по умолчанию nullptr).
     explicit MainWindow(BuilderFactory builders, StyleFactory styles, std::shared_ptr<parser::IParserRegistry> registry,
-                        std::shared_ptr<logger::ILogger> logger = nullptr, QWidget* parent = nullptr);
+                        const std::shared_ptr<logger::ILogger>& logger = nullptr, QWidget* parent = nullptr);
     /// @brief Виртуальный деструктор.
     ~MainWindow() override;
 
@@ -65,6 +74,10 @@ class MainWindow : public QMainWindow
     /// @brief Показывает пользователю ошибку, пришедшую сигналом модели.
     /// @param[in] message Текст ошибки.
     void onError(const QString& message);
+    /// @brief Переключает светлую/тёмную тему оформления и обновляет подпись кнопки.
+    void toggleTheme();
+    /// @brief Применяет тему ко всему приложению (QSS + график + дерево + сегменты) с текущим акцентом.
+    void applyTheme();
 
    private:
     /// @brief Запрашивает под-источники, при необходимости показывает диалог выбора, затем задаёт источник модели.
@@ -80,6 +93,17 @@ class MainWindow : public QMainWindow
     /// @param[in] data Данные временного ряда.
     /// @return Владеющий указатель на построенный график.
     std::unique_ptr<QChart> buildChart(const data::TimelineData& data);
+    /// @brief Согласует оформление самого графика (фон, легенда, оси) с активной темой приложения.
+    /// @param[in] chart График для перекраски; nullptr игнорируется.
+    void applyChartTheme(QChart* chart);
+    /// @brief Обновляет цветной свотч на кнопке палитры.
+    /// @param[in] color Представительный цвет выбранной палитры.
+    void updatePaletteButton(const QColor& color);
+    /// @brief Строит выпадающий поповер выбора палитры со свотчами по доступным стилям.
+    void buildPalettePopover();
+    /// @brief Показывает/скрывает блок агрегации; он осмыслен только для построителя Pie.
+    /// @param[in] visible Показать блок (true) или скрыть (false).
+    void setAggregateVisible(bool visible);
 
     BuilderFactory builders_;                            ///< Фабрика построителей графиков (рендер во View).
     StyleFactory styles_;                                ///< Фабрика стилей графиков (рендер во View).
@@ -87,11 +111,21 @@ class MainWindow : public QMainWindow
     std::shared_ptr<logger::ILogger> logger_;            ///< Логгер для диагностики (может быть nullptr).
     std::unique_ptr<ChartModel> model_;                  ///< Наблюдаемая модель состояния и данных графика.
 
-    QTreeView* treeView_ = nullptr;        ///< Дерево файлов с данными.
-    QChartView* chartView_ = nullptr;      ///< Область отображения графика.
-    QComboBox* chartCombo_ = nullptr;      ///< Выбор типа построителя графика.
-    QComboBox* styleCombo_ = nullptr;      ///< Выбор стиля графика.
-    QCheckBox* aggregateCheck_ = nullptr;  ///< Чекбокс включения агрегации (актуален для Pie).
+    QTreeView* treeView_ = nullptr;          ///< Дерево файлов с данными.
+    QChartView* chartView_ = nullptr;        ///< Область отображения графика.
+    QButtonGroup* chartTypeGroup_ = nullptr;  ///< Сегмент-контрол выбора типа графика.
+    QToolButton* paletteButton_ = nullptr;   ///< Кнопка-открыватель поповера выбора палитры.
+    QMenu* paletteMenu_ = nullptr;           ///< Поповер со свотчами палитр.
+    ToggleSwitch* aggregateSwitch_ = nullptr;  ///< Переключатель агрегации (актуален для Pie).
+    QWidget* aggWrap_ = nullptr;             ///< Контейнер переключателя агрегации (виден только для Pie).
+    QAction* aggSeparator_ = nullptr;        ///< Разделитель тулбара после блока агрегации.
+    QToolButton* themeButton_ = nullptr;     ///< Кнопка переключения светлой/тёмной темы.
+    QLabel* plotTitle_ = nullptr;            ///< Заголовок над областью графика (имя ряда).
+    QLabel* statusInfo_ = nullptr;           ///< Правый индикатор статус-бара (число точек ряда).
+    QLabel* pathLabel_ = nullptr;            ///< Путь к текущему файлу в бренд-баре.
+    FileItemDelegate* fileDelegate_ = nullptr;  ///< Делегат двухстрочной отрисовки файлов.
+    bool darkTheme_ = false;                 ///< Активна ли тёмная тема.
+    QColor accent_{0xc0, 0x28, 0x1a};        ///< Акцентный цвет приложения (= цвет выбранной палитры).
 };
 
 }  // namespace gui

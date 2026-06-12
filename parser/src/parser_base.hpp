@@ -19,7 +19,7 @@ class ParserBase : public IParser
    public:
     /// @brief Конструктор базового парсера.
     /// @param[in] logger Логгер для записи диагностических сообщений.
-    explicit ParserBase(std::shared_ptr<logger::ILogger> logger) : logger_(std::move(logger))
+    explicit ParserBase(const std::shared_ptr<logger::ILogger>& logger) : logger_(logger)
     {
     }
 

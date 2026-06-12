@@ -18,7 +18,7 @@ class BarChartBuilder : public IChartBuilder
    public:
     /// @brief Конструктор построителя.
     /// @param[in] logger Логгер для диагностики построения; допускается nullptr.
-    explicit BarChartBuilder(std::shared_ptr<logger::ILogger> logger = nullptr) : logger_(std::move(logger))
+    explicit BarChartBuilder(const std::shared_ptr<logger::ILogger>& logger = nullptr) : logger_(logger)
     {
     }
 
