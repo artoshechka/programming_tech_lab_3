@@ -110,15 +110,14 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
     // Агрегация: ползунок-переключатель с подписью.
     aggregateSwitch_ = new ToggleSwitch();
     aggregateSwitch_->setChecked(true);
-    aggregateSwitch_->setEnabled(false);  // корректное состояние выставит начальная синхронизация ниже
-    auto* aggWrap = new QWidget();
-    auto* aggRow = new QHBoxLayout(aggWrap);
+    aggWrap_ = new QWidget();
+    auto* aggRow = new QHBoxLayout(aggWrap_);
     aggRow->setContentsMargins(4, 0, 4, 0);
     aggRow->setSpacing(8);
     aggRow->addWidget(aggregateSwitch_);
     aggRow->addWidget(new QLabel(ui::kAggregateCheckbox));
-    toolbar->addWidget(aggWrap);
-    toolbar->addSeparator();
+    toolbar->addWidget(aggWrap_);
+    aggSeparator_ = toolbar->addSeparator();
 
     // Распорка прижимает правую группу кнопок к краю тулбара (как в референс-дизайне).
     auto* spacer = new QWidget();
@@ -176,7 +175,7 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
         initialBuilder = first->property("builderName").toString();
     }
     model_->setBuilder(initialBuilder.toStdString());
-    aggregateSwitch_->setEnabled(initialBuilder == "Pie");
+    setAggregateVisible(initialBuilder == "Pie");
     std::string initialStyle = ui::kDefaultStyleName;
     if (styles_.find(initialStyle) == styles_.end() && !styles_.empty()) initialStyle = styles_.begin()->first;
     if (auto it = styles_.find(initialStyle); it != styles_.end())
@@ -203,12 +202,19 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
     connect(chartTypeGroup_, QOverload<QAbstractButton*>::of(&QButtonGroup::buttonClicked), this,
             [this](QAbstractButton* button) {
         const QString name = button->property("builderName").toString();
-        aggregateSwitch_->setEnabled(name == "Pie");
+        setAggregateVisible(name == "Pie");
         model_->setBuilder(name.toStdString());
     });
     connect(aggregateSwitch_, &ToggleSwitch::toggled, this, [this](bool on) { model_->setAggregate(on); });
 
     applyTheme();  // первичное применение темы со стартовым акцентом
+}
+
+/// @brief Показывает/скрывает блок агрегации; он осмыслен только для построителя Pie.
+void MainWindow::setAggregateVisible(bool visible)
+{
+    aggWrap_->setVisible(visible);
+    aggSeparator_->setVisible(visible);
 }
 
 /// @brief Пересоздаёт QFileSystemModel с фильтрами по реестру парсеров и задаёт корень дерева.

@@ -3,7 +3,7 @@ project(gui LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt5 REQUIRED COMPONENTS Widgets Charts PrintSupport Svg)
+find_package(Qt5 REQUIRED COMPONENTS Widgets Charts PrintSupport)
 
 add_library(${PROJECT_NAME} STATIC
     src/mainwindow.cpp
@@ -29,5 +29,4 @@ target_link_libraries(${PROJECT_NAME}
         Qt5::Widgets
         Qt5::Charts
         Qt5::PrintSupport
-        Qt5::Svg
 )

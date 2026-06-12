@@ -14,6 +14,8 @@
 
 class QMenu;
 class QButtonGroup;
+class QWidget;
+class QAction;
 #include <chart/ichart_builder.hpp>
 #include <functional>
 #include <logger/ilogger.hpp>
@@ -99,6 +101,9 @@ class MainWindow : public QMainWindow
     void updatePaletteButton(const QColor& color);
     /// @brief Строит выпадающий поповер выбора палитры со свотчами по доступным стилям.
     void buildPalettePopover();
+    /// @brief Показывает/скрывает блок агрегации; он осмыслен только для построителя Pie.
+    /// @param[in] visible Показать блок (true) или скрыть (false).
+    void setAggregateVisible(bool visible);
 
     BuilderFactory builders_;                            ///< Фабрика построителей графиков (рендер во View).
     StyleFactory styles_;                                ///< Фабрика стилей графиков (рендер во View).
@@ -112,6 +117,8 @@ class MainWindow : public QMainWindow
     QToolButton* paletteButton_ = nullptr;   ///< Кнопка-открыватель поповера выбора палитры.
     QMenu* paletteMenu_ = nullptr;           ///< Поповер со свотчами палитр.
     ToggleSwitch* aggregateSwitch_ = nullptr;  ///< Переключатель агрегации (актуален для Pie).
+    QWidget* aggWrap_ = nullptr;             ///< Контейнер переключателя агрегации (виден только для Pie).
+    QAction* aggSeparator_ = nullptr;        ///< Разделитель тулбара после блока агрегации.
     QToolButton* themeButton_ = nullptr;     ///< Кнопка переключения светлой/тёмной темы.
     QLabel* plotTitle_ = nullptr;            ///< Заголовок над областью графика (имя ряда).
     QLabel* statusInfo_ = nullptr;           ///< Правый индикатор статус-бара (число точек ряда).

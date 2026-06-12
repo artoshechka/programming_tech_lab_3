@@ -10,7 +10,7 @@
 #include <QFileSystemModel>
 #include <QFont>
 #include <QPainter>
-#include <QtSvg/QSvgRenderer>
+#include <QPainterPath>
 
 namespace gui
 {
@@ -32,28 +32,56 @@ QString HumanSize(qint64 bytes)
     return QString::number(size, 'f', unit == 0 ? 0 : 1) + " " + kUnits[unit];
 }
 
-/// @brief SVG-глиф файла (контурный).
-constexpr const char* kFileSvg =
-    "<svg viewBox='0 0 16 16' fill='none'><path d='M4 1.6h5l3 3v9.8c0 .3-.3.6-.6.6H4c-.4 0-.6-.3-.6-.6V2.2c0-.3.2-.6.6-.6Z' "
-    "stroke='%1' stroke-width='1.2'/><path d='M9 1.8v3h3' stroke='%1' stroke-width='1.2'/></svg>";
-
-/// @brief SVG-глиф папки (контурный).
-constexpr const char* kFolderSvg =
-    "<svg viewBox='0 0 16 16' fill='none'><path d='M1.5 4.2c0-.6.4-1 1-1H6l1.3 1.3h6.2c.5 0 1 .4 1 1v6.8c0 .5-.5 "
-    "1-1 1H2.5c-.6 0-1-.5-1-1V4.2Z' stroke='%1' stroke-width='1.2'/></svg>";
-
-/// @brief Рендерит SVG-строку (с подстановкой цвета) в пиксмап с учётом DPR (резко на Retina).
-QPixmap RenderSvg(const char* svg, const QColor& color, int size, qreal dpr)
+/// @brief Контурный глиф файла в системе координат 16×16 (совпадает с прежним SVG).
+QPainterPath FileGlyphPath()
 {
-    const QString src = QString(svg).arg(color.name());
-    QSvgRenderer renderer(src.toUtf8());
-    QPixmap pm(qRound(size * dpr), qRound(size * dpr));
-    pm.fill(Qt::transparent);
-    QPainter p(&pm);
-    renderer.render(&p, QRectF(0, 0, size * dpr, size * dpr));
-    p.end();
-    pm.setDevicePixelRatio(dpr);
-    return pm;
+    QPainterPath p;
+    p.moveTo(4.0, 1.6);
+    p.lineTo(9.0, 1.6);
+    p.lineTo(12.0, 4.6);
+    p.lineTo(12.0, 14.4);
+    p.cubicTo(12.0, 14.7, 11.7, 15.0, 11.4, 15.0);
+    p.lineTo(4.0, 15.0);
+    p.cubicTo(3.6, 15.0, 3.4, 14.7, 3.4, 14.4);
+    p.lineTo(3.4, 2.2);
+    p.cubicTo(3.4, 1.9, 3.6, 1.6, 4.0, 1.6);
+    p.closeSubpath();
+    p.moveTo(9.0, 1.8);
+    p.lineTo(9.0, 4.8);
+    p.lineTo(12.0, 4.8);
+    return p;
+}
+
+/// @brief Контурный глиф папки в системе координат 16×16 (совпадает с прежним SVG).
+QPainterPath FolderGlyphPath()
+{
+    QPainterPath p;
+    p.moveTo(1.5, 4.2);
+    p.cubicTo(1.5, 3.6, 1.9, 3.2, 2.5, 3.2);
+    p.lineTo(6.0, 3.2);
+    p.lineTo(7.3, 4.5);
+    p.lineTo(13.5, 4.5);
+    p.cubicTo(14.0, 4.5, 14.5, 4.9, 14.5, 5.5);
+    p.lineTo(14.5, 12.3);
+    p.cubicTo(14.5, 12.8, 14.0, 13.3, 13.5, 13.3);
+    p.lineTo(2.5, 13.3);
+    p.cubicTo(1.9, 13.3, 1.5, 12.8, 1.5, 12.3);
+    p.closeSubpath();
+    return p;
+}
+
+/// @brief Рисует контурную иконку файла/папки прямо на painter (вектор, DPR-резкость от Qt).
+void DrawGlyph(QPainter* painter, const QRect& rect, bool isDir, const QColor& color)
+{
+    painter->save();
+    painter->setRenderHint(QPainter::Antialiasing, true);
+    painter->translate(rect.topLeft());
+    const qreal scale = rect.width() / 16.0;
+    painter->scale(scale, scale);
+    painter->setPen(QPen(color, 1.2));
+    painter->setBrush(Qt::NoBrush);
+    painter->drawPath(isDir ? FolderGlyphPath() : FileGlyphPath());
+    painter->restore();
 }
 
 }  // namespace
@@ -100,9 +128,8 @@ void FileItemDelegate::paint(QPainter* painter, const QStyleOptionViewItem& opti
     const QRect r = option.rect;
     const int iconSize = 17;
     const int leftPad = 8;
-    const qreal dpr = (painter->device() != nullptr) ? painter->device()->devicePixelRatioF() : 1.0;
     const QRect iconRect(r.left() + leftPad, r.top() + (r.height() - iconSize) / 2, iconSize, iconSize);
-    painter->drawPixmap(iconRect, RenderSvg(isDir ? kFolderSvg : kFileSvg, iconColor, iconSize, dpr));
+    DrawGlyph(painter, iconRect, isDir, iconColor);
 
     const int textLeft = iconRect.right() + 10;
     const int textRight = r.right() - 12;
