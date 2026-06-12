@@ -33,6 +33,7 @@
 #include <QtCharts/QLegend>
 #include <QtCharts/QPieSeries>
 #include <QtCharts/QPieSlice>
+#include <QtSvg/QSvgRenderer>
 #include <chart/ichart_builder.hpp>
 #include <logger/logger_macros.hpp>
 
@@ -60,19 +61,11 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
       logger_(logger),
       model_(std::make_unique<ChartModel>(std::move(registry), logger_))
 {
-    // Бренд-бар сверху: марка + название слева, путь к файлу по центру.
+    // Верхняя строка: путь к текущему файлу по центру (отступ слева — под нативные кнопки macOS).
     auto* brandBar = new QWidget();
     brandBar->setObjectName("brandBar");
     auto* brandRow = new QHBoxLayout(brandBar);
-    brandRow->setContentsMargins(80, 6, 16, 6);  // отступ слева под нативные кнопки окна macOS
-    brandRow->setSpacing(8);
-    auto* brandMark = new QLabel();
-    brandMark->setObjectName("brandMark");
-    brandMark->setFixedSize(16, 16);
-    auto* brandName = new QLabel("DataPlot");
-    brandName->setObjectName("brandName");
-    brandRow->addWidget(brandMark);
-    brandRow->addWidget(brandName);
+    brandRow->setContentsMargins(80, 6, 16, 6);
     brandRow->addStretch();
     pathLabel_ = new QLabel();
     pathLabel_->setObjectName("brandPath");
@@ -271,6 +264,7 @@ void MainWindow::toggleTheme()
     fileDelegate_->setDark(darkTheme_);
     treeView_->viewport()->update();
     updateSegmentIcons();
+    update();  // полная перерисовка всего окна под новую тему
     LogInfo(logger_) << "Theme switched to " << (darkTheme_ ? "dark" : "light");
 }
 
@@ -297,7 +291,7 @@ void MainWindow::buildPalettePopover()
         sw->setObjectName("swatch");
         sw->setFixedSize(30, 30);
         sw->setToolTip(QString::fromStdString(name));
-        sw->setStyleSheet(QStringLiteral("QToolButton#swatch{background:%1;border-radius:8px;border:2px solid transparent;}"
+        sw->setStyleSheet(QStringLiteral("QToolButton#swatch{background:%1;border:2px solid transparent;}"
                                          "QToolButton#swatch:hover{border:2px solid #c0281a;}")
                               .arg(color.name()));
         const std::string styleName = name;
@@ -325,48 +319,32 @@ void MainWindow::updatePaletteButton(const QColor& color)
     p.setRenderHint(QPainter::Antialiasing);
     p.setPen(Qt::NoPen);
     p.setBrush(color);
-    p.drawRoundedRect(0, 0, 14, 14, 4, 4);
+    p.drawRect(0, 0, 14, 14);
     p.end();
     paletteButton_->setIcon(QIcon(pm));
 }
 
-/// @brief Рисует иконку типа графика заданным цветом.
+/// @brief Рисует иконку типа графика заданным цветом (SVG-глиф).
 QIcon MainWindow::builderIcon(const QString& name, const QColor& color) const
 {
+    QString svg;
+    if (name == "Bar")
+        svg = "<svg viewBox='0 0 16 16'><rect x='2' y='7' width='2.6' height='7' rx='.6' fill='%1'/>"
+              "<rect x='6.7' y='3.5' width='2.6' height='10.5' rx='.6' fill='%1'/>"
+              "<rect x='11.4' y='9' width='2.6' height='5' rx='.6' fill='%1'/></svg>";
+    else if (name == "Pie")
+        svg = "<svg viewBox='0 0 16 16'><circle cx='8' cy='8' r='6.2' fill='%1'/>"
+              "<path d='M8 8 L8 1.8 M8 8 L13.4 9.6' stroke='#ffffff' stroke-opacity='.85' stroke-width='1'/></svg>";
+    else
+        svg = "<svg viewBox='0 0 16 16' fill='none'><path d='M2 12 6 7l3 3 5-7' stroke='%1' stroke-width='1.7' "
+              "stroke-linecap='round' stroke-linejoin='round'/></svg>";
+
+    const QString src = svg.arg(color.name());
+    QSvgRenderer renderer(src.toUtf8());
     QPixmap pm(18, 18);
     pm.fill(Qt::transparent);
     QPainter p(&pm);
-    p.setRenderHint(QPainter::Antialiasing);
-    p.setPen(Qt::NoPen);
-    p.setBrush(color);
-    if (name == "Bar")
-    {
-        p.drawRoundedRect(QRectF(2.0, 8.0, 3.2, 8.0), 1.0, 1.0);
-        p.drawRoundedRect(QRectF(7.4, 3.0, 3.2, 13.0), 1.0, 1.0);
-        p.drawRoundedRect(QRectF(12.8, 10.0, 3.2, 6.0), 1.0, 1.0);
-    }
-    else if (name == "Pie")
-    {
-        p.drawEllipse(QRectF(2.0, 2.0, 14.0, 14.0));
-        QPen pen(QColor(255, 255, 255, 170));
-        pen.setWidthF(1.2);
-        p.setPen(pen);
-        const QPointF c(9.0, 9.0);
-        p.drawLine(c, QPointF(9.0, 2.0));
-        p.drawLine(c, QPointF(15.0, 11.0));
-    }
-    else
-    {
-        QPen pen(color);
-        pen.setWidthF(1.8);
-        pen.setCapStyle(Qt::RoundCap);
-        pen.setJoinStyle(Qt::RoundJoin);
-        p.setPen(pen);
-        p.setBrush(Qt::NoBrush);
-        p.drawLine(QPointF(2, 13), QPointF(7, 7));
-        p.drawLine(QPointF(7, 7), QPointF(10, 10));
-        p.drawLine(QPointF(10, 10), QPointF(16, 3));
-    }
+    renderer.render(&p, QRectF(0, 0, 18, 18));
     p.end();
     return QIcon(pm);
 }

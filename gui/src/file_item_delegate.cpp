@@ -9,8 +9,8 @@
 #include <QFileInfo>
 #include <QFileSystemModel>
 #include <QFont>
-#include <QIcon>
 #include <QPainter>
+#include <QtSvg/QSvgRenderer>
 
 namespace gui
 {
@@ -19,8 +19,6 @@ namespace
 {
 
 /// @brief Человекочитаемый размер файла.
-/// @param[in] bytes Размер в байтах.
-/// @return Строка вида "162 КБ".
 QString HumanSize(qint64 bytes)
 {
     static const char* kUnits[] = {"Б", "КБ", "МБ", "ГБ"};
@@ -32,6 +30,29 @@ QString HumanSize(qint64 bytes)
         ++unit;
     }
     return QString::number(size, 'f', unit == 0 ? 0 : 1) + " " + kUnits[unit];
+}
+
+/// @brief SVG-глиф файла (контурный).
+constexpr const char* kFileSvg =
+    "<svg viewBox='0 0 16 16' fill='none'><path d='M4 1.6h5l3 3v9.8c0 .3-.3.6-.6.6H4c-.4 0-.6-.3-.6-.6V2.2c0-.3.2-.6.6-.6Z' "
+    "stroke='%1' stroke-width='1.2'/><path d='M9 1.8v3h3' stroke='%1' stroke-width='1.2'/></svg>";
+
+/// @brief SVG-глиф папки (контурный).
+constexpr const char* kFolderSvg =
+    "<svg viewBox='0 0 16 16' fill='none'><path d='M1.5 4.2c0-.6.4-1 1-1H6l1.3 1.3h6.2c.5 0 1 .4 1 1v6.8c0 .5-.5 "
+    "1-1 1H2.5c-.6 0-1-.5-1-1V4.2Z' stroke='%1' stroke-width='1.2'/></svg>";
+
+/// @brief Рендерит SVG-строку (с подстановкой цвета) в пиксмап.
+QPixmap RenderSvg(const char* svg, const QColor& color, int size)
+{
+    const QString src = QString(svg).arg(color.name());
+    QSvgRenderer renderer(src.toUtf8());
+    QPixmap pm(size, size);
+    pm.fill(Qt::transparent);
+    QPainter p(&pm);
+    renderer.render(&p, QRectF(0, 0, size, size));
+    p.end();
+    return pm;
 }
 
 }  // namespace
@@ -50,7 +71,7 @@ QSize FileItemDelegate::sizeHint(const QStyleOptionViewItem& option, const QMode
     const auto* model = qobject_cast<const QFileSystemModel*>(index.model());
     const bool isDir = (model != nullptr) && model->isDir(index);
     QSize base = QStyledItemDelegate::sizeHint(option, index);
-    base.setHeight(isDir ? 34 : 48);
+    base.setHeight(isDir ? 36 : 52);
     return base;
 }
 
@@ -68,52 +89,53 @@ void FileItemDelegate::paint(QPainter* painter, const QStyleOptionViewItem& opti
 
     const auto* model = qobject_cast<const QFileSystemModel*>(index.model());
     const bool selected = (option.state & QStyle::State_Selected) != 0;
+    const bool isDir = (model != nullptr) && model->isDir(index);
 
     const QColor nameColor = selected ? (dark_ ? QColor(0xf5, 0xb6, 0xa8) : QColor(0x8c, 0x1a, 0x0f))
                                        : (dark_ ? QColor(0xec, 0xec, 0xee) : QColor(0x2b, 0x2b, 0x30));
     const QColor metaColor = dark_ ? QColor(0x82, 0x82, 0x8a) : QColor(0xa6, 0xa6, 0xae);
+    const QColor iconColor = selected ? (dark_ ? QColor(0xd4, 0x45, 0x30) : QColor(0xc0, 0x28, 0x1a)) : metaColor;
 
     const QRect r = option.rect;
-    const int iconSize = 18;
+    const int iconSize = 17;
     const int leftPad = 8;
-    QRect iconRect(r.left() + leftPad, r.top() + (r.height() - iconSize) / 2, iconSize, iconSize);
-    const QIcon icon = index.data(Qt::DecorationRole).value<QIcon>();
-    if (!icon.isNull()) icon.paint(painter, iconRect, Qt::AlignCenter, QIcon::Normal, QIcon::On);
+    const QRect iconRect(r.left() + leftPad, r.top() + (r.height() - iconSize) / 2, iconSize, iconSize);
+    painter->drawPixmap(iconRect, RenderSvg(isDir ? kFolderSvg : kFileSvg, iconColor, iconSize));
+
     const int textLeft = iconRect.right() + 10;
-    const QRect textRect(textLeft, r.top(), r.right() - textLeft - 10, r.height());
-
+    const int textRight = r.right() - 12;
     const QString name = index.data(Qt::DisplayRole).toString();
-    painter->save();
-    painter->setRenderHint(QPainter::Antialiasing);
 
-    const bool isDir = (model != nullptr) && model->isDir(index);
+    painter->save();
     if (isDir || model == nullptr)
     {
         QFont nameFont = option.font;
         nameFont.setWeight(selected ? QFont::DemiBold : QFont::Normal);
         painter->setFont(nameFont);
         painter->setPen(nameColor);
-        painter->drawText(textRect, Qt::AlignVCenter | Qt::AlignLeft, name);
+        painter->drawText(QRect(textLeft, r.top(), textRight - textLeft, r.height()), Qt::AlignVCenter | Qt::AlignLeft,
+                          name);
         painter->restore();
         return;
     }
 
     const QFileInfo info = model->fileInfo(index);
     const QString meta = info.lastModified().toString("dd.MM.yyyy HH:mm") + "   ·   " + HumanSize(info.size());
+    const int mid = r.top() + r.height() / 2;
 
     QFont nameFont = option.font;
     nameFont.setWeight(selected ? QFont::DemiBold : QFont::Normal);
     painter->setFont(nameFont);
     painter->setPen(nameColor);
-    const QRect nameRect(textLeft, r.top() + 6, textRect.width(), r.height() / 2);
-    painter->drawText(nameRect, Qt::AlignBottom | Qt::AlignLeft, name);
+    painter->drawText(QRect(textLeft, r.top() + 4, textRight - textLeft, mid - r.top() - 4),
+                      Qt::AlignBottom | Qt::AlignLeft, name);
 
     QFont metaFont = option.font;
-    metaFont.setPointSizeF(qMax(7.0, option.font.pointSizeF() - 1.5));
+    metaFont.setPointSizeF(qMax(7.0, option.font.pointSizeF() - 2.0));
     painter->setFont(metaFont);
     painter->setPen(metaColor);
-    const QRect metaRect(textLeft, r.center().y() + 1, textRect.width(), r.height() / 2 - 4);
-    painter->drawText(metaRect, Qt::AlignTop | Qt::AlignLeft, meta);
+    painter->drawText(QRect(textLeft, mid + 2, textRight - textLeft, r.bottom() - mid - 4),
+                      Qt::AlignTop | Qt::AlignLeft, meta);
 
     painter->restore();
 }
