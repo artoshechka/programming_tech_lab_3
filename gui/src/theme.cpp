@@ -52,9 +52,9 @@ QToolBar { background: #f3f2f1; border: none; border-bottom: 1px solid #e4e3e1; 
 QToolBar::separator { background: #e4e3e1; width: 1px; margin: 6px 4px; }
 
 #segmented { background: #ffffff; border: 1px solid #e0dfdd; border-radius: 0; }
-QToolButton#segButton { background: transparent; border: none; border-radius: 0; padding: 5px 10px; }
+QToolButton#segButton { background: transparent; border: none; border-radius: 0; padding: 5px 14px; color: #6a6a72; font-weight: 600; }
 QToolButton#segButton:hover { background: #f0efed; }
-QToolButton#segButton:checked { background: @ACC@; }
+QToolButton#segButton:checked { background: @ACC@; color: @ONACC@; }
 
 QPushButton#primaryButton { background: @ACC@; color: @ONACC@; border: none; border-radius: 0; padding: 6px 16px; font-weight: 600; }
 QPushButton#primaryButton:hover { background: @ACCH@; }
@@ -109,9 +109,9 @@ QToolBar { background: #2e2e34; border: none; border-bottom: 1px solid #3a3a42; 
 QToolBar::separator { background: #3a3a42; width: 1px; margin: 6px 4px; }
 
 #segmented { background: #34343b; border: 1px solid #44444e; border-radius: 0; }
-QToolButton#segButton { background: transparent; border: none; border-radius: 0; padding: 5px 10px; }
+QToolButton#segButton { background: transparent; border: none; border-radius: 0; padding: 5px 14px; color: #9a9aa2; font-weight: 600; }
 QToolButton#segButton:hover { background: #3d3d45; }
-QToolButton#segButton:checked { background: @ACC@; }
+QToolButton#segButton:checked { background: @ACC@; color: @ONACC@; }
 
 QPushButton#primaryButton { background: @ACC@; color: @ONACC@; border: none; border-radius: 0; padding: 6px 16px; font-weight: 600; }
 QPushButton#primaryButton:hover { background: @ACCH@; }

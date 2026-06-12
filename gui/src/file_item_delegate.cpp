@@ -72,7 +72,7 @@ QSize FileItemDelegate::sizeHint(const QStyleOptionViewItem& option, const QMode
     const auto* model = qobject_cast<const QFileSystemModel*>(index.model());
     const bool isDir = (model != nullptr) && model->isDir(index);
     QSize base = QStyledItemDelegate::sizeHint(option, index);
-    base.setHeight(isDir ? 36 : 52);
+    base.setHeight(isDir ? 36 : 56);
     return base;
 }
 
@@ -133,7 +133,7 @@ void FileItemDelegate::paint(QPainter* painter, const QStyleOptionViewItem& opti
                       Qt::AlignBottom | Qt::AlignLeft, name);
 
     QFont metaFont = option.font;
-    metaFont.setPointSizeF(qMax(7.0, option.font.pointSizeF() - 2.0));
+    metaFont.setPointSizeF(qMax(8.0, option.font.pointSizeF() - 0.5));
     painter->setFont(metaFont);
     painter->setPen(metaColor);
     painter->drawText(QRect(textLeft, mid + 2, textRight - textLeft, r.bottom() - mid - 4),

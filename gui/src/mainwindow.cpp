@@ -33,7 +33,6 @@
 #include <QtCharts/QLegend>
 #include <QtCharts/QPieSeries>
 #include <QtCharts/QPieSlice>
-#include <QtSvg/QSvgRenderer>
 #include <chart/ichart_builder.hpp>
 #include <logger/logger_macros.hpp>
 
@@ -89,8 +88,7 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
         auto* seg = new QToolButton();
         seg->setObjectName("segButton");
         seg->setCheckable(true);
-        seg->setIconSize(QSize(18, 18));
-        seg->setToolTip(QString::fromStdString(name));
+        seg->setText(QString::fromStdString(name));
         seg->setProperty("builderName", QString::fromStdString(name));
         segRow->addWidget(seg);
         chartTypeGroup_->addButton(seg);
@@ -179,7 +177,6 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
     }
     model_->setBuilder(initialBuilder.toStdString());
     aggregateSwitch_->setEnabled(initialBuilder == "Pie");
-    updateSegmentIcons();
     std::string initialStyle = ui::kDefaultStyleName;
     if (styles_.find(initialStyle) == styles_.end() && !styles_.empty()) initialStyle = styles_.begin()->first;
     if (auto it = styles_.find(initialStyle); it != styles_.end())
@@ -208,7 +205,6 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
         const QString name = button->property("builderName").toString();
         aggregateSwitch_->setEnabled(name == "Pie");
         model_->setBuilder(name.toStdString());
-        updateSegmentIcons();
     });
     connect(aggregateSwitch_, &ToggleSwitch::toggled, this, [this](bool on) { model_->setAggregate(on); });
 
@@ -273,7 +269,6 @@ void MainWindow::applyTheme()
     fileDelegate_->setDark(darkTheme_);
     fileDelegate_->setAccent(accent_);
     applyChartTheme(chartView_->chart());
-    updateSegmentIcons();
     treeView_->viewport()->update();
     update();  // полная перерисовка всего окна под новую тему/акцент
 }
@@ -334,44 +329,6 @@ void MainWindow::updatePaletteButton(const QColor& color)
     p.drawRect(0, 0, 14, 14);
     p.end();
     paletteButton_->setIcon(QIcon(pm));
-}
-
-/// @brief Рисует иконку типа графика заданным цветом (SVG-глиф).
-QIcon MainWindow::builderIcon(const QString& name, const QColor& color) const
-{
-    QString svg;
-    if (name == "Bar")
-        svg = "<svg viewBox='0 0 16 16'><rect x='2' y='7' width='2.6' height='7' rx='.6' fill='%1'/>"
-              "<rect x='6.7' y='3.5' width='2.6' height='10.5' rx='.6' fill='%1'/>"
-              "<rect x='11.4' y='9' width='2.6' height='5' rx='.6' fill='%1'/></svg>";
-    else if (name == "Pie")
-        svg = "<svg viewBox='0 0 16 16'><path d='M8 8 L8 1.8 A6.2 6.2 0 1 1 13.4 9.6 Z' fill='%1'/></svg>";
-    else
-        svg = "<svg viewBox='0 0 16 16' fill='none'><path d='M2 12 6 7l3 3 5-7' stroke='%1' stroke-width='1.7' "
-              "stroke-linecap='round' stroke-linejoin='round'/></svg>";
-
-    const qreal dpr = devicePixelRatioF();
-    const QString src = svg.arg(color.name());
-    QSvgRenderer renderer(src.toUtf8());
-    QPixmap pm(qRound(18 * dpr), qRound(18 * dpr));
-    pm.fill(Qt::transparent);
-    QPainter p(&pm);
-    renderer.render(&p, QRectF(0, 0, 18 * dpr, 18 * dpr));
-    p.end();
-    pm.setDevicePixelRatio(dpr);
-    return QIcon(pm);
-}
-
-/// @brief Перекрашивает иконки сегмент-контрола под выбор и тему.
-void MainWindow::updateSegmentIcons()
-{
-    const QColor on(0xff, 0xff, 0xff);
-    const QColor off = darkTheme_ ? QColor(0x9a, 0x9a, 0xa2) : QColor(0x6a, 0x6a, 0x72);
-    for (auto* button : chartTypeGroup_->buttons())
-    {
-        const QString name = button->property("builderName").toString();
-        button->setIcon(builderIcon(name, button->isChecked() ? on : off));
-    }
 }
 
 /// @brief Согласует оформление самого графика с активной темой приложения.

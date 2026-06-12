@@ -99,13 +99,6 @@ class MainWindow : public QMainWindow
     void updatePaletteButton(const QColor& color);
     /// @brief Строит выпадающий поповер выбора палитры со свотчами по доступным стилям.
     void buildPalettePopover();
-    /// @brief Рисует иконку типа графика заданным цветом.
-    /// @param[in] name Имя построителя ("Bar", "Pie", …).
-    /// @param[in] color Цвет иконки.
-    /// @return Иконка 18×18.
-    QIcon builderIcon(const QString& name, const QColor& color) const;
-    /// @brief Перекрашивает иконки сегмент-контрола: выбранная — белая, прочие — приглушённые.
-    void updateSegmentIcons();
 
     BuilderFactory builders_;                            ///< Фабрика построителей графиков (рендер во View).
     StyleFactory styles_;                                ///< Фабрика стилей графиков (рендер во View).
