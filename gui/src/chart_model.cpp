@@ -2,20 +2,20 @@
 /// @brief Определение ChartModel
 /// @author Artemenko Anton
 
+#include <exception>
 #include <gui/src/chart_model.hpp>
 #include <logger/logger_macros.hpp>
 #include <parser/iparser.hpp>
 #include <parser/parse_exception.hpp>
-#include <exception>
 #include <system_error>
 #include <utility>
 
 namespace gui
 {
 
-ChartModel::ChartModel(std::shared_ptr<parser::IParserRegistry> registry, std::shared_ptr<logger::ILogger> logger,
+ChartModel::ChartModel(std::shared_ptr<parser::IParserRegistry> registry, const std::shared_ptr<logger::ILogger>& logger,
                        QObject* parent)
-    : QObject(parent), registry_(std::move(registry)), logger_(std::move(logger))
+    : QObject(parent), registry_(std::move(registry)), logger_(logger)
 {
 }
 

@@ -17,7 +17,7 @@ class SqliteDBManager : public IDatabaseManager
    public:
     /// @brief Конструктор фабрики.
     /// @param[in] logger Логгер, прокидываемый в каждое создаваемое соединение; допускается nullptr.
-    explicit SqliteDBManager(std::shared_ptr<logger::ILogger> logger = nullptr);
+    explicit SqliteDBManager(const std::shared_ptr<logger::ILogger>& logger = nullptr);
 
     /// @brief Виртуальный деструктор.
     ~SqliteDBManager() override = default;

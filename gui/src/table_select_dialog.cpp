@@ -5,7 +5,7 @@
 #include <QDialogButtonBox>
 #include <QVBoxLayout>
 #include <gui/src/table_select_dialog.hpp>
-#include <gui/src/ui_strings.hpp>
+#include <gui/ui_strings.hpp>
 
 namespace gui
 {

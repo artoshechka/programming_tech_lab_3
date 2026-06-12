@@ -10,6 +10,12 @@ add_library(${PROJECT_NAME} STATIC
     src/chart_model.cpp
     src/table_select_dialog.cpp
     src/app_compositor.cpp
+    src/theme.cpp
+    src/toggle_switch.cpp
+    src/file_item_delegate.cpp
+    mainwindow.hpp
+    app_compositor.hpp
+    ui_strings.hpp
 )
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)

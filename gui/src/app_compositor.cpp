@@ -5,8 +5,8 @@
 #include <chart/src/bar_chart_builder.hpp>
 #include <chart/src/pie_chart_builder.hpp>
 #include <database_module/src/sqlite_db_manager.hpp>
-#include <gui/src/app_compositor.hpp>
-#include <gui/src/mainwindow.hpp>
+#include <gui/app_compositor.hpp>
+#include <gui/mainwindow.hpp>
 #include <ioc_container/IOC_Contaner.hpp>
 #include <logger/logger_factory.hpp>
 #include <logger/logger_macros.hpp>
@@ -15,6 +15,7 @@
 #include <parser/src/parser_registry.hpp>
 #include <style/src/color_style.hpp>
 #include <style/src/grayscale_style.hpp>
+#include <style/src/style_palette.hpp>
 
 namespace gui
 {
@@ -51,11 +52,15 @@ MainWindow* CreateMainWindow(QWidget* parent)
     builders["Bar"] = [appLogger] { return std::make_shared<chart::BarChartBuilder>(appLogger); };
 
     StyleFactory styles;
-    styles["Color"] = [appLogger] { return std::make_shared<style::ColorStyle>(appLogger); };
-    styles["Grayscale"] = [appLogger] { return std::make_shared<style::GrayscaleStyle>(appLogger); };
+    styles["Тёплая"] = [appLogger] { return std::make_shared<style::ColorStyle>(style::kWarmPalette, appLogger); };
+    styles["Контраст"] = [appLogger] { return std::make_shared<style::ColorStyle>(style::kContrastPalette, appLogger); };
+    styles["Графит"] = [appLogger] { return std::make_shared<style::ColorStyle>(style::kGraphitePalette, appLogger); };
+    styles["Индиго"] = [appLogger] { return std::make_shared<style::ColorStyle>(style::kIndigoPalette, appLogger); };
+    styles["Океан"] = [appLogger] { return std::make_shared<style::ColorStyle>(style::kOceanPalette, appLogger); };
+    styles["Оттенки серого"] = [appLogger] { return std::make_shared<style::GrayscaleStyle>(appLogger); };
 
-    LogInfo(appLogger) << "Composition root: ready (" << parserRegistry->SupportedExtensions().size()
-                       << " parsers, " << builders.size() << " builders, " << styles.size() << " styles)";
+    LogInfo(appLogger) << "Composition root: ready (" << parserRegistry->SupportedExtensions().size() << " parsers, "
+                       << builders.size() << " builders, " << styles.size() << " styles)";
     return new MainWindow(std::move(builders), std::move(styles), parserRegistry, appLogger, parent);
 }
 

@@ -6,7 +6,7 @@
 
 #include <QObject>
 #include <QString>
-#include <data_model/src/timeline_data.hpp>
+#include <data_model/timeline_data.hpp>
 #include <filesystem>
 #include <logger/ilogger.hpp>
 #include <memory>
@@ -31,19 +31,31 @@ class ChartModel : public QObject
     /// @param[in] logger Логгер для диагностики; допускается nullptr.
     /// @param[in] parent Родительский QObject (по умолчанию nullptr).
     explicit ChartModel(std::shared_ptr<parser::IParserRegistry> registry,
-                        std::shared_ptr<logger::ILogger> logger = nullptr, QObject* parent = nullptr);
+                        const std::shared_ptr<logger::ILogger>& logger = nullptr, QObject* parent = nullptr);
 
     /// @brief Возвращает закэшированные данные текущего источника.
     /// @return Ссылка на данные; вызывать только при hasData() == true.
     const data::TimelineData& data() const;
     /// @brief Есть ли загруженные данные.
-    [[nodiscard]] bool hasData() const { return dataSlot_.has_value(); }
+    [[nodiscard]] bool hasData() const
+    {
+        return dataSlot_.has_value();
+    }
     /// @brief Текущее имя построителя графика.
-    [[nodiscard]] const std::string& builder() const { return builder_; }
+    [[nodiscard]] const std::string& builder() const
+    {
+        return builder_;
+    }
     /// @brief Текущее имя стиля графика.
-    [[nodiscard]] const std::string& style() const { return style_; }
+    [[nodiscard]] const std::string& style() const
+    {
+        return style_;
+    }
     /// @brief Включена ли агрегация.
-    [[nodiscard]] bool aggregate() const { return aggregate_; }
+    [[nodiscard]] bool aggregate() const
+    {
+        return aggregate_;
+    }
 
     /// @brief Возвращает под-источники файла (таблицы и т.п.) для выбора пользователем.
     /// @param[in] path Путь к файлу-источнику.

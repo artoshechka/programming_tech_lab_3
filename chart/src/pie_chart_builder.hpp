@@ -18,7 +18,9 @@ class PieChartBuilder : public IChartBuilder
    public:
     /// @brief Конструктор построителя.
     /// @param[in] logger Логгер для диагностики построения; допускается nullptr.
-    explicit PieChartBuilder(std::shared_ptr<logger::ILogger> logger = nullptr) : logger_(std::move(logger)) {}
+    explicit PieChartBuilder(const std::shared_ptr<logger::ILogger>& logger = nullptr) : logger_(logger)
+    {
+    }
 
     /// @brief Применяет опции построения (использует BuilderOptions::aggregate и palette).
     /// @param[in] options Опции; aggregate=true (значение по умолчанию) включает группировку
@@ -39,9 +41,9 @@ class PieChartBuilder : public IChartBuilder
     [[nodiscard]] std::unique_ptr<QtCharts::QChart> Build(const data::TimelineData& data) override;
 
    private:
-    bool aggregate_ = true;                    ///< Флаг включения агрегации входных точек (по умолчанию включён).
-    const style::IPalette* palette_ = nullptr; ///< Палитра для покраски срезов (опционально).
-    std::shared_ptr<logger::ILogger> logger_;  ///< Логгер для диагностики (может быть nullptr).
+    bool aggregate_ = true;                     ///< Флаг включения агрегации входных точек (по умолчанию включён).
+    const style::IPalette* palette_ = nullptr;  ///< Палитра для покраски срезов (опционально).
+    std::shared_ptr<logger::ILogger> logger_;   ///< Логгер для диагностики (может быть nullptr).
 };
 
 }  // namespace chart

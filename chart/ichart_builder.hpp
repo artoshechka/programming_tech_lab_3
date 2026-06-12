@@ -4,7 +4,7 @@
 #ifndef GUID_a1b2c3d4_e5f6_7890_abcd_ef1234567890
 #define GUID_a1b2c3d4_e5f6_7890_abcd_ef1234567890
 
-#include <data_model/src/timeline_data.hpp>
+#include <data_model/timeline_data.hpp>
 #include <memory>
 
 // Опережающее объявление: интерфейс не тянет тяжёлый <QtCharts/QChart> в потребителей,
@@ -29,7 +29,7 @@ namespace chart
 ///          в иерархию IChartBuilder и без касания вызывающих, которые их не используют.
 struct BuilderOptions
 {
-    bool aggregate = true;              ///< Включить агрегацию входных точек; по умолчанию включена.
+    bool aggregate = true;                     ///< Включить агрегацию входных точек; по умолчанию включена.
     const style::IPalette* palette = nullptr;  ///< Палитра для покраски элементов; nullptr — без покраски.
 };
 
@@ -44,7 +44,10 @@ class IChartBuilder
     /// @param[in] options Опции построения; неприменимые поля игнорируются.
     /// @details Базовая реализация — no-op: билдер, не поддерживающий ни одной опции,
     ///          не обязан переопределять метод. Вызывается перед Build().
-    virtual void Configure(const BuilderOptions& options) noexcept { (void)options; }
+    virtual void Configure(const BuilderOptions& options) noexcept
+    {
+        (void)options;
+    }
 
     /// @brief Строит и возвращает QChart на основе данных.
     /// @param[in] data Входные данные временного ряда.

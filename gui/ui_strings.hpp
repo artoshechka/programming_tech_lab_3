@@ -14,12 +14,26 @@ namespace gui::ui
 
 /// @brief Заголовок панели инструментов.
 inline constexpr const char* kToolbarTitle = "Controls";
-/// @brief Подпись чекбокса включения агрегации.
+/// @brief Подпись переключателя включения агрегации.
 inline constexpr const char* kAggregateCheckbox = "Агрегация";
+/// @brief Подпись кнопки выбора палитры.
+inline constexpr const char* kPaletteButton = " Палитра";
+/// @brief Заголовок поповера выбора палитры.
+inline constexpr const char* kPaletteHeader = "Палитра";
+/// @brief Имя палитры/стиля по умолчанию (оранжевая — в стилистике приложения).
+inline constexpr const char* kDefaultStyleName = "Тёплая";
 /// @brief Подпись кнопки выбора рабочей папки.
 inline constexpr const char* kFolderButton = "Папка";
 /// @brief Подпись кнопки сохранения графика в PDF.
 inline constexpr const char* kSavePdfButton = "Сохранить PDF";
+/// @brief Подпись кнопки переключения светлой темы.
+inline constexpr const char* kThemeLightButton = "☀ Светлая";
+/// @brief Подпись кнопки переключения тёмной темы.
+inline constexpr const char* kThemeDarkButton = "☾ Тёмная";
+/// @brief Текст-заглушка заголовка графика, пока данные не загружены.
+inline constexpr const char* kPlotTitlePlaceholder = "Выберите файл с данными";
+/// @brief Суффикс счётчика точек ряда в статус-баре.
+inline constexpr const char* kPointsSuffix = " точек";
 
 /// @brief Заголовок диалога выбора рабочей папки с данными.
 inline constexpr const char* kChooseFolderTitle = "Выберите папку с данными";

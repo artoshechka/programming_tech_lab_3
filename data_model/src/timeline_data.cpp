@@ -4,4 +4,4 @@
 /// @details TimelineData — агрегат без методов; вся реализация в заголовке.
 ///          Файл нужен для непустой цели статической библиотеки.
 
-#include <data_model/src/timeline_data.hpp>
+#include <data_model/timeline_data.hpp>

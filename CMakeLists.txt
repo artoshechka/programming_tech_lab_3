@@ -9,6 +9,12 @@ set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_SOURCE_DIR}/gui/src)
 
 find_package(Qt5 REQUIRED COMPONENTS Widgets Charts PrintSupport)
 
+# Исходники содержат кириллические строковые литералы (UI-строки, единицы размера).
+# MSVC без /utf-8 интерпретирует их как ANSI и портит — задаём кодировку явно.
+if(MSVC)
+    add_compile_options(/utf-8)
+endif()
+
 add_subdirectory(logger)
 add_subdirectory(data_model)
 add_subdirectory(database_module)
