@@ -35,6 +35,14 @@ class ToggleSwitch : public QAbstractButton
     /// @param[in] p Положение в диапазоне [0; 1].
     void setPos(qreal p);
 
+    /// @brief Задаёт акцентный цвет включённого состояния.
+    /// @param[in] color Новый акцент.
+    void setAccent(const QColor& color)
+    {
+        accent_ = color;
+        update();
+    }
+
    protected:
     /// @brief Рисует дорожку и ползунок.
     void paintEvent(QPaintEvent* event) override;

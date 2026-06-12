@@ -167,7 +167,6 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
 
     statusInfo_ = new QLabel();
     statusBar()->addPermanentWidget(statusInfo_);
-    qApp->setStyleSheet(theme::StyleSheet(theme::Mode::Light));
 
     // Начальная синхронизация модели с виджетами до подключения сигналов: модель должна знать
     // builder/style/aggregate ещё до первой загрузки источника.
@@ -186,7 +185,8 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
     if (auto it = styles_.find(initialStyle); it != styles_.end())
     {
         model_->setStyle(initialStyle);
-        updatePaletteButton(it->second()->ColorFor(0, 8));
+        accent_ = it->second()->ColorFor(0, 8);
+        updatePaletteButton(accent_);
     }
     model_->setAggregate(aggregateSwitch_->isChecked());
 
@@ -211,6 +211,8 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
         updateSegmentIcons();
     });
     connect(aggregateSwitch_, &ToggleSwitch::toggled, this, [this](bool on) { model_->setAggregate(on); });
+
+    applyTheme();  // первичное применение темы со стартовым акцентом
 }
 
 /// @brief Пересоздаёт QFileSystemModel с фильтрами по реестру парсеров и задаёт корень дерева.
@@ -258,14 +260,22 @@ void MainWindow::refresh()
 void MainWindow::toggleTheme()
 {
     darkTheme_ = !darkTheme_;
-    qApp->setStyleSheet(theme::StyleSheet(darkTheme_ ? theme::Mode::Dark : theme::Mode::Light));
     themeButton_->setText(darkTheme_ ? ui::kThemeLightButton : ui::kThemeDarkButton);
-    applyChartTheme(chartView_->chart());
-    fileDelegate_->setDark(darkTheme_);
-    treeView_->viewport()->update();
-    updateSegmentIcons();
-    update();  // полная перерисовка всего окна под новую тему
+    applyTheme();
     LogInfo(logger_) << "Theme switched to " << (darkTheme_ ? "dark" : "light");
+}
+
+/// @brief Применяет тему ко всему приложению с текущим акцентом.
+void MainWindow::applyTheme()
+{
+    qApp->setStyleSheet(theme::StyleSheet(darkTheme_ ? theme::Mode::Dark : theme::Mode::Light, accent_));
+    aggregateSwitch_->setAccent(accent_);
+    fileDelegate_->setDark(darkTheme_);
+    fileDelegate_->setAccent(accent_);
+    applyChartTheme(chartView_->chart());
+    updateSegmentIcons();
+    treeView_->viewport()->update();
+    update();  // полная перерисовка всего окна под новую тему/акцент
 }
 
 /// @brief Строит выпадающий поповер выбора палитры со свотчами по доступным стилям.
@@ -296,8 +306,10 @@ void MainWindow::buildPalettePopover()
                               .arg(color.name()));
         const std::string styleName = name;
         connect(sw, &QToolButton::clicked, this, [this, styleName, color] {
+            accent_ = color;
             model_->setStyle(styleName);
             updatePaletteButton(color);
+            applyTheme();  // перекрасить всё приложение под акцент палитры
             paletteMenu_->hide();
         });
         grid->addWidget(sw, idx / 3, idx % 3);
@@ -333,19 +345,20 @@ QIcon MainWindow::builderIcon(const QString& name, const QColor& color) const
               "<rect x='6.7' y='3.5' width='2.6' height='10.5' rx='.6' fill='%1'/>"
               "<rect x='11.4' y='9' width='2.6' height='5' rx='.6' fill='%1'/></svg>";
     else if (name == "Pie")
-        svg = "<svg viewBox='0 0 16 16'><circle cx='8' cy='8' r='6.2' fill='%1'/>"
-              "<path d='M8 8 L8 1.8 M8 8 L13.4 9.6' stroke='#ffffff' stroke-opacity='.85' stroke-width='1'/></svg>";
+        svg = "<svg viewBox='0 0 16 16'><path d='M8 8 L8 1.8 A6.2 6.2 0 1 1 13.4 9.6 Z' fill='%1'/></svg>";
     else
         svg = "<svg viewBox='0 0 16 16' fill='none'><path d='M2 12 6 7l3 3 5-7' stroke='%1' stroke-width='1.7' "
               "stroke-linecap='round' stroke-linejoin='round'/></svg>";
 
+    const qreal dpr = devicePixelRatioF();
     const QString src = svg.arg(color.name());
     QSvgRenderer renderer(src.toUtf8());
-    QPixmap pm(18, 18);
+    QPixmap pm(qRound(18 * dpr), qRound(18 * dpr));
     pm.fill(Qt::transparent);
     QPainter p(&pm);
-    renderer.render(&p, QRectF(0, 0, 18, 18));
+    renderer.render(&p, QRectF(0, 0, 18 * dpr, 18 * dpr));
     p.end();
+    pm.setDevicePixelRatio(dpr);
     return QIcon(pm);
 }
 

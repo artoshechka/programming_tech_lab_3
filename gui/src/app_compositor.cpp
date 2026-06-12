@@ -53,10 +53,10 @@ MainWindow* CreateMainWindow(QWidget* parent)
 
     StyleFactory styles;
     styles["Тёплая"] = [appLogger] { return std::make_shared<style::ColorStyle>(style::kWarmPalette, appLogger); };
-    styles["Холодная"] = [appLogger] { return std::make_shared<style::ColorStyle>(style::kCoolPalette, appLogger); };
-    styles["Классика"] = [appLogger] { return std::make_shared<style::ColorStyle>(style::kBrandPalette, appLogger); };
-    styles["Яркая"] = [appLogger] { return std::make_shared<style::ColorStyle>(style::kVividPalette, appLogger); };
-    styles["Пастель"] = [appLogger] { return std::make_shared<style::ColorStyle>(style::kPastelPalette, appLogger); };
+    styles["Контраст"] = [appLogger] { return std::make_shared<style::ColorStyle>(style::kContrastPalette, appLogger); };
+    styles["Графит"] = [appLogger] { return std::make_shared<style::ColorStyle>(style::kGraphitePalette, appLogger); };
+    styles["Индиго"] = [appLogger] { return std::make_shared<style::ColorStyle>(style::kIndigoPalette, appLogger); };
+    styles["Океан"] = [appLogger] { return std::make_shared<style::ColorStyle>(style::kOceanPalette, appLogger); };
     styles["Оттенки серого"] = [appLogger] { return std::make_shared<style::GrayscaleStyle>(appLogger); };
 
     LogInfo(appLogger) << "Composition root: ready (" << parserRegistry->SupportedExtensions().size() << " parsers, "

@@ -74,6 +74,8 @@ class MainWindow : public QMainWindow
     void onError(const QString& message);
     /// @brief Переключает светлую/тёмную тему оформления и обновляет подпись кнопки.
     void toggleTheme();
+    /// @brief Применяет тему ко всему приложению (QSS + график + дерево + сегменты) с текущим акцентом.
+    void applyTheme();
 
    private:
     /// @brief Запрашивает под-источники, при необходимости показывает диалог выбора, затем задаёт источник модели.
@@ -123,6 +125,7 @@ class MainWindow : public QMainWindow
     QLabel* pathLabel_ = nullptr;            ///< Путь к текущему файлу в бренд-баре.
     FileItemDelegate* fileDelegate_ = nullptr;  ///< Делегат двухстрочной отрисовки файлов.
     bool darkTheme_ = false;                 ///< Активна ли тёмная тема.
+    QColor accent_{0xc0, 0x28, 0x1a};        ///< Акцентный цвет приложения (= цвет выбранной палитры).
 };
 
 }  // namespace gui

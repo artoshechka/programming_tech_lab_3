@@ -42,16 +42,17 @@ constexpr const char* kFolderSvg =
     "<svg viewBox='0 0 16 16' fill='none'><path d='M1.5 4.2c0-.6.4-1 1-1H6l1.3 1.3h6.2c.5 0 1 .4 1 1v6.8c0 .5-.5 "
     "1-1 1H2.5c-.6 0-1-.5-1-1V4.2Z' stroke='%1' stroke-width='1.2'/></svg>";
 
-/// @brief Рендерит SVG-строку (с подстановкой цвета) в пиксмап.
-QPixmap RenderSvg(const char* svg, const QColor& color, int size)
+/// @brief Рендерит SVG-строку (с подстановкой цвета) в пиксмап с учётом DPR (резко на Retina).
+QPixmap RenderSvg(const char* svg, const QColor& color, int size, qreal dpr)
 {
     const QString src = QString(svg).arg(color.name());
     QSvgRenderer renderer(src.toUtf8());
-    QPixmap pm(size, size);
+    QPixmap pm(qRound(size * dpr), qRound(size * dpr));
     pm.fill(Qt::transparent);
     QPainter p(&pm);
-    renderer.render(&p, QRectF(0, 0, size, size));
+    renderer.render(&p, QRectF(0, 0, size * dpr, size * dpr));
     p.end();
+    pm.setDevicePixelRatio(dpr);
     return pm;
 }
 
@@ -91,16 +92,17 @@ void FileItemDelegate::paint(QPainter* painter, const QStyleOptionViewItem& opti
     const bool selected = (option.state & QStyle::State_Selected) != 0;
     const bool isDir = (model != nullptr) && model->isDir(index);
 
-    const QColor nameColor = selected ? (dark_ ? QColor(0xf5, 0xb6, 0xa8) : QColor(0x8c, 0x1a, 0x0f))
-                                       : (dark_ ? QColor(0xec, 0xec, 0xee) : QColor(0x2b, 0x2b, 0x30));
+    const QColor selName = dark_ ? accent_.lighter(140) : accent_.darker(135);
+    const QColor nameColor = selected ? selName : (dark_ ? QColor(0xec, 0xec, 0xee) : QColor(0x2b, 0x2b, 0x30));
     const QColor metaColor = dark_ ? QColor(0x82, 0x82, 0x8a) : QColor(0xa6, 0xa6, 0xae);
-    const QColor iconColor = selected ? (dark_ ? QColor(0xd4, 0x45, 0x30) : QColor(0xc0, 0x28, 0x1a)) : metaColor;
+    const QColor iconColor = selected ? accent_ : metaColor;
 
     const QRect r = option.rect;
     const int iconSize = 17;
     const int leftPad = 8;
+    const qreal dpr = (painter->device() != nullptr) ? painter->device()->devicePixelRatioF() : 1.0;
     const QRect iconRect(r.left() + leftPad, r.top() + (r.height() - iconSize) / 2, iconSize, iconSize);
-    painter->drawPixmap(iconRect, RenderSvg(isDir ? kFolderSvg : kFileSvg, iconColor, iconSize));
+    painter->drawPixmap(iconRect, RenderSvg(isDir ? kFolderSvg : kFileSvg, iconColor, iconSize, dpr));
 
     const int textLeft = iconRect.right() + 10;
     const int textRight = r.right() - 12;

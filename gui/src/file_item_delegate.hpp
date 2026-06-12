@@ -4,6 +4,7 @@
 #ifndef GUID_07182939_4a5b_4d16_0718_2939_4a5b6c7d
 #define GUID_07182939_4a5b_4d16_0718_2939_4a5b6c7d
 
+#include <QColor>
 #include <QStyledItemDelegate>
 
 namespace gui
@@ -25,6 +26,13 @@ class FileItemDelegate : public QStyledItemDelegate
     /// @param[in] dark true — тёмная тема.
     void setDark(bool dark);
 
+    /// @brief Задаёт акцентный цвет (для выделенного файла).
+    /// @param[in] accent Акцентный цвет.
+    void setAccent(const QColor& accent)
+    {
+        accent_ = accent;
+    }
+
     /// @brief Рекомендуемый размер элемента (двухстрочный для файлов).
     QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const override;
 
@@ -32,7 +40,8 @@ class FileItemDelegate : public QStyledItemDelegate
     void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override;
 
    private:
-    bool dark_ = false;  ///< Активна ли тёмная тема.
+    bool dark_ = false;                 ///< Активна ли тёмная тема.
+    QColor accent_{0xc0, 0x28, 0x1a};   ///< Акцентный цвет (выделенный файл).
 };
 
 }  // namespace gui
