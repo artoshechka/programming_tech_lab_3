@@ -18,7 +18,7 @@ graph TD
     gui["gui<br/>View + ChartModel + композиция"]
     ioc["ioc_container<br/>DI-контейнер"]
     chart["chart<br/>построители графиков + агрегация"]
-    style["style<br/>палитры и темы графика"]
+    styleMod["style<br/>палитры и темы графика"]
     parser["parser<br/>загрузка данных по расширению"]
     database["database_module<br/>доступ к SQLite"]
     data_model["data_model<br/>доменная модель TimelineData"]
@@ -26,16 +26,16 @@ graph TD
 
     main --> gui
     gui --> chart
-    gui --> style
+    gui --> styleMod
     gui --> parser
     gui --> database
     gui --> data_model
     gui --> logger
     gui --> ioc
     chart --> data_model
-    chart --> style
+    chart --> styleMod
     chart --> logger
-    style --> logger
+    styleMod --> logger
     parser --> data_model
     parser --> database
     parser --> logger

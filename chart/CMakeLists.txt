@@ -6,6 +6,9 @@ find_package(Qt5 REQUIRED COMPONENTS Charts)
 add_library(${PROJECT_NAME} STATIC
     src/pie_chart_builder.cpp
     src/bar_chart_builder.cpp
+    src/line_chart_builder.cpp
+    src/gantt_chart_builder.cpp
+    src/area_chart_builder.cpp
 )
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
