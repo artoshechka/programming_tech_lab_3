@@ -45,7 +45,7 @@ QString Fill(QString tpl, const QColor& acc, const QColor& accH, const QColor& a
 const char* kLight = R"(
 QMainWindow, QDialog, QWidget { background: #faf9f8; color: #2b2b30; font-size: 13px; }
 
-#brandBar { background: #ffffff; border-bottom: 1px solid #ececeb; }
+#brandBar { background: transparent; border: none; }
 #brandPath { color: #8a8a92; font-size: 12px; }
 
 QToolBar { background: #f3f2f1; border: none; border-bottom: 1px solid #e4e3e1; spacing: 8px; padding: 8px 14px; }
@@ -75,6 +75,7 @@ QTreeView::item:hover { background: #ebeae8; }
 QTreeView::item:selected { background: @SOFT@; color: @SELTXT@; }
 QTreeView::branch { background: transparent; }
 QTreeView::branch:selected { background: @SOFT@; }
+#fileRow, #fileRow QLabel, #fileRowIcon { background: transparent; }
 QHeaderView::section { background: #f3f2f1; border: none; color: #8a8a92; padding: 6px 4px; font-size: 11px; font-weight: 600; }
 
 #toolbarSpacer { background: transparent; }
@@ -82,12 +83,14 @@ QHeaderView::section { background: #f3f2f1; border: none; color: #8a8a92; paddin
 QMenu { background: #ffffff; border: 1px solid #e0dfdd; border-radius: 0; padding: 6px; }
 QLabel#popoverHeader { color: #8a8a92; font-size: 11px; font-weight: 600; }
 
+QToolTip { background: #2b2b30; color: #ffffff; border: none; padding: 6px 9px; font-size: 12px; }
+
 QLabel#plotTitle { font-size: 16px; font-weight: 600; padding: 14px 0 8px; color: #2b2b30; letter-spacing: 0.01em; }
 QChartView { background: #ffffff; border: none; }
 
-QStatusBar { background: #f3f2f1; border-top: 1px solid #e4e3e1; color: #8a8a92; }
+QStatusBar { background: transparent; border: none; color: #8a8a92; }
 QStatusBar::item { border: none; }
-QStatusBar QLabel { color: #8a8a92; }
+QStatusBar QLabel { color: #8a8a92; background: transparent; }
 
 QSplitter::handle { background: #e4e3e1; }
 QSplitter::handle:hover { background: @ACC@; }
@@ -102,7 +105,7 @@ QScrollBar::add-line, QScrollBar::sub-line { height: 0; }
 const char* kDark = R"(
 QMainWindow, QDialog, QWidget { background: #26262b; color: #ececee; font-size: 13px; }
 
-#brandBar { background: #2e2e34; border-bottom: 1px solid #3a3a42; }
+#brandBar { background: transparent; border: none; }
 #brandPath { color: #9a9aa2; font-size: 12px; }
 
 QToolBar { background: #2e2e34; border: none; border-bottom: 1px solid #3a3a42; spacing: 8px; padding: 8px 14px; }
@@ -132,6 +135,7 @@ QTreeView::item:hover { background: #383840; }
 QTreeView::item:selected { background: @SOFT@; color: @SELTXT@; }
 QTreeView::branch { background: transparent; }
 QTreeView::branch:selected { background: @SOFT@; }
+#fileRow, #fileRow QLabel, #fileRowIcon { background: transparent; }
 QHeaderView::section { background: #2e2e34; border: none; color: #9a9aa2; padding: 6px 4px; font-size: 11px; font-weight: 600; }
 
 #toolbarSpacer { background: transparent; }
@@ -139,12 +143,14 @@ QHeaderView::section { background: #2e2e34; border: none; color: #9a9aa2; paddin
 QMenu { background: #2e2e34; border: 1px solid #44444e; border-radius: 0; padding: 6px; }
 QLabel#popoverHeader { color: #9a9aa2; font-size: 11px; font-weight: 600; }
 
+QToolTip { background: #1f1f24; color: #ececee; border: 1px solid #44444e; padding: 6px 9px; font-size: 12px; }
+
 QLabel#plotTitle { font-size: 16px; font-weight: 600; padding: 14px 0 8px; color: #ececee; letter-spacing: 0.01em; }
 QChartView { background: #2e2e34; border: none; }
 
-QStatusBar { background: #2e2e34; border-top: 1px solid #3a3a42; color: #9a9aa2; }
+QStatusBar { background: transparent; border: none; color: #9a9aa2; }
 QStatusBar::item { border: none; }
-QStatusBar QLabel { color: #9a9aa2; }
+QStatusBar QLabel { color: #9a9aa2; background: transparent; }
 
 QSplitter::handle { background: #3a3a42; }
 QSplitter::handle:hover { background: @ACC@; }

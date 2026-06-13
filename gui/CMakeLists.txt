@@ -13,6 +13,9 @@ add_library(${PROJECT_NAME} STATIC
     src/theme.cpp
     src/toggle_switch.cpp
     src/file_item_delegate.cpp
+    src/file_glyphs.cpp
+    src/file_row_widget.cpp
+    src/scrollable_chart_view.cpp
     mainwindow.hpp
     app_compositor.hpp
     ui_strings.hpp

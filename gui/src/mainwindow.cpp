@@ -13,6 +13,7 @@
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QIcon>
+#include <QItemSelectionModel>
 #include <QLabel>
 #include <QMargins>
 #include <QMenu>
@@ -34,13 +35,15 @@
 #include <QtCharts/QPieSeries>
 #include <QtCharts/QPieSlice>
 #include <chart/ichart_builder.hpp>
+#include <gui/builder_names.hpp>
 #include <logger/logger_macros.hpp>
 
 #include "chart_model.hpp"
 #include "table_select_dialog.hpp"
 #include <gui/src/file_item_delegate.hpp>
+#include <gui/src/file_row_widget.hpp>
+#include <gui/src/scrollable_chart_view.hpp>
 #include <gui/src/theme.hpp>
-#include <gui/src/toggle_switch.hpp>
 #include <gui/ui_strings.hpp>
 
 QT_CHARTS_USE_NAMESPACE
@@ -90,6 +93,8 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
         seg->setCheckable(true);
         seg->setText(QString::fromStdString(name));
         seg->setProperty("builderName", QString::fromStdString(name));
+        // Тултип объясняет, как формируется график этого типа (показывается при наведении).
+        seg->setToolTip(QString::fromUtf8(ui::TooltipForBuilder(name)));
         segRow->addWidget(seg);
         chartTypeGroup_->addButton(seg);
     }
@@ -106,18 +111,6 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
     paletteButton_->setMenu(paletteMenu_);
     toolbar->addWidget(paletteButton_);
     toolbar->addSeparator();
-
-    // Агрегация: ползунок-переключатель с подписью.
-    aggregateSwitch_ = new ToggleSwitch();
-    aggregateSwitch_->setChecked(true);
-    aggWrap_ = new QWidget();
-    auto* aggRow = new QHBoxLayout(aggWrap_);
-    aggRow->setContentsMargins(4, 0, 4, 0);
-    aggRow->setSpacing(8);
-    aggRow->addWidget(aggregateSwitch_);
-    aggRow->addWidget(new QLabel(ui::kAggregateCheckbox));
-    toolbar->addWidget(aggWrap_);
-    aggSeparator_ = toolbar->addSeparator();
 
     // Распорка прижимает правую группу кнопок к краю тулбара (как в референс-дизайне).
     auto* spacer = new QWidget();
@@ -140,7 +133,7 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
     treeView_->setHeaderHidden(true);
     fileDelegate_ = new FileItemDelegate(this);
     treeView_->setItemDelegate(fileDelegate_);
-    chartView_ = new QChartView();
+    chartView_ = new ScrollableChartView();
     chartView_->setRenderHint(QPainter::Antialiasing);
     chartView_->setChart(new QChart());
 
@@ -166,16 +159,17 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
     statusBar()->addPermanentWidget(statusInfo_);
 
     // Начальная синхронизация модели с виджетами до подключения сигналов: модель должна знать
-    // builder/style/aggregate ещё до первой загрузки источника.
+    // builder/style ещё до первой загрузки источника. По умолчанию — линия времени ("Line").
     QString initialBuilder;
     if (!chartTypeGroup_->buttons().isEmpty())
     {
-        auto* first = chartTypeGroup_->buttons().first();
-        first->setChecked(true);
-        initialBuilder = first->property("builderName").toString();
+        QAbstractButton* defaultButton = chartTypeGroup_->buttons().first();
+        for (auto* button : chartTypeGroup_->buttons())
+            if (button->property("builderName").toString() == builders::kLine) defaultButton = button;
+        defaultButton->setChecked(true);
+        initialBuilder = defaultButton->property("builderName").toString();
     }
     model_->setBuilder(initialBuilder.toStdString());
-    setAggregateVisible(initialBuilder == "Pie");
     std::string initialStyle = ui::kDefaultStyleName;
     if (styles_.find(initialStyle) == styles_.end() && !styles_.empty()) initialStyle = styles_.begin()->first;
     if (auto it = styles_.find(initialStyle); it != styles_.end())
@@ -184,7 +178,6 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
         accent_ = it->second()->ColorFor(0, 8);
         updatePaletteButton(accent_);
     }
-    model_->setAggregate(aggregateSwitch_->isChecked());
 
     const QString root = QFileDialog::getExistingDirectory(this, ui::kChooseFolderTitle);
     if (!root.isEmpty()) setRoot(root);
@@ -201,20 +194,12 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
     connect(themeButton_, &QToolButton::clicked, this, &MainWindow::toggleTheme);
     connect(chartTypeGroup_, QOverload<QAbstractButton*>::of(&QButtonGroup::buttonClicked), this,
             [this](QAbstractButton* button) {
-        const QString name = button->property("builderName").toString();
-        setAggregateVisible(name == "Pie");
-        model_->setBuilder(name.toStdString());
+        model_->setBuilder(button->property("builderName").toString().toStdString());
     });
-    connect(aggregateSwitch_, &ToggleSwitch::toggled, this, [this](bool on) { model_->setAggregate(on); });
+    // Раскрытие папки подгружает её содержимое — досоздаём живые виджеты строк.
+    connect(treeView_, &QTreeView::expanded, this, [this](const QModelIndex&) { installRowWidgets(treeView_->rootIndex()); });
 
     applyTheme();  // первичное применение темы со стартовым акцентом
-}
-
-/// @brief Показывает/скрывает блок агрегации; он осмыслен только для построителя Pie.
-void MainWindow::setAggregateVisible(bool visible)
-{
-    aggWrap_->setVisible(visible);
-    aggSeparator_->setVisible(visible);
 }
 
 /// @brief Пересоздаёт QFileSystemModel с фильтрами по реестру парсеров и задаёт корень дерева.
@@ -233,8 +218,50 @@ void MainWindow::setRoot(const QString& path)
     treeView_->setRootIndex(model->index(path));
     treeView_->setColumnWidth(0, 220);
     for (int c = 1; c <= 3; ++c) treeView_->hideColumn(c);
+
+    // Содержимое каталога загружается асинхронно: ставим живые виджеты строк по мере готовности
+    // и при появлении новых строк, а выделение синхронизируем с моделью выбора.
+    connect(model, &QFileSystemModel::directoryLoaded, this,
+            [this](const QString&) { installRowWidgets(treeView_->rootIndex()); });
+    connect(treeView_->selectionModel(), &QItemSelectionModel::selectionChanged, this,
+            [this](const QItemSelection&, const QItemSelection&) { updateRowSelection(); });
+    installRowWidgets(treeView_->rootIndex());
+
     if (old) old->deleteLater();
     statusBar()->showMessage(path);
+}
+
+/// @brief Рекурсивно ставит живые виджеты строк (FileRowWidget) на видимые элементы дерева.
+/// @details Создаёт виджет только там, где его ещё нет (идемпотентно), и спускается в раскрытые
+///          папки. Вызывается при загрузке каталога, раскрытии папки и смене корня.
+/// @param[in] parent Родительский индекс (поддерево для обхода).
+void MainWindow::installRowWidgets(const QModelIndex& parent)
+{
+    auto* model = qobject_cast<QFileSystemModel*>(treeView_->model());
+    if (model == nullptr) return;
+    const int rows = model->rowCount(parent);
+    for (int i = 0; i < rows; ++i)
+    {
+        const QModelIndex idx = model->index(i, 0, parent);
+        if (treeView_->indexWidget(idx) == nullptr)
+        {
+            const bool isDir = model->isDir(idx);
+            const QFileInfo info = model->fileInfo(idx);
+            const FileKind kind = ClassifyFileKind(isDir, info.suffix().toLower());
+            auto* rowWidget = new FileRowWidget(kind, isDir, idx.data(Qt::DisplayRole).toString(), info, idx);
+            rowWidget->applyTheme(darkTheme_, accent_);
+            treeView_->setIndexWidget(idx, rowWidget);
+        }
+        if (treeView_->isExpanded(idx)) installRowWidgets(idx);
+    }
+}
+
+/// @brief Синхронизирует визуальное выделение живых строк с моделью выбора дерева.
+void MainWindow::updateRowSelection()
+{
+    auto* selection = treeView_->selectionModel();
+    for (auto* rowWidget : treeView_->findChildren<FileRowWidget*>())
+        rowWidget->setSelected(selection != nullptr && selection->isSelected(rowWidget->index()));
 }
 
 /// @brief Открывает диалог выбора папки; обновляет дерево.
@@ -271,9 +298,7 @@ void MainWindow::toggleTheme()
 void MainWindow::applyTheme()
 {
     qApp->setStyleSheet(theme::StyleSheet(darkTheme_ ? theme::Mode::Dark : theme::Mode::Light, accent_));
-    aggregateSwitch_->setAccent(accent_);
-    fileDelegate_->setDark(darkTheme_);
-    fileDelegate_->setAccent(accent_);
+    for (auto* row : treeView_->findChildren<FileRowWidget*>()) row->applyTheme(darkTheme_, accent_);
     applyChartTheme(chartView_->chart());
     treeView_->viewport()->update();
     update();  // полная перерисовка всего окна под новую тему/акцент
@@ -431,6 +456,8 @@ void MainWindow::setChart(std::unique_ptr<QChart> chart)
     // в коде, на границе с Qt API.
     chartView_->setChart(chart.release());
     delete old;
+    // Новый график показываем вписанным в окно; масштаб/прокрутку пользователь задаёт сам.
+    if (auto* scrollable = qobject_cast<ScrollableChartView*>(chartView_)) scrollable->resetView();
 }
 
 /// @brief Открывает диалог сохранения, рендерит текущий график в PDF через QPdfWriter.
