@@ -9,13 +9,50 @@
 #ifndef GUID_a7c1e93b_5d24_4f80_9b3a_1c6e2f8a4d05
 #define GUID_a7c1e93b_5d24_4f80_9b3a_1c6e2f8a4d05
 
+#include <string_view>
+
+#include <gui/builder_names.hpp>
+
 namespace gui::ui
 {
 
 /// @brief Заголовок панели инструментов.
 inline constexpr const char* kToolbarTitle = "Controls";
-/// @brief Подпись переключателя включения агрегации.
-inline constexpr const char* kAggregateCheckbox = "Агрегация";
+
+/// @brief Тултип кнопки «Line»: как формируется линия времени.
+inline constexpr const char* kLineTooltip =
+    "Линия времени: все точки value(t) на реальной оси времени в хронологическом "
+    "порядке, без агрегации — сохраняет суть временного ряда.";
+/// @brief Тултип кнопки «Bar»: как формируется столбчатая диаграмма.
+inline constexpr const char* kBarTooltip =
+    "Столбчатая диаграмма: при числе точек > 50 значения усредняются по месяцу "
+    "(MM.YYYY); высота столбца — среднее за период.";
+/// @brief Тултип кнопки «Pie»: как формируется круговая диаграмма.
+inline constexpr const char* kPieTooltip =
+    "Круговая диаграмма: при числе точек > 50 — группировка по месяцу (MM.YYYY); "
+    "показываются 10 крупнейших долей, остальное сводится в сектор «Other».";
+/// @brief Тултип кнопки «Gantt»: как формируется диаграмма-таймлайн.
+inline constexpr const char* kGanttTooltip =
+    "Диаграмма-таймлайн: ряд группируется по месяцу; каждый период — горизонтальная "
+    "полоса, смещённая по реальной оси времени (ступеньками) и окрашенная палитрой.";
+/// @brief Тултип кнопки «Area»: как формируется диаграмма с областями.
+inline constexpr const char* kAreaTooltip =
+    "Диаграмма с областями: все точки value(t) на реальной оси времени с заливкой "
+    "площади под кривой — подчёркивает форму, объём и динамику ряда, без агрегации.";
+
+/// @brief Возвращает тултип-описание для построителя по его имени.
+/// @param[in] builderName Имя построителя ("Line"/"Bar"/"Pie"/"Gantt"/"Area").
+/// @return Текст описания; пустая строка, если построитель неизвестен.
+inline const char* TooltipForBuilder(std::string_view builderName)
+{
+    if (builderName == builders::kLine) return kLineTooltip;
+    if (builderName == builders::kBar) return kBarTooltip;
+    if (builderName == builders::kPie) return kPieTooltip;
+    if (builderName == builders::kGantt) return kGanttTooltip;
+    if (builderName == builders::kArea) return kAreaTooltip;
+    return "";
+}
+
 /// @brief Подпись кнопки выбора палитры.
 inline constexpr const char* kPaletteButton = " Палитра";
 /// @brief Заголовок поповера выбора палитры.

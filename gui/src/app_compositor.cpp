@@ -2,10 +2,14 @@
 /// @brief Реализация точки композиции приложения
 /// @author Artemenko Anton
 
+#include <chart/src/area_chart_builder.hpp>
 #include <chart/src/bar_chart_builder.hpp>
+#include <chart/src/gantt_chart_builder.hpp>
+#include <chart/src/line_chart_builder.hpp>
 #include <chart/src/pie_chart_builder.hpp>
 #include <database_module/src/sqlite_db_manager.hpp>
 #include <gui/app_compositor.hpp>
+#include <gui/builder_names.hpp>
 #include <gui/mainwindow.hpp>
 #include <ioc_container/IOC_Contaner.hpp>
 #include <logger/logger_factory.hpp>
@@ -48,8 +52,11 @@ MainWindow* CreateMainWindow(QWidget* parent)
 
     // Билдеры и стили получают логгер через захват в фабриках.
     BuilderFactory builders;
-    builders["Pie"] = [appLogger] { return std::make_shared<chart::PieChartBuilder>(appLogger); };
-    builders["Bar"] = [appLogger] { return std::make_shared<chart::BarChartBuilder>(appLogger); };
+    builders[::gui::builders::kLine] = [appLogger] { return std::make_shared<chart::LineChartBuilder>(appLogger); };
+    builders[::gui::builders::kArea] = [appLogger] { return std::make_shared<chart::AreaChartBuilder>(appLogger); };
+    builders[::gui::builders::kGantt] = [appLogger] { return std::make_shared<chart::GanttChartBuilder>(appLogger); };
+    builders[::gui::builders::kPie] = [appLogger] { return std::make_shared<chart::PieChartBuilder>(appLogger); };
+    builders[::gui::builders::kBar] = [appLogger] { return std::make_shared<chart::BarChartBuilder>(appLogger); };
 
     StyleFactory styles;
     styles["Тёплая"] = [appLogger] { return std::make_shared<style::ColorStyle>(style::kWarmPalette, appLogger); };
