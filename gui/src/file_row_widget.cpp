@@ -2,8 +2,6 @@
 /// @brief Реализация живого виджета строки дерева файлов.
 /// @author Artemenko Anton
 
-#include <gui/src/file_row_widget.hpp>
-
 #include <QDateTime>
 #include <QFileInfo>
 #include <QFont>
@@ -12,6 +10,7 @@
 #include <QPainter>
 #include <QRectF>
 #include <QVBoxLayout>
+#include <gui/src/file_row_widget.hpp>
 
 namespace gui
 {
@@ -132,8 +131,7 @@ FileRowWidget::FileRowWidget(FileKind kind, bool isDir, const QString& name, con
     {
         // Папка — одна строка с именем по центру высоты.
         row->addWidget(nameLabel_, 1, Qt::AlignVCenter);
-    }
-    else
+    } else
     {
         // Файл — имя сверху, под ним мета «размер · дата».
         auto* col = new QVBoxLayout();

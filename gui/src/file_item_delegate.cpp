@@ -2,13 +2,11 @@
 /// @brief Реализация делегата строки дерева файлов (высота строки + фон/выделение).
 /// @author Artemenko Anton
 
-#include <gui/src/file_item_delegate.hpp>
-
 #include <QApplication>
 #include <QFileSystemModel>
 #include <QIcon>
 #include <QPainter>
-
+#include <gui/src/file_item_delegate.hpp>
 #include <gui/src/file_row_widget.hpp>
 
 namespace gui

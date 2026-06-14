@@ -37,7 +37,7 @@ class ColorStyle : public IChartStyle
     void Apply(QtCharts::QChart* chart) override;
 
    private:
-    QList<QColor> palette_;                     ///< Палитра цветов для раскраски серий.
+    QList<QColor> palette_;                    ///< Палитра цветов для раскраски серий.
     std::shared_ptr<logger::ILogger> logger_;  ///< Логгер для диагностики (может быть nullptr).
 };
 

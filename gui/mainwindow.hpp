@@ -17,6 +17,7 @@ class QButtonGroup;
 class QWidget;
 #include <chart/ichart_builder.hpp>
 #include <functional>
+#include <gui/ichart_exporter.hpp>
 #include <logger/ilogger.hpp>
 #include <map>
 #include <memory>
@@ -36,6 +37,8 @@ using BuilderFactory = std::map<std::string, std::function<std::shared_ptr<chart
 using StyleFactory = std::map<std::string, std::function<std::shared_ptr<style::IChartStyle>()>>;
 /// @brief Фабрика парсеров: расширение -> функция, создающая IParser. Используется только в композиции.
 using ParserFactory = std::map<std::string, std::function<std::shared_ptr<parser::IParser>()>>;
+/// @brief Фабрика экспортёров: расширение -> функция, создающая IChartExporter.
+using ExporterFactory = std::map<std::string, std::function<std::shared_ptr<IChartExporter>()>>;
 
 class ChartModel;
 class FileItemDelegate;
@@ -51,10 +54,12 @@ class MainWindow : public QMainWindow
     /// @brief Конструктор главного окна.
     /// @param[in] builders Фабрика построителей графиков (имя -> создатель).
     /// @param[in] styles Фабрика стилей графиков (имя -> создатель).
+    /// @param[in] exporters Фабрика экспортёров графика в файл (расширение -> создатель).
     /// @param[in] registry Реестр парсеров для загрузки данных по расширению.
     /// @param[in] logger Логгер для диагностики действий пользователя; допускается nullptr.
     /// @param[in] parent Родительский виджет (по умолчанию nullptr).
-    explicit MainWindow(BuilderFactory builders, StyleFactory styles, std::shared_ptr<parser::IParserRegistry> registry,
+    explicit MainWindow(BuilderFactory builders, StyleFactory styles, ExporterFactory exporters,
+                        std::shared_ptr<parser::IParserRegistry> registry,
                         const std::shared_ptr<logger::ILogger>& logger = nullptr, QWidget* parent = nullptr);
     /// @brief Виртуальный деструктор.
     ~MainWindow() override;
@@ -63,8 +68,10 @@ class MainWindow : public QMainWindow
     /// @brief Обрабатывает клик по элементу дерева: пропускает папки, загружает файл.
     /// @param[in] index Индекс выбранного элемента модели файловой системы.
     void onFileSelected(const QModelIndex& index);
-    /// @brief Открывает диалог сохранения, рендерит текущий график в PDF через QPdfWriter.
-    void onSavePdf();
+    /// @brief Открывает диалог сохранения и экспортирует текущий график в выбранный формат.
+    /// @details Формат выбирается по фильтру/расширению; собственно рендер делегирован
+    ///          экспортёру из фабрики — слот не знает о конкретных форматах.
+    void onSaveChart();
     /// @brief Открывает диалог выбора папки; обновляет дерево.
     void onChooseFolder();
     /// @brief Перестраивает график из текущего состояния модели (реакция на сигналы модели).
@@ -107,22 +114,23 @@ class MainWindow : public QMainWindow
 
     BuilderFactory builders_;                            ///< Фабрика построителей графиков (рендер во View).
     StyleFactory styles_;                                ///< Фабрика стилей графиков (рендер во View).
+    ExporterFactory exporters_;                          ///< Фабрика экспортёров графика в файл.
     std::shared_ptr<parser::IParserRegistry> registry_;  ///< Реестр парсеров (для запроса поддерживаемых расширений).
     std::shared_ptr<logger::ILogger> logger_;            ///< Логгер для диагностики (может быть nullptr).
     std::unique_ptr<ChartModel> model_;                  ///< Наблюдаемая модель состояния и данных графика.
 
-    QTreeView* treeView_ = nullptr;          ///< Дерево файлов с данными.
-    QChartView* chartView_ = nullptr;        ///< Область отображения графика.
-    QButtonGroup* chartTypeGroup_ = nullptr;  ///< Сегмент-контрол выбора типа графика.
-    QToolButton* paletteButton_ = nullptr;   ///< Кнопка-открыватель поповера выбора палитры.
-    QMenu* paletteMenu_ = nullptr;           ///< Поповер со свотчами палитр.
-    QToolButton* themeButton_ = nullptr;     ///< Кнопка переключения светлой/тёмной темы.
-    QLabel* plotTitle_ = nullptr;            ///< Заголовок над областью графика (имя ряда).
-    QLabel* statusInfo_ = nullptr;           ///< Правый индикатор статус-бара (число точек ряда).
-    QLabel* pathLabel_ = nullptr;            ///< Путь к текущему файлу в бренд-баре.
+    QTreeView* treeView_ = nullptr;             ///< Дерево файлов с данными.
+    QChartView* chartView_ = nullptr;           ///< Область отображения графика.
+    QButtonGroup* chartTypeGroup_ = nullptr;    ///< Сегмент-контрол выбора типа графика.
+    QToolButton* paletteButton_ = nullptr;      ///< Кнопка-открыватель поповера выбора палитры.
+    QMenu* paletteMenu_ = nullptr;              ///< Поповер со свотчами палитр.
+    QToolButton* themeButton_ = nullptr;        ///< Кнопка переключения светлой/тёмной темы.
+    QLabel* plotTitle_ = nullptr;               ///< Заголовок над областью графика (имя ряда).
+    QLabel* statusInfo_ = nullptr;              ///< Правый индикатор статус-бара (число точек ряда).
+    QLabel* pathLabel_ = nullptr;               ///< Путь к текущему файлу в бренд-баре.
     FileItemDelegate* fileDelegate_ = nullptr;  ///< Делегат двухстрочной отрисовки файлов.
-    bool darkTheme_ = false;                 ///< Активна ли тёмная тема.
-    QColor accent_{0xc0, 0x28, 0x1a};        ///< Акцентный цвет приложения (= цвет выбранной палитры).
+    bool darkTheme_ = false;                    ///< Активна ли тёмная тема.
+    QColor accent_{0xc0, 0x28, 0x1a};           ///< Акцентный цвет приложения (= цвет выбранной палитры).
 };
 
 }  // namespace gui
