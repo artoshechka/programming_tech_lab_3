@@ -1,0 +1,7 @@
+{
+  "name": "bad_value",
+  "points": [
+    { "Time": "01.01.2020 00:00", "Value": "not_a_number" },
+    { "Time": "02.01.2020 00:00", "Value": 2.0 }
+  ]
+}
