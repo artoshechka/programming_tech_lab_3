@@ -2,13 +2,12 @@
 /// @brief Реализация векторных глифов иконок файлов/папок.
 /// @author Artemenko Anton
 
-#include <gui/src/file_glyphs.hpp>
-
 #include <QPainter>
 #include <QPainterPath>
 #include <QPen>
 #include <QPointF>
 #include <QRectF>
+#include <gui/src/file_glyphs.hpp>
 
 namespace gui
 {

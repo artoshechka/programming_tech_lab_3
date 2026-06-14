@@ -11,8 +11,7 @@ namespace gui::theme
 {
 
 /// @brief Режим оформления интерфейса.
-enum class Mode
-{
+enum class Mode {
     Light,  ///< Светлая тема.
     Dark    ///< Тёмная тема.
 };

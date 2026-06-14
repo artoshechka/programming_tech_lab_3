@@ -16,9 +16,11 @@ add_library(${PROJECT_NAME} STATIC
     src/file_glyphs.cpp
     src/file_row_widget.cpp
     src/scrollable_chart_view.cpp
+    src/pdf_exporter.cpp
     mainwindow.hpp
     app_compositor.hpp
     ui_strings.hpp
+    ichart_exporter.hpp
 )
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)

@@ -2,12 +2,11 @@
 /// @brief Реализация представления графика с прокруткой скроллбарами.
 /// @author Artemenko Anton
 
-#include <gui/src/scrollable_chart_view.hpp>
-
 #include <QResizeEvent>
 #include <QWheelEvent>
 #include <QtCharts/QChart>
 #include <QtGlobal>
+#include <gui/src/scrollable_chart_view.hpp>
 
 QT_CHARTS_USE_NAMESPACE
 
