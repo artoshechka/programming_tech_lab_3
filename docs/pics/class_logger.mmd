@@ -1,0 +1,75 @@
+%% Модуль logger: интерфейс логгера, потокобезопасная реализация и потоковый helper.
+%% Видимость: + public, # protected, - private; static помечен $.
+---
+config:
+  look: classic
+---
+classDiagram
+    direction TB
+
+    class ILogger {
+        <<interface>>
+        +~ILogger() virtual
+        +SetSettings(settings) void
+        +GetSettings() LoggerSettings
+        +Log(level, message, file, line, function) void
+    }
+    class ThreadSafeLogger {
+        +ThreadSafeLogger(componentName, output)
+        +~ThreadSafeLogger()
+        +SetSettings(settings) void
+        +GetSettings() LoggerSettings
+        +Log(level, message, file, line, function) void
+        #FormatMessage(level, message, file, line, function) string
+        #LogLevelToString(level) string$
+        #string componentName_
+        -OpenLogFile() void
+        -ofstream logFile_
+        -recursive_mutex syncMutex_
+        -LoggerSettings settings_
+    }
+    class AppLogger {
+        +AppLogger(output)
+        +~AppLogger()
+        -FormatMessage(level, message, file, line, function) string
+    }
+    class LogEntryStream {
+        +LogEntryStream(logger, level, file, line, function)
+        +~LogEntryStream()
+        +operator<<(value) LogEntryStream&
+        -shared_ptr~ILogger~ logger_
+        -LogLevel level_
+        -const char* file_
+        -int line_
+        -const char* function_
+        -ostringstream stream_
+    }
+    class LoggerSettings {
+        <<struct>>
+        +LoggerSettings(logFilePath, logLevel, output)
+        +optional~string~ logFilePath_
+        +LogLevel logLevel_
+        +LogOutput output_
+    }
+    class LogLevel {
+        <<enumeration>>
+        Trace
+        Debug
+        Info
+        Warning
+        Error
+        Fatal
+    }
+    class LogOutput {
+        <<enumeration>>
+        Console
+        File
+    }
+
+    ThreadSafeLogger ..|> ILogger
+    AppLogger --|> ThreadSafeLogger
+    LogEntryStream o-- ILogger
+    ThreadSafeLogger *-- LoggerSettings
+    ILogger ..> LoggerSettings
+    LoggerSettings ..> LogLevel
+    LoggerSettings ..> LogOutput
