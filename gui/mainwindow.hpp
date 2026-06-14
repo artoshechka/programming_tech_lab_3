@@ -88,7 +88,7 @@ class MainWindow : public QMainWindow
     /// @brief Запрашивает под-источники, при необходимости показывает диалог выбора, затем задаёт источник модели.
     /// @param[in] path Путь к файлу данных.
     void loadFile(const QString& path);
-    /// @brief Пересоздаёт QFileSystemModel с фильтрами по реестру парсеров и задаёт корень дерева.
+    /// @brief Пересоздаёт QFileSystemModel (показывает все файлы и папки) и задаёт корень дерева.
     /// @param[in] path Путь к папке.
     void setRoot(const QString& path);
     /// @brief Передаёт новый график в QChartView, удаляя предыдущий.
