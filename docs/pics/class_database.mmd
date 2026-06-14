@@ -1,0 +1,48 @@
+%% Модуль database_module: интерфейс соединения, фабрика и SQLite-реализация через Qt SQL.
+%% Заглушка <<logger>> — коллаборатор из модуля logger, показан без членов.
+---
+config:
+  look: classic
+---
+classDiagram
+    direction TB
+
+    class IDatabase {
+        <<interface>>
+        +~IDatabase() virtual
+        +Open(path) bool
+        +Close() void
+        +Tables() vector~string~
+        +Query(sql, rowFn) void
+    }
+    class IDatabaseManager {
+        <<interface>>
+        +~IDatabaseManager() virtual
+        +Create(connectionName) shared_ptr~IDatabase~
+    }
+    class SqliteDB {
+        +SqliteDB(connectionName, logger)
+        +~SqliteDB()
+        +Open(path) bool
+        +Close() void
+        +Tables() vector~string~
+        +Query(sql, rowFn) void
+        -QSqlDatabase db_
+        -shared_ptr~ILogger~ logger_
+    }
+    class SqliteDBManager {
+        +SqliteDBManager(logger)
+        +~SqliteDBManager()
+        +Create(connectionName) shared_ptr~IDatabase~
+        -shared_ptr~ILogger~ logger_
+    }
+
+    class ILogger {
+        <<logger>>
+    }
+
+    SqliteDB ..|> IDatabase
+    SqliteDBManager ..|> IDatabaseManager
+    SqliteDBManager ..> IDatabase : creates
+    SqliteDB o-- ILogger
+    SqliteDBManager o-- ILogger

@@ -1,0 +1,85 @@
+%% Модуль chart: построители графиков из временного ряда + общие опции построения.
+%% Заглушки <<style>>, <<logger>>, <<data_model>> — коллабораторы из других модулей.
+---
+config:
+  look: classic
+---
+classDiagram
+    direction TB
+
+    class BuilderOptions {
+        <<struct>>
+        +bool aggregate
+        +const IPalette* palette
+    }
+    class IChartBuilder {
+        <<interface>>
+        +~IChartBuilder() virtual
+        +Configure(options) void
+        +Build(data) unique_ptr~QChart~
+    }
+    class BarChartBuilder {
+        +BarChartBuilder(logger)
+        +Configure(options) void
+        +Build(data) unique_ptr~QChart~
+        -const IPalette* palette_
+        -shared_ptr~ILogger~ logger_
+    }
+    class PieChartBuilder {
+        +PieChartBuilder(logger)
+        +Configure(options) void
+        +Build(data) unique_ptr~QChart~
+        -bool aggregate_
+        -const IPalette* palette_
+        -shared_ptr~ILogger~ logger_
+    }
+    class LineChartBuilder {
+        +LineChartBuilder(logger)
+        +Configure(options) void
+        +Build(data) unique_ptr~QChart~
+        -const IPalette* palette_
+        -shared_ptr~ILogger~ logger_
+    }
+    class AreaChartBuilder {
+        +AreaChartBuilder(logger)
+        +Configure(options) void
+        +Build(data) unique_ptr~QChart~
+        -const IPalette* palette_
+        -shared_ptr~ILogger~ logger_
+    }
+    class GanttChartBuilder {
+        +GanttChartBuilder(logger)
+        +Configure(options) void
+        +Build(data) unique_ptr~QChart~
+        -const IPalette* palette_
+        -shared_ptr~ILogger~ logger_
+    }
+
+    class IPalette {
+        <<style>>
+    }
+    class ILogger {
+        <<logger>>
+    }
+    class TimelineData {
+        <<data_model>>
+    }
+
+    BarChartBuilder ..|> IChartBuilder
+    PieChartBuilder ..|> IChartBuilder
+    LineChartBuilder ..|> IChartBuilder
+    AreaChartBuilder ..|> IChartBuilder
+    GanttChartBuilder ..|> IChartBuilder
+    IChartBuilder ..> BuilderOptions
+    IChartBuilder ..> TimelineData
+    BuilderOptions o-- IPalette
+    BarChartBuilder o-- IPalette
+    PieChartBuilder o-- IPalette
+    LineChartBuilder o-- IPalette
+    AreaChartBuilder o-- IPalette
+    GanttChartBuilder o-- IPalette
+    BarChartBuilder o-- ILogger
+    PieChartBuilder o-- ILogger
+    LineChartBuilder o-- ILogger
+    AreaChartBuilder o-- ILogger
+    GanttChartBuilder o-- ILogger

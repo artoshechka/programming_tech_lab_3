@@ -1,0 +1,41 @@
+%% Модуль style: палитра цветов (IPalette) и стиль оформления графика (IChartStyle).
+%% Заглушка <<logger>> — коллаборатор из модуля logger.
+---
+config:
+  look: classic
+---
+classDiagram
+    direction TB
+
+    class IPalette {
+        <<interface>>
+        +~IPalette() virtual
+        +ColorFor(index, total) QColor
+    }
+    class IChartStyle {
+        <<interface>>
+        +Apply(chart) void
+    }
+    class ColorStyle {
+        +ColorStyle(palette, logger)
+        +ColorFor(index, total) QColor
+        +Apply(chart) void
+        -QList~QColor~ palette_
+        -shared_ptr~ILogger~ logger_
+    }
+    class GrayscaleStyle {
+        +GrayscaleStyle(logger)
+        +ColorFor(index, total) QColor
+        +Apply(chart) void
+        -shared_ptr~ILogger~ logger_
+    }
+
+    class ILogger {
+        <<logger>>
+    }
+
+    IChartStyle --|> IPalette
+    ColorStyle ..|> IChartStyle
+    GrayscaleStyle ..|> IChartStyle
+    ColorStyle o-- ILogger
+    GrayscaleStyle o-- ILogger

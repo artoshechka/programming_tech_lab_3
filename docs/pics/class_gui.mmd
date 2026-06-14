@@ -1,0 +1,175 @@
+%% Модуль gui: главное окно (View), наблюдаемая модель (ChartModel), экспортёры и виджеты дерева.
+%% Заглушки <<chart>>, <<style>>, <<parser>>, <<logger>>, <<data_model>> — коллабораторы из других модулей.
+---
+config:
+  look: classic
+---
+classDiagram
+    direction TB
+
+    class IChartExporter {
+        <<interface>>
+        +~IChartExporter() virtual
+        +Export(scene, path) bool
+        +FileFilter() QString
+    }
+    class PdfExporter {
+        +Export(scene, path) bool
+        +FileFilter() QString
+    }
+    class MainWindow {
+        +MainWindow(builders, styles, exporters, registry, logger, parent)
+        +~MainWindow()
+        +onFileSelected(index) void
+        +onSaveChart() void
+        +onChooseFolder() void
+        +refresh() void
+        +onError(message) void
+        +toggleTheme() void
+        +applyTheme() void
+        -loadFile(path) void
+        -setRoot(path) void
+        -setChart(chart) void
+        -buildChart(data) unique_ptr~QChart~
+        -applyChartTheme(chart) void
+        -updatePaletteButton(color) void
+        -buildPalettePopover() void
+        -installRowWidgets(parent) void
+        -updateRowSelection() void
+        -BuilderFactory builders_
+        -StyleFactory styles_
+        -ExporterFactory exporters_
+        -shared_ptr~IParserRegistry~ registry_
+        -shared_ptr~ILogger~ logger_
+        -unique_ptr~ChartModel~ model_
+        -QTreeView* treeView_
+        -QChartView* chartView_
+        -QButtonGroup* chartTypeGroup_
+        -QToolButton* paletteButton_
+        -QMenu* paletteMenu_
+        -QToolButton* themeButton_
+        -QLabel* plotTitle_
+        -QLabel* statusInfo_
+        -QLabel* pathLabel_
+        -FileItemDelegate* fileDelegate_
+        -bool darkTheme_
+        -QColor accent_
+    }
+    class ChartModel {
+        +ChartModel(registry, logger, parent)
+        +data() TimelineData&
+        +hasData() bool
+        +builder() string&
+        +style() string&
+        +aggregate() bool
+        +listSubSources(path) vector~string~
+        +setSource(source) void
+        +setBuilder(builder) void
+        +setStyle(style) void
+        +setAggregate(aggregate) void
+        +dataChanged() signal
+        +renderOptionsChanged() signal
+        +errorOccurred(message) signal
+        -SourcePath(source) string$
+        -shared_ptr~IParserRegistry~ registry_
+        -shared_ptr~ILogger~ logger_
+        -optional~DataSlot~ dataSlot_
+        -optional~TablesSlot~ tablesSlot_
+        -string builder_
+        -string style_
+        -bool aggregate_
+    }
+    class FileItemDelegate {
+        +FileItemDelegate(parent)
+        +sizeHint(option, index) QSize
+        +paint(painter, option, index) void
+    }
+    class FileRowWidget {
+        +FileRowWidget(kind, isDir, name, info, index, parent)
+        +setSelected(selected) void
+        +applyTheme(dark, accent) void
+        +index() QModelIndex
+        -updateColors() void
+        -FileKind kind_
+        -bool isDir_
+        -bool selected_
+        -bool dark_
+        -QColor accent_
+        -QPersistentModelIndex index_
+        -GlyphIcon* icon_
+        -QLabel* nameLabel_
+        -QLabel* sizeLabel_
+        -QLabel* dateLabel_
+    }
+    class GlyphIcon {
+        +GlyphIcon(kind, parent)
+        +setColor(color) void
+        #paintEvent(event) void
+        -FileKind kind_
+        -QColor color_
+    }
+    class ScrollableChartView {
+        +ScrollableChartView(parent)
+        +resetView() void
+        #resizeEvent(event) void
+        #wheelEvent(event) void
+        -layoutChart() void
+        -qreal contentScale_
+    }
+    class TableSelectDialog {
+        +TableSelectDialog(tables, parent)
+        +selectedTable() QString
+        -QListWidget* list_
+    }
+    class ToggleSwitch {
+        +ToggleSwitch(parent)
+        +sizeHint() QSize
+        +pos() qreal
+        +setPos(p) void
+        +setAccent(color) void
+        #paintEvent(event) void
+        -qreal pos_
+        -QColor accent_
+    }
+    class FileKind {
+        <<enumeration>>
+        Folder
+        Json
+        Sqlite
+        Generic
+    }
+
+    class IChartBuilder {
+        <<chart>>
+    }
+    class IChartStyle {
+        <<style>>
+    }
+    class IParserRegistry {
+        <<parser>>
+    }
+    class ILogger {
+        <<logger>>
+    }
+    class TimelineData {
+        <<data_model>>
+    }
+
+    PdfExporter ..|> IChartExporter
+    MainWindow *-- ChartModel
+    MainWindow *-- FileItemDelegate
+    MainWindow ..> FileRowWidget : creates
+    MainWindow ..> ScrollableChartView : creates
+    MainWindow ..> TableSelectDialog : creates
+    MainWindow o-- IChartExporter
+    MainWindow o-- IChartBuilder
+    MainWindow o-- IChartStyle
+    MainWindow o-- IParserRegistry
+    MainWindow o-- ILogger
+    FileItemDelegate ..> FileRowWidget
+    FileRowWidget *-- GlyphIcon
+    FileRowWidget ..> FileKind
+    GlyphIcon ..> FileKind
+    ChartModel o-- IParserRegistry
+    ChartModel o-- ILogger
+    ChartModel *-- TimelineData

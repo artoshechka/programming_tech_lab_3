@@ -1,0 +1,22 @@
+%% Модуль data_model: доменная единица обмена — временной ряд и его точки.
+%% Видимость: + public; static помечен $.
+---
+config:
+  look: classic
+---
+classDiagram
+    direction TB
+
+    class TimePoint {
+        <<struct>>
+        +string time_
+        +double value_
+        +kSchema$
+    }
+    class TimelineData {
+        +string name_
+        +vector~TimePoint~ points_
+        +kSchema$
+    }
+
+    TimelineData *-- TimePoint

@@ -1,0 +1,72 @@
+%% Модуль parser: загрузка временного ряда по расширению (JSON / SQLite) + реестр.
+%% Заглушки со стереотипом-источником (<<logger>>, <<database_module>>, <<data_model>>) —
+%% это коллабораторы из других модулей, показаны без членов.
+---
+config:
+  look: classic
+---
+classDiagram
+    direction TB
+
+    class IParser {
+        <<interface>>
+        +~IParser() virtual
+        +Load(source) TimelineData
+        +ListSubSources(path) vector~string~
+    }
+    class IParserRegistry {
+        <<interface>>
+        +~IParserRegistry() virtual
+        +Get(extension) shared_ptr~IParser~
+        +SupportedExtensions() vector~string~
+    }
+    class ParserBase {
+        <<abstract>>
+        +ParserBase(logger)
+        #shared_ptr~ILogger~ logger_
+    }
+    class JsonParser {
+        +JsonParser(logger)
+        +~JsonParser()
+        +Load(source) TimelineData
+    }
+    class DatabaseParser {
+        +DatabaseParser(logger, manager)
+        +~DatabaseParser()
+        +Load(source) TimelineData
+        +ListSubSources(path) vector~string~
+        -shared_ptr~IDatabaseManager~ manager_
+        -atomic~int~ nextConnId_$
+    }
+    class ParserRegistry {
+        +ParserRegistry(logger)
+        +Register(extension, parser) void
+        +Get(extension) shared_ptr~IParser~
+        +SupportedExtensions() vector~string~
+        -map~string, IParser~ parsers_
+        -shared_ptr~ILogger~ logger_
+    }
+    class ParseException {
+        <<exception>>
+        +ParseException(message)
+    }
+
+    class ILogger {
+        <<logger>>
+    }
+    class IDatabaseManager {
+        <<database_module>>
+    }
+    class TimelineData {
+        <<data_model>>
+    }
+
+    ParserBase ..|> IParser
+    JsonParser --|> ParserBase
+    DatabaseParser --|> ParserBase
+    ParserRegistry ..|> IParserRegistry
+    ParserRegistry o-- IParser
+    ParserBase o-- ILogger
+    ParserRegistry o-- ILogger
+    DatabaseParser o-- IDatabaseManager
+    IParser ..> TimelineData

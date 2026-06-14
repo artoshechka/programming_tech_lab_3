@@ -51,34 +51,45 @@ QJsonValue FieldToJson(const T& field)
 }
 
 template <typename T>
-void JsonToField(T& field, const QJsonValue& json);
+void JsonToField(T& field, const QJsonValue& json, const char* name);
 
 template <typename T>
 void StructFromJson(T& object, const QJsonObject& json)
 {
-    data::ForEachField(object,
-                       [&](auto& value, const char* name) { JsonToField(value, json.value(QString::fromUtf8(name))); });
+    data::ForEachField(object, [&](auto& value, const char* name) {
+        const QJsonValue jsonValue = json.value(QString::fromUtf8(name));
+        if (jsonValue.isUndefined()) throw ParseException(std::string("JSON: missing field: ") + name);
+        JsonToField(value, jsonValue, name);
+    });
 }
 
 template <typename T>
-void JsonToField(T& field, const QJsonValue& json)
+void JsonToField(T& field, const QJsonValue& json, const char* name)
 {
     if constexpr (data::HasSchemaV<T>)
-        StructFromJson(field, json.toObject());
-    else if constexpr (data::IsVectorV<T>)
     {
+        if (!json.isObject()) throw ParseException(std::string("JSON: field '") + name + "' is not an object");
+        StructFromJson(field, json.toObject());
+    } else if constexpr (data::IsVectorV<T>)
+    {
+        if (!json.isArray()) throw ParseException(std::string("JSON: field '") + name + "' is not an array");
         field.clear();
         const QJsonArray array = json.toArray();
         for (const QJsonValue& item : array)
         {
             typename T::value_type element;
-            JsonToField(element, item);
+            JsonToField(element, item, name);
             field.push_back(std::move(element));
         }
     } else if constexpr (std::is_same_v<T, std::string>)
+    {
+        if (!json.isString()) throw ParseException(std::string("JSON: field '") + name + "' is not a string");
         field = json.toString().toStdString();
-    else
+    } else
+    {
+        if (!json.isDouble()) throw ParseException(std::string("JSON: field '") + name + "' is not a number");
         field = static_cast<T>(json.toDouble());
+    }
 }
 }  // namespace
 
