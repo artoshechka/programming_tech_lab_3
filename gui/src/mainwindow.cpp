@@ -20,13 +20,12 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
-#include <QPageSize>
 #include <QPainter>
-#include <QPdfWriter>
 #include <QPixmap>
 #include <QPushButton>
 #include <QSplitter>
 #include <QStatusBar>
+#include <QStringList>
 #include <QToolBar>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -55,11 +54,13 @@ namespace gui
 MainWindow::~MainWindow() = default;
 
 /// @brief Строит UI: тулбар с комбобоксами и кнопками, дерево файлов, область графика; связывает сигналы.
-MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared_ptr<parser::IParserRegistry> registry,
+MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, ExporterFactory exporters,
+                       std::shared_ptr<parser::IParserRegistry> registry,
                        const std::shared_ptr<logger::ILogger>& logger, QWidget* parent)
     : QMainWindow(parent),
       builders_(std::move(builders)),
       styles_(std::move(styles)),
+      exporters_(std::move(exporters)),
       registry_(registry),
       logger_(logger),
       model_(std::make_unique<ChartModel>(std::move(registry), logger_))
@@ -121,13 +122,13 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
 
     auto* folderBtn = new QPushButton(ui::kFolderButton);
     folderBtn->setObjectName("primaryButton");
-    auto* pdfBtn = new QPushButton(ui::kSavePdfButton);
-    pdfBtn->setObjectName("ghostButton");
+    auto* saveBtn = new QPushButton(ui::kSaveButton);
+    saveBtn->setObjectName("ghostButton");
     themeButton_ = new QToolButton();
     themeButton_->setObjectName("themeButton");
     themeButton_->setText(ui::kThemeDarkButton);
     toolbar->addWidget(folderBtn);
-    toolbar->addWidget(pdfBtn);
+    toolbar->addWidget(saveBtn);
     toolbar->addWidget(themeButton_);
 
     treeView_ = new QTreeView();
@@ -191,7 +192,7 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, std::shared
     // Сигналы виджетов -> слоты-мутаторы модели (роль контроллера в Qt Model/View).
     connect(treeView_, &QTreeView::clicked, this, &MainWindow::onFileSelected);
     connect(folderBtn, &QPushButton::clicked, this, &MainWindow::onChooseFolder);
-    connect(pdfBtn, &QPushButton::clicked, this, &MainWindow::onSavePdf);
+    connect(saveBtn, &QPushButton::clicked, this, &MainWindow::onSaveChart);
     connect(themeButton_, &QToolButton::clicked, this, &MainWindow::toggleTheme);
     connect(chartTypeGroup_, QOverload<QAbstractButton*>::of(&QButtonGroup::buttonClicked), this,
             [this](QAbstractButton* button) {
@@ -461,20 +462,44 @@ void MainWindow::setChart(std::unique_ptr<QChart> chart)
     if (auto* scrollable = qobject_cast<ScrollableChartView*>(chartView_)) scrollable->resetView();
 }
 
-/// @brief Открывает диалог сохранения, рендерит текущий график в PDF через QPdfWriter.
-void MainWindow::onSavePdf()
+/// @brief Открывает диалог сохранения и экспортирует текущий график в выбранный формат.
+void MainWindow::onSaveChart()
 {
-    const QString path = QFileDialog::getSaveFileName(this, ui::kSavePdfDialogTitle, {}, ui::kPdfFilter);
+    if (exporters_.empty()) return;
+
+    // Фильтр диалога и выбор экспортёра собираются из фабрики: слот не знает форматов.
+    // Связь «строка фильтра -> расширение» строится здесь же, чтобы по выбору пользователя
+    // (selectedFilter) найти нужный экспортёр без разбора литералов фильтров.
+    QStringList filters;
+    std::map<QString, std::string> filterToExt;
+    for (const auto& [ext, make] : exporters_)
+    {
+        const QString filter = make()->FileFilter();
+        filters << filter;
+        filterToExt[filter] = ext;
+    }
+
+    QString selectedFilter;
+    const QString path =
+        QFileDialog::getSaveFileName(this, ui::kSaveChartDialogTitle, {}, filters.join(";;"), &selectedFilter);
     if (path.isEmpty()) return;
-    QPdfWriter writer(path);
-    writer.setPageSize(QPageSize(QPageSize::A4));
-    QPainter painter(&writer);
-    // Рендерим всю сцену графика, а не вьюпорт: иначе при прокрутке/масштабе в PDF попадает
-    // только видимый обрезок. render() сцены не зависит от положения скроллбаров.
-    if (auto* scene = chartView_->scene()) scene->render(&painter);
-    painter.end();
-    LogInfo(logger_) << "Chart saved to PDF: " << path.toStdString();
-    statusBar()->showMessage(ui::kSavedPrefix + path);
+
+    // Расширение берём из выбранного фильтра; на случай нестандартного выбора — первый из фабрики.
+    auto extIt = filterToExt.find(selectedFilter);
+    const std::string ext = extIt != filterToExt.end() ? extIt->second : exporters_.begin()->first;
+    const QString suffix = "." + QString::fromStdString(ext);
+    QString outPath = path.endsWith(suffix, Qt::CaseInsensitive) ? path : path + suffix;
+
+    auto* scene = chartView_->scene();
+    if (scene == nullptr) return;
+    if (!exporters_.at(ext)()->Export(*scene, outPath))
+    {
+        LogError(logger_) << "Chart export failed: " << outPath.toStdString();
+        onError(ui::kSaveErrorMessage);
+        return;
+    }
+    LogInfo(logger_) << "Chart saved: " << outPath.toStdString();
+    statusBar()->showMessage(ui::kSavedPrefix + outPath);
 }
 
 }  // namespace gui

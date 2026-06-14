@@ -61,8 +61,8 @@ inline constexpr const char* kPaletteHeader = "Палитра";
 inline constexpr const char* kDefaultStyleName = "Тёплая";
 /// @brief Подпись кнопки выбора рабочей папки.
 inline constexpr const char* kFolderButton = "Папка";
-/// @brief Подпись кнопки сохранения графика в PDF.
-inline constexpr const char* kSavePdfButton = "Сохранить PDF";
+/// @brief Подпись кнопки сохранения графика в файл.
+inline constexpr const char* kSaveButton = "Сохранить";
 /// @brief Подпись кнопки переключения светлой темы.
 inline constexpr const char* kThemeLightButton = "☀ Светлая";
 /// @brief Подпись кнопки переключения тёмной темы.
@@ -74,10 +74,12 @@ inline constexpr const char* kPointsSuffix = " точек";
 
 /// @brief Заголовок диалога выбора рабочей папки с данными.
 inline constexpr const char* kChooseFolderTitle = "Выберите папку с данными";
-/// @brief Заголовок диалога сохранения PDF.
-inline constexpr const char* kSavePdfDialogTitle = "Сохранить PDF";
+/// @brief Заголовок диалога сохранения графика в файл.
+inline constexpr const char* kSaveChartDialogTitle = "Сохранить график";
 /// @brief Фильтр файлов диалога сохранения PDF.
 inline constexpr const char* kPdfFilter = "PDF (*.pdf)";
+/// @brief Фильтр файлов диалога сохранения PNG.
+inline constexpr const char* kPngFilter = "PNG (*.png)";
 /// @brief Заголовок диалога выбора таблицы SQLite.
 inline constexpr const char* kSelectTableTitle = "Выберите таблицу";
 
@@ -87,6 +89,8 @@ inline constexpr const char* kErrorTitle = "Ошибка";
 inline constexpr const char* kLoadErrorTitle = "Ошибка загрузки";
 /// @brief Префикс сообщения статус-бара об успешном сохранении.
 inline constexpr const char* kSavedPrefix = "Сохранено: ";
+/// @brief Текст ошибки при неудачном сохранении графика в файл.
+inline constexpr const char* kSaveErrorMessage = "Не удалось сохранить график в файл.";
 
 /// @brief Заголовок окна фатальной ошибки при старте приложения.
 inline constexpr const char* kFatalErrorTitle = "Fatal error";

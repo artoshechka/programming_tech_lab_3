@@ -11,6 +11,7 @@
 #include <gui/app_compositor.hpp>
 #include <gui/builder_names.hpp>
 #include <gui/mainwindow.hpp>
+#include <gui/src/pdf_exporter.hpp>
 #include <ioc_container/IOC_Contaner.hpp>
 #include <logger/logger_factory.hpp>
 #include <logger/logger_macros.hpp>
@@ -66,9 +67,15 @@ MainWindow* CreateMainWindow(QWidget* parent)
     styles["Океан"] = [appLogger] { return std::make_shared<style::ColorStyle>(style::kOceanPalette, appLogger); };
     styles["Оттенки серого"] = [appLogger] { return std::make_shared<style::GrayscaleStyle>(appLogger); };
 
+    // Экспортёры графика в файл: одна строка на формат, как и в Builder/StyleFactory.
+    ExporterFactory exporters;
+    exporters["pdf"] = [] { return std::make_shared<PdfExporter>(); };
+
     LogInfo(appLogger) << "Composition root: ready (" << parserRegistry->SupportedExtensions().size() << " parsers, "
-                       << builders.size() << " builders, " << styles.size() << " styles)";
-    return new MainWindow(std::move(builders), std::move(styles), parserRegistry, appLogger, parent);
+                       << builders.size() << " builders, " << styles.size() << " styles, " << exporters.size()
+                       << " exporters)";
+    return new MainWindow(std::move(builders), std::move(styles), std::move(exporters), parserRegistry, appLogger,
+                          parent);
 }
 
 }  // namespace gui
