@@ -10,6 +10,7 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFileSystemModel>
+#include <QGraphicsScene>
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QIcon>
@@ -468,7 +469,9 @@ void MainWindow::onSavePdf()
     QPdfWriter writer(path);
     writer.setPageSize(QPageSize(QPageSize::A4));
     QPainter painter(&writer);
-    chartView_->render(&painter);
+    // Рендерим всю сцену графика, а не вьюпорт: иначе при прокрутке/масштабе в PDF попадает
+    // только видимый обрезок. render() сцены не зависит от положения скроллбаров.
+    if (auto* scene = chartView_->scene()) scene->render(&painter);
     painter.end();
     LogInfo(logger_) << "Chart saved to PDF: " << path.toStdString();
     statusBar()->showMessage(ui::kSavedPrefix + path);
