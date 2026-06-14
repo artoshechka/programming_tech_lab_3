@@ -1,0 +1,89 @@
+%% Обзор: ключевые сущности модулей (без членов) и связи между модулями.
+%% Полный состав классов каждого модуля — в отдельных class_<модуль>.mmd.
+%% Стереотип у класса указывает модуль-источник.
+---
+config:
+  look: classic
+---
+classDiagram
+    direction LR
+
+    class ILogger {
+        <<logger>>
+    }
+    class TimelineData {
+        <<data_model>>
+    }
+    class IParser {
+        <<parser>>
+    }
+    class IParserRegistry {
+        <<parser>>
+    }
+    class IDatabase {
+        <<database_module>>
+    }
+    class IDatabaseManager {
+        <<database_module>>
+    }
+    class IChartBuilder {
+        <<chart>>
+    }
+    class BuilderOptions {
+        <<chart>>
+    }
+    class IPalette {
+        <<style>>
+    }
+    class IChartStyle {
+        <<style>>
+    }
+    class IChartExporter {
+        <<gui>>
+    }
+    class ChartModel {
+        <<gui>>
+    }
+    class MainWindow {
+        <<gui>>
+    }
+    class IOCContainer {
+        <<ioc>>
+    }
+
+    %% --- разрешение зависимостей (композиционный корень) ---
+    IOCContainer ..> ILogger : wires
+    IOCContainer ..> IDatabaseManager : wires
+    IOCContainer ..> IParserRegistry : wires
+
+    %% --- parser → data_model / database / logger ---
+    IParserRegistry o-- IParser
+    IParser ..> TimelineData
+    IParser ..> IDatabaseManager
+    IParser ..> ILogger
+
+    %% --- database ---
+    IDatabaseManager ..> IDatabase : creates
+    IDatabase ..> ILogger
+
+    %% --- chart → data_model / style / logger ---
+    IChartBuilder ..> TimelineData
+    IChartBuilder ..> BuilderOptions
+    IChartBuilder ..> IPalette
+    IChartBuilder ..> ILogger
+    BuilderOptions o-- IPalette
+
+    %% --- style → logger ---
+    IChartStyle --|> IPalette
+    IChartStyle ..> ILogger
+
+    %% --- gui (View + Model) → всё остальное ---
+    MainWindow *-- ChartModel
+    MainWindow o-- IChartBuilder
+    MainWindow o-- IChartStyle
+    MainWindow o-- IChartExporter
+    MainWindow o-- IParserRegistry
+    MainWindow o-- ILogger
+    ChartModel o-- IParserRegistry
+    ChartModel *-- TimelineData
+    ChartModel o-- ILogger

@@ -204,17 +204,15 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, ExporterFac
     applyTheme();  // первичное применение темы со стартовым акцентом
 }
 
-/// @brief Пересоздаёт QFileSystemModel с фильтрами по реестру парсеров и задаёт корень дерева.
+/// @brief Пересоздаёт QFileSystemModel (показывает все файлы и папки) и задаёт корень дерева.
+/// @details Фильтр по расширению не накладывается: в дереве видны все файлы, тип каждого
+///          различается иконкой (FileKind). Строить график умеют только поддерживаемые
+///          форматы (json/sqlite) — выбор остальных файлов игнорируется в onFileSelected().
 void MainWindow::setRoot(const QString& path)
 {
     auto* old = qobject_cast<QFileSystemModel*>(treeView_->model());
     auto* model = new QFileSystemModel(this);
     model->setFilter(QDir::NoDotAndDotDot | QDir::AllDirs | QDir::Files);
-    QStringList filters;
-    if (registry_)
-        for (const auto& ext : registry_->SupportedExtensions()) filters << QString::fromStdString("*." + ext);
-    model->setNameFilters(filters);
-    model->setNameFilterDisables(false);
     model->setRootPath(path);
     treeView_->setModel(model);
     treeView_->setRootIndex(model->index(path));
@@ -407,6 +405,24 @@ void MainWindow::onFileSelected(const QModelIndex& index)
     auto* model = static_cast<QFileSystemModel*>(treeView_->model());
     if (model->isDir(index)) return;
     const QString path = model->filePath(index);
+
+    // График строим только для поддерживаемых форматов (json/sqlite). Прочие файлы видны
+    // в дереве со своей иконкой, но при выборе ничего не загружаем и не показываем ошибку.
+    const std::string ext = QFileInfo(path).suffix().toLower().toStdString();
+    bool supported = false;
+    if (registry_)
+        for (const auto& e : registry_->SupportedExtensions())
+            if (e == ext)
+            {
+                supported = true;
+                break;
+            }
+    if (!supported)
+    {
+        LogInfo(logger_) << "Unsupported file ignored: " << path.toStdString();
+        return;
+    }
+
     LogInfo(logger_) << "File selected: " << path.toStdString();
     loadFile(path);
 }

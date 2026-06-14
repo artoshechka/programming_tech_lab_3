@@ -1,0 +1,7 @@
+{
+  "name": "broken_syntax",
+  "points": [
+    { "Time": "01.01.2020 00:00", "Value": 1.0 },
+    { "Time": "02.01.2020 00:00", "Value": 2.0
+  ]
+}
