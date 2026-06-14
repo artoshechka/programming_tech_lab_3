@@ -119,18 +119,18 @@ class MainWindow : public QMainWindow
     std::shared_ptr<logger::ILogger> logger_;            ///< Логгер для диагностики (может быть nullptr).
     std::unique_ptr<ChartModel> model_;                  ///< Наблюдаемая модель состояния и данных графика.
 
-    QTreeView* treeView_ = nullptr;          ///< Дерево файлов с данными.
-    QChartView* chartView_ = nullptr;        ///< Область отображения графика.
-    QButtonGroup* chartTypeGroup_ = nullptr;  ///< Сегмент-контрол выбора типа графика.
-    QToolButton* paletteButton_ = nullptr;   ///< Кнопка-открыватель поповера выбора палитры.
-    QMenu* paletteMenu_ = nullptr;           ///< Поповер со свотчами палитр.
-    QToolButton* themeButton_ = nullptr;     ///< Кнопка переключения светлой/тёмной темы.
-    QLabel* plotTitle_ = nullptr;            ///< Заголовок над областью графика (имя ряда).
-    QLabel* statusInfo_ = nullptr;           ///< Правый индикатор статус-бара (число точек ряда).
-    QLabel* pathLabel_ = nullptr;            ///< Путь к текущему файлу в бренд-баре.
+    QTreeView* treeView_ = nullptr;             ///< Дерево файлов с данными.
+    QChartView* chartView_ = nullptr;           ///< Область отображения графика.
+    QButtonGroup* chartTypeGroup_ = nullptr;    ///< Сегмент-контрол выбора типа графика.
+    QToolButton* paletteButton_ = nullptr;      ///< Кнопка-открыватель поповера выбора палитры.
+    QMenu* paletteMenu_ = nullptr;              ///< Поповер со свотчами палитр.
+    QToolButton* themeButton_ = nullptr;        ///< Кнопка переключения светлой/тёмной темы.
+    QLabel* plotTitle_ = nullptr;               ///< Заголовок над областью графика (имя ряда).
+    QLabel* statusInfo_ = nullptr;              ///< Правый индикатор статус-бара (число точек ряда).
+    QLabel* pathLabel_ = nullptr;               ///< Путь к текущему файлу в бренд-баре.
     FileItemDelegate* fileDelegate_ = nullptr;  ///< Делегат двухстрочной отрисовки файлов.
-    bool darkTheme_ = false;                 ///< Активна ли тёмная тема.
-    QColor accent_{0xc0, 0x28, 0x1a};        ///< Акцентный цвет приложения (= цвет выбранной палитры).
+    bool darkTheme_ = false;                    ///< Активна ли тёмная тема.
+    QColor accent_{0xc0, 0x28, 0x1a};           ///< Акцентный цвет приложения (= цвет выбранной палитры).
 };
 
 }  // namespace gui

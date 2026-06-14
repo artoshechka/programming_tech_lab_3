@@ -2,8 +2,6 @@
 /// @brief Определение MainWindow
 /// @author Artemenko Anton
 
-#include <gui/mainwindow.hpp>
-
 #include <QApplication>
 #include <QButtonGroup>
 #include <QDir>
@@ -36,15 +34,16 @@
 #include <QtCharts/QPieSlice>
 #include <chart/ichart_builder.hpp>
 #include <gui/builder_names.hpp>
-#include <logger/logger_macros.hpp>
-
-#include "chart_model.hpp"
-#include "table_select_dialog.hpp"
+#include <gui/mainwindow.hpp>
 #include <gui/src/file_item_delegate.hpp>
 #include <gui/src/file_row_widget.hpp>
 #include <gui/src/scrollable_chart_view.hpp>
 #include <gui/src/theme.hpp>
 #include <gui/ui_strings.hpp>
+#include <logger/logger_macros.hpp>
+
+#include "chart_model.hpp"
+#include "table_select_dialog.hpp"
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -196,10 +195,11 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, ExporterFac
     connect(themeButton_, &QToolButton::clicked, this, &MainWindow::toggleTheme);
     connect(chartTypeGroup_, QOverload<QAbstractButton*>::of(&QButtonGroup::buttonClicked), this,
             [this](QAbstractButton* button) {
-        model_->setBuilder(button->property("builderName").toString().toStdString());
-    });
+                model_->setBuilder(button->property("builderName").toString().toStdString());
+            });
     // Раскрытие папки подгружает её содержимое — досоздаём живые виджеты строк.
-    connect(treeView_, &QTreeView::expanded, this, [this](const QModelIndex&) { installRowWidgets(treeView_->rootIndex()); });
+    connect(treeView_, &QTreeView::expanded, this,
+            [this](const QModelIndex&) { installRowWidgets(treeView_->rootIndex()); });
 
     applyTheme();  // первичное применение темы со стартовым акцентом
 }
@@ -368,7 +368,7 @@ void MainWindow::updatePaletteButton(const QColor& color)
 void MainWindow::applyChartTheme(QChart* chart)
 {
     if (chart == nullptr) return;
-    chart->setTitle({});  // имя ряда показывает plotTitle_, чтобы не дублировать заголовок
+    chart->setTitle({});               // имя ряда показывает plotTitle_, чтобы не дублировать заголовок
     chart->setBackgroundRoundness(0);  // плоский фон без «карточки» — однородно с QChartView
     chart->setMargins(QMargins(8, 8, 8, 8));
 

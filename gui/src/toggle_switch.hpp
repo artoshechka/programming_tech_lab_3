@@ -48,7 +48,7 @@ class ToggleSwitch : public QAbstractButton
     void paintEvent(QPaintEvent* event) override;
 
    private:
-    qreal pos_ = 0.0;             ///< Положение ползунка: 0 — выкл, 1 — вкл.
+    qreal pos_ = 0.0;                  ///< Положение ползунка: 0 — выкл, 1 — вкл.
     QColor accent_{0xc0, 0x28, 0x1a};  ///< Цвет включённого состояния (оранжевый акцент).
 };
 

@@ -2,12 +2,11 @@
 /// @brief Определение экспортёра графика в PDF.
 /// @author Artemenko Anton
 
-#include <gui/src/pdf_exporter.hpp>
-
 #include <QGraphicsScene>
 #include <QPageSize>
 #include <QPainter>
 #include <QPdfWriter>
+#include <gui/src/pdf_exporter.hpp>
 #include <gui/ui_strings.hpp>
 
 namespace gui

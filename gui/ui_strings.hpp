@@ -9,9 +9,8 @@
 #ifndef GUID_a7c1e93b_5d24_4f80_9b3a_1c6e2f8a4d05
 #define GUID_a7c1e93b_5d24_4f80_9b3a_1c6e2f8a4d05
 
-#include <string_view>
-
 #include <gui/builder_names.hpp>
+#include <string_view>
 
 namespace gui::ui
 {

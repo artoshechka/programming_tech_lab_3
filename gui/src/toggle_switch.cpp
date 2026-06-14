@@ -2,19 +2,18 @@
 /// @brief Реализация анимированного переключателя-ползунка.
 /// @author Artemenko Anton
 
-#include <gui/src/toggle_switch.hpp>
-
 #include <QPainter>
 #include <QPropertyAnimation>
+#include <gui/src/toggle_switch.hpp>
 
 namespace gui
 {
 
 namespace
 {
-constexpr int kWidth = 42;    ///< Ширина виджета.
-constexpr int kHeight = 22;   ///< Высота виджета.
-constexpr int kMargin = 3;    ///< Отступ ползунка от края дорожки.
+constexpr int kWidth = 42;   ///< Ширина виджета.
+constexpr int kHeight = 22;  ///< Высота виджета.
+constexpr int kMargin = 3;   ///< Отступ ползунка от края дорожки.
 }  // namespace
 
 ToggleSwitch::ToggleSwitch(QWidget* parent) : QAbstractButton(parent)

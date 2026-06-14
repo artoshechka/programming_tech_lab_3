@@ -17,8 +17,7 @@ namespace gui
 {
 
 /// @brief Тип файла для выбора иконки в дереве.
-enum class FileKind
-{
+enum class FileKind {
     Folder,   ///< Папка.
     Json,     ///< JSON-файл.
     Sqlite,   ///< База SQLite.

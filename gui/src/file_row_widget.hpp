@@ -61,16 +61,16 @@ class FileRowWidget : public QWidget
     /// @brief Пересчитывает цвета/шрифты лейблов и цвет иконки по текущим теме и выделению.
     void updateColors();
 
-    FileKind kind_;                 ///< Тип файла (для иконки).
-    bool isDir_;                    ///< Папка ли это.
-    bool selected_ = false;         ///< Выделена ли строка.
-    bool dark_ = false;             ///< Активна ли тёмная тема.
-    QColor accent_;                 ///< Акцентный цвет.
-    QPersistentModelIndex index_;   ///< Индекс элемента модели.
-    GlyphIcon* icon_ = nullptr;     ///< Виджет-иконка.
-    QLabel* nameLabel_ = nullptr;   ///< Имя элемента.
-    QLabel* sizeLabel_ = nullptr;   ///< Размер файла (только для файлов).
-    QLabel* dateLabel_ = nullptr;   ///< Дата изменения (только для файлов).
+    FileKind kind_;                ///< Тип файла (для иконки).
+    bool isDir_;                   ///< Папка ли это.
+    bool selected_ = false;        ///< Выделена ли строка.
+    bool dark_ = false;            ///< Активна ли тёмная тема.
+    QColor accent_;                ///< Акцентный цвет.
+    QPersistentModelIndex index_;  ///< Индекс элемента модели.
+    GlyphIcon* icon_ = nullptr;    ///< Виджет-иконка.
+    QLabel* nameLabel_ = nullptr;  ///< Имя элемента.
+    QLabel* sizeLabel_ = nullptr;  ///< Размер файла (только для файлов).
+    QLabel* dateLabel_ = nullptr;  ///< Дата изменения (только для файлов).
 };
 
 }  // namespace gui
