@@ -2,9 +2,9 @@
 /// @brief Определение логгера приложения
 /// @author Artemenko Anton
 
+#include <QFileInfo>
 #include <app_logger.hpp>
 #include <chrono>
-#include <filesystem>
 #include <iomanip>
 #include <sstream>
 
@@ -35,7 +35,7 @@ std::string AppLogger::FormatMessage(LogLevel level, const std::string& message,
     std::string fileInfo;
     if (file != nullptr)
     {
-        fileInfo = std::filesystem::path(file).filename().string() + ':' + std::to_string(line);
+        fileInfo = QFileInfo(QString::fromUtf8(file)).fileName().toStdString() + ':' + std::to_string(line);
     }
 
     std::string functionInfo = function ? function : "";
