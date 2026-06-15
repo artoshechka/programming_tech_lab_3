@@ -712,6 +712,118 @@ classDiagram
     ChartModel *-- TimelineData
 ```
 
+## Диаграмма сигналов и слотов
+
+Взаимодействие виджетов, модели и представления через механизм сигналов/слотов Qt
+(паттерн Model/View). Исходник: [`docs/pics/signal_slot.mmd`](docs/pics/signal_slot.mmd).
+
+- Сплошная стрелка с меткой — `connect(сигнал → слот)`.
+- Пунктир `emit` — слот модели эмитит сигнал.
+- Пунктир `loadFile()` — прямой вызов (не через `connect`).
+
+```mermaid
+---
+config:
+  look: classic
+---
+flowchart LR
+    classDef sig fill:#f6d9ec,stroke:#b5497f,color:#000
+    classDef slot fill:#d9e8f6,stroke:#2f78b5,color:#000
+
+    subgraph W["Виджеты Qt (источники сигналов)"]
+        tree["QTreeView treeView_"]
+        folder["QPushButton folderBtn"]
+        save["QPushButton saveBtn"]
+        theme["QToolButton themeButton_"]
+        types["QButtonGroup chartTypeGroup_"]
+        swatch["QToolButton swatch (палитра)"]
+        fsm["QFileSystemModel"]
+        sel["QItemSelectionModel"]
+        toggle["ToggleSwitch"]
+        dlgBox["QDialogButtonBox"]
+    end
+
+    subgraph M["ChartModel — модель / контроллер"]
+        setSource["setSource()"]:::slot
+        setBuilder["setBuilder()"]:::slot
+        setStyle["setStyle()"]:::slot
+        setAgg["setAggregate()"]:::slot
+        sigData(["dataChanged()"]):::sig
+        sigOpts(["renderOptionsChanged()"]):::sig
+        sigErr(["errorOccurred(msg)"]):::sig
+    end
+
+    subgraph V["MainWindow — представление"]
+        onFile["onFileSelected()"]:::slot
+        onFolder["onChooseFolder()"]:::slot
+        onSave["onSaveChart()"]:::slot
+        onTheme["toggleTheme()"]:::slot
+        refresh["refresh()"]:::slot
+        onErr["onError()"]:::slot
+        instRows["installRowWidgets()"]
+        updSel["updateRowSelection()"]
+    end
+
+    subgraph D["TableSelectDialog"]
+        accept["accept()"]:::slot
+        reject["reject()"]:::slot
+    end
+
+    tree -- "clicked(index)" --> onFile
+    folder -- "clicked()" --> onFolder
+    save -- "clicked()" --> onSave
+    theme -- "clicked()" --> onTheme
+    tree -- "expanded(index)" --> instRows
+    fsm -- "directoryLoaded(path)" --> instRows
+    sel -- "selectionChanged()" --> updSel
+
+    types -- "buttonClicked(btn)" --> setBuilder
+    swatch -- "clicked()" --> setStyle
+
+    onFile -. "loadFile()" .-> setSource
+
+    setSource -. emit .-> sigData
+    setSource -. emit .-> sigErr
+    setBuilder -. emit .-> sigOpts
+    setStyle -. emit .-> sigOpts
+    setAgg -. emit .-> sigOpts
+
+    sigData -- "dataChanged()" --> refresh
+    sigOpts -- "renderOptionsChanged()" --> refresh
+    sigErr -- "errorOccurred(msg)" --> onErr
+
+    dlgBox -- "accepted()" --> accept
+    dlgBox -- "rejected()" --> reject
+
+    toggle -- "toggled(on)" --> toggle
+```
+
+### Таблица соединений
+
+| Источник (сигнал)                              | Приёмник (слот)               | Где                      |
+|------------------------------------------------|-------------------------------|--------------------------|
+| `treeView_::clicked(index)`                    | `MainWindow::onFileSelected`  | `mainwindow.cpp`         |
+| `folderBtn::clicked()`                         | `MainWindow::onChooseFolder`  | `mainwindow.cpp`         |
+| `saveBtn::clicked()`                           | `MainWindow::onSaveChart`     | `mainwindow.cpp`         |
+| `themeButton_::clicked()`                      | `MainWindow::toggleTheme`     | `mainwindow.cpp`         |
+| `treeView_::expanded(index)`                   | λ → `installRowWidgets`       | `mainwindow.cpp`         |
+| `QFileSystemModel::directoryLoaded(path)`      | λ → `installRowWidgets`       | `mainwindow.cpp` (setRoot) |
+| `QItemSelectionModel::selectionChanged()`      | λ → `updateRowSelection`      | `mainwindow.cpp` (setRoot) |
+| `chartTypeGroup_::buttonClicked(btn)`          | λ → `ChartModel::setBuilder`  | `mainwindow.cpp`         |
+| `swatch::clicked()`                            | λ → `ChartModel::setStyle`    | `mainwindow.cpp` (палитра) |
+| `ChartModel::dataChanged()`                    | `MainWindow::refresh`         | `mainwindow.cpp`         |
+| `ChartModel::renderOptionsChanged()`           | `MainWindow::refresh`         | `mainwindow.cpp`         |
+| `ChartModel::errorOccurred(msg)`               | `MainWindow::onError`         | `mainwindow.cpp`         |
+| `QDialogButtonBox::accepted()`                 | `QDialog::accept`             | `table_select_dialog.cpp`|
+| `QDialogButtonBox::rejected()`                 | `QDialog::reject`             | `table_select_dialog.cpp`|
+| `ToggleSwitch::toggled(on)`                    | λ (анимация ползунка)         | `toggle_switch.cpp`      |
+
+Сигналы `ChartModel` эмитятся из слотов-мутаторов: `setSource` → `dataChanged` / `errorOccurred`;
+`setBuilder` / `setStyle` / `setAggregate` → `renderOptionsChanged`.
+
+> Примечание: слот `ChartModel::setAggregate` определён, но в текущей сборке к нему не
+> подключён ни один виджет; `setSource` вызывается напрямую из `loadFile()`, а не через `connect`.
+
 ## Тестирование
 
 ### Пользовательские тест-кейсы
