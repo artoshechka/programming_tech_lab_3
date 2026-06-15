@@ -6,6 +6,7 @@
 #include <QtCharts/QChart>
 #include <QtCharts/QValueAxis>
 #include <chart/aggregate.hpp>
+#include <memory>
 #include <logger/logger_macros.hpp>
 #include <style/ipalette.hpp>
 
@@ -28,7 +29,7 @@ std::unique_ptr<QtCharts::QChart> BarChartBuilder::Build(const data::TimelineDat
     const data::TimelineData agg_ = willAggregate ? Aggregate(raw) : raw;
     const data::TimelineData& data = agg_;
 
-    auto* set = new QBarSet(QString::fromStdString(data.name_));
+    auto set = std::make_unique<QBarSet>(QString::fromStdString(data.name_));
     QStringList categories;
     double minVal = 0.0, maxVal = 0.0;
 
@@ -50,25 +51,28 @@ std::unique_ptr<QtCharts::QChart> BarChartBuilder::Build(const data::TimelineDat
     // Bar-чарт использует один QBarSet — палитра выдаёт единственный цвет с total=1.
     if (palette_ != nullptr) set->setColor(palette_->ColorFor(0, 1));
 
-    auto* series = new QBarSeries();
-    series->append(set);
+    auto series = std::make_unique<QBarSeries>();
+    series->append(set.release());
 
-    auto* axisX = new QBarCategoryAxis();
+    auto axisX = std::make_unique<QBarCategoryAxis>();
     axisX->append(categories);
 
-    auto* axisY = new QValueAxis();
+    auto axisY = std::make_unique<QValueAxis>();
     double padding = (maxVal - minVal) * 0.15;
     axisY->setRange(std::min(0.0, minVal - padding), maxVal + padding);
     axisY->setTickCount(6);
     axisY->setGridLineVisible(true);
 
     auto chart = std::make_unique<QChart>();
-    chart->addSeries(series);
+    auto* seriesPtr = series.get();
+    chart->addSeries(series.release());
     chart->setTitle(QString::fromStdString(data.name_));
-    chart->addAxis(axisX, Qt::AlignBottom);
-    chart->addAxis(axisY, Qt::AlignLeft);
-    series->attachAxis(axisX);
-    series->attachAxis(axisY);
+    auto* axisXPtr = axisX.get();
+    chart->addAxis(axisX.release(), Qt::AlignBottom);
+    auto* axisYPtr = axisY.get();
+    chart->addAxis(axisY.release(), Qt::AlignLeft);
+    seriesPtr->attachAxis(axisXPtr);
+    seriesPtr->attachAxis(axisYPtr);
     chart->legend()->setVisible(false);
     LogInfo(logger_) << "Bar chart built: '" << data.name_ << "', " << data.points_.size() << " bars";
     return chart;

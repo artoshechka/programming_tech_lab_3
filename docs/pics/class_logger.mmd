@@ -11,14 +11,12 @@ classDiagram
         <<interface>>
         +~ILogger() virtual
         +SetSettings(settings) void
-        +GetSettings() LoggerSettings
         +Log(level, message, file, line, function) void
     }
     class ThreadSafeLogger {
         +ThreadSafeLogger(componentName, output)
         +~ThreadSafeLogger()
         +SetSettings(settings) void
-        +GetSettings() LoggerSettings
         +Log(level, message, file, line, function) void
         #FormatMessage(level, message, file, line, function) string
         #LogLevelToString(level) string$

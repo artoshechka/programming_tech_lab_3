@@ -9,6 +9,7 @@
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QValueAxis>
 #include <algorithm>
+#include <memory>
 #include <logger/logger_macros.hpp>
 #include <style/ipalette.hpp>
 
@@ -46,7 +47,7 @@ std::unique_ptr<QtCharts::QChart> LineChartBuilder::Build(const data::TimelineDa
     const bool timeAxis = !data.points_.empty() && ParseTime(data.points_.front().time_).isValid();
     LogDebug(logger_) << "Line options: points=" << data.points_.size() << ", timeAxis=" << timeAxis;
 
-    auto* series = new QLineSeries();
+    auto series = std::make_unique<QLineSeries>();
     series->setName(QString::fromStdString(data.name_));
 
     double minVal = 0.0, maxVal = 0.0;
@@ -83,33 +84,36 @@ std::unique_ptr<QtCharts::QChart> LineChartBuilder::Build(const data::TimelineDa
     }
 
     auto chart = std::make_unique<QChart>();
-    chart->addSeries(series);
+    auto* seriesPtr = series.get();
+    chart->addSeries(series.release());
     chart->setTitle(QString::fromStdString(data.name_));
     chart->legend()->setVisible(false);
 
-    QAbstractAxis* axisX = nullptr;
+    std::unique_ptr<QAbstractAxis> axisX;
     if (timeAxis)
     {
-        auto* dtAxis = new QDateTimeAxis();
+        auto dtAxis = std::make_unique<QDateTimeAxis>();
         dtAxis->setFormat(kDayAxisFormat);
         dtAxis->setTickCount(kDateAxisTicks);
-        axisX = dtAxis;
+        axisX = std::move(dtAxis);
     } else
     {
-        axisX = new QValueAxis();
+        axisX = std::make_unique<QValueAxis>();
     }
-    chart->addAxis(axisX, Qt::AlignBottom);
-    series->attachAxis(axisX);
+    auto* axisXPtr = axisX.get();
+    chart->addAxis(axisX.release(), Qt::AlignBottom);
+    seriesPtr->attachAxis(axisXPtr);
 
-    auto* axisY = new QValueAxis();
+    auto axisY = std::make_unique<QValueAxis>();
     const double padding = (maxVal - minVal) * kAxisPaddingFraction;
     axisY->setRange(minVal - padding, maxVal + padding);
     axisY->setTickCount(kValueAxisTicks);
     axisY->setGridLineVisible(true);
-    chart->addAxis(axisY, Qt::AlignLeft);
-    series->attachAxis(axisY);
+    auto* axisYPtr = axisY.get();
+    chart->addAxis(axisY.release(), Qt::AlignLeft);
+    seriesPtr->attachAxis(axisYPtr);
 
-    LogInfo(logger_) << "Line chart built: '" << data.name_ << "', " << series->count() << " points";
+    LogInfo(logger_) << "Line chart built: '" << data.name_ << "', " << seriesPtr->count() << " points";
     return chart;
 }
 

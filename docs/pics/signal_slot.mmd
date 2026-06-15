@@ -19,7 +19,6 @@ flowchart LR
         swatch["QToolButton swatch (палитра)"]
         fsm["QFileSystemModel"]
         sel["QItemSelectionModel"]
-        toggle["ToggleSwitch"]
         dlgBox["QDialogButtonBox"]
     end
 
@@ -27,7 +26,6 @@ flowchart LR
         setSource["setSource()"]:::slot
         setBuilder["setBuilder()"]:::slot
         setStyle["setStyle()"]:::slot
-        setAgg["setAggregate()"]:::slot
         sigData(["dataChanged()"]):::sig
         sigOpts(["renderOptionsChanged()"]):::sig
         sigErr(["errorOccurred(msg)"]):::sig
@@ -70,7 +68,6 @@ flowchart LR
     setSource -. emit .-> sigErr
     setBuilder -. emit .-> sigOpts
     setStyle -. emit .-> sigOpts
-    setAgg -. emit .-> sigOpts
 
     %% --- наблюдатель: сигналы модели -> слоты представления ---
     sigData -- "dataChanged()" --> refresh
@@ -80,6 +77,3 @@ flowchart LR
     %% --- диалог выбора таблицы ---
     dlgBox -- "accepted()" --> accept
     dlgBox -- "rejected()" --> reject
-
-    %% --- ToggleSwitch: внутренняя анимация ползунка ---
-    toggle -- "toggled(on)" --> toggle

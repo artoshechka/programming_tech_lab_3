@@ -10,6 +10,7 @@
 #include <QPainter>
 #include <QRectF>
 #include <QVBoxLayout>
+#include <memory>
 #include <gui/src/file_row_widget.hpp>
 
 namespace gui
@@ -134,13 +135,13 @@ FileRowWidget::FileRowWidget(FileKind kind, bool isDir, const QString& name, con
     } else
     {
         // Файл — имя сверху, под ним мета «размер · дата».
-        auto* col = new QVBoxLayout();
+        auto col = std::make_unique<QVBoxLayout>();
         col->setContentsMargins(0, 0, 0, 0);
         col->setSpacing(kNameMetaGap);
         col->addStretch();
         col->addWidget(nameLabel_);
 
-        auto* meta = new QHBoxLayout();
+        auto meta = std::make_unique<QHBoxLayout>();
         meta->setContentsMargins(0, 0, 0, 0);
         meta->setSpacing(kMetaGap);
         sizeLabel_ = new QLabel(HumanSize(info.size()), this);
@@ -151,9 +152,9 @@ FileRowWidget::FileRowWidget(FileKind kind, bool isDir, const QString& name, con
             meta->addWidget(label);
         }
         meta->addStretch();
-        col->addLayout(meta);
+        col->addLayout(meta.release());
         col->addStretch();
-        row->addLayout(col, 1);
+        row->addLayout(col.release(), 1);
     }
 
     updateColors();

@@ -22,9 +22,6 @@ class IDatabase
     /// @return true при успешном открытии, иначе false.
     virtual bool Open(const std::string& path) = 0;
 
-    /// @brief Закрывает текущее соединение с базой данных.
-    virtual void Close() = 0;
-
     /// @brief Возвращает список таблиц в открытой базе данных.
     /// @return Вектор имён таблиц.
     virtual std::vector<std::string> Tables() const = 0;

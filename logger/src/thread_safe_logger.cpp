@@ -65,12 +65,6 @@ void ThreadSafeLogger::OpenLogFile()
     }
 }
 
-logger::LoggerSettings ThreadSafeLogger::GetSettings() const
-{
-    std::lock_guard<std::recursive_mutex> lock(syncMutex_);
-    return settings_;
-}
-
 std::string ThreadSafeLogger::LogLevelToString(LogLevel level)
 {
     switch (level)
