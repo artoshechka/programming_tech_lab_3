@@ -38,6 +38,7 @@
 #include <gui/src/file_item_delegate.hpp>
 #include <gui/src/file_row_widget.hpp>
 #include <gui/src/scrollable_chart_view.hpp>
+#include <gui/src/welcome_dialog.hpp>
 #include <gui/src/theme.hpp>
 #include <gui/ui_strings.hpp>
 #include <logger/logger_macros.hpp>
@@ -180,8 +181,12 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, ExporterFac
         updatePaletteButton(accent_);
     }
 
-    const QString root = QFileDialog::getExistingDirectory(this, ui::kChooseFolderTitle);
-    if (!root.isEmpty()) setRoot(root);
+    WelcomeDialog welcome(accent_, this);
+    if (welcome.exec() == QDialog::Accepted)
+    {
+        const QString root = welcome.selectedFolder();
+        if (!root.isEmpty()) setRoot(root);
+    }
 
     // Сигналы модели -> представление: модель уведомляет, View перестраивает график / показывает ошибку.
     connect(model_.get(), &ChartModel::dataChanged, this, &MainWindow::refresh);

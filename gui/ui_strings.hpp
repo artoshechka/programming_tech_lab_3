@@ -71,6 +71,17 @@ inline constexpr const char* kPlotTitlePlaceholder = "Выберите файл 
 /// @brief Суффикс счётчика точек ряда в статус-баре.
 inline constexpr const char* kPointsSuffix = " точек";
 
+/// @brief Заголовок приветственного окна при старте приложения.
+inline constexpr const char* kWelcomeTitle = "Добро пожаловать";
+/// @brief Крупный заголовок приветственного окна.
+inline constexpr const char* kWelcomeHeading = "Визуализатор временных рядов";
+/// @brief Поясняющий текст приветственного окна.
+inline constexpr const char* kWelcomeSubtitle =
+    "Для начала выберите папку с данными (JSON или SQLite). "
+    "Файлы из неё появятся в дереве слева.";
+/// @brief Подпись основной кнопки приветственного окна.
+inline constexpr const char* kWelcomeChooseButton = "Выбрать папку";
+
 /// @brief Заголовок диалога выбора рабочей папки с данными.
 inline constexpr const char* kChooseFolderTitle = "Выберите папку с данными";
 /// @brief Заголовок диалога сохранения графика в файл.
