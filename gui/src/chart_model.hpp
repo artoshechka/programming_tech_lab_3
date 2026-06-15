@@ -4,10 +4,10 @@
 #ifndef GUID_b2c3d4e5_f6a7_8901_bcde_f23456789012
 #define GUID_b2c3d4e5_f6a7_8901_bcde_f23456789012
 
+#include <QDateTime>
 #include <QObject>
 #include <QString>
 #include <data_model/timeline_data.hpp>
-#include <filesystem>
 #include <logger/ilogger.hpp>
 #include <memory>
 #include <optional>
@@ -93,17 +93,17 @@ class ChartModel : public QObject
     /// @brief Кэш распарсенных данных последнего источника.
     struct DataSlot
     {
-        std::string source;                     ///< Источник, для которого закэшированы данные.
-        std::filesystem::file_time_type mtime;  ///< Время модификации файла на момент парсинга.
-        data::TimelineData data;                ///< Распарсенные данные.
+        std::string source;       ///< Источник, для которого закэшированы данные.
+        QDateTime mtime;          ///< Время модификации файла на момент парсинга.
+        data::TimelineData data;  ///< Распарсенные данные.
     };
 
     /// @brief Кэш списка под-источников последнего файла.
     struct TablesSlot
     {
-        std::string path;                       ///< Путь к файлу, для которого закэширован список.
-        std::filesystem::file_time_type mtime;  ///< Время модификации файла на момент чтения.
-        std::vector<std::string> tables;        ///< Имена под-источников.
+        std::string path;                 ///< Путь к файлу, для которого закэширован список.
+        QDateTime mtime;                  ///< Время модификации файла на момент чтения.
+        std::vector<std::string> tables;  ///< Имена под-источников.
     };
 
     std::shared_ptr<parser::IParserRegistry> registry_;  ///< Реестр парсеров по расширению.
