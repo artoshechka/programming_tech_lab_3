@@ -401,7 +401,16 @@ void MainWindow::applyChartTheme(QChart* chart)
 /// @brief Показывает пользователю ошибку, пришедшую сигналом модели.
 void MainWindow::onError(const QString& message)
 {
+    clearChart();
     QMessageBox::critical(this, ui::kLoadErrorTitle, message);
+}
+
+/// @brief Сбрасывает сцену графика в пустое состояние и возвращает заголовок/счётчик к заглушке.
+void MainWindow::clearChart()
+{
+    setChart(std::make_unique<QChart>());
+    plotTitle_->setText(ui::kPlotTitlePlaceholder);
+    statusInfo_->clear();
 }
 
 /// @brief Обрабатывает клик по элементу дерева: пропускает папки, загружает файл.

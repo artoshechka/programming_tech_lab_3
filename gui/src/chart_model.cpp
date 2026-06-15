@@ -58,6 +58,7 @@ void ChartModel::setSource(const std::string& source)
     const QFileInfo fileInfo(QString::fromStdString(path));
     if (!fileInfo.exists())
     {
+        dataSlot_.reset();
         LogError(logger_) << "Cannot stat source: " << path;
         emit errorOccurred(QString::fromStdString("Cannot stat source: " + path));
         return;
@@ -75,6 +76,7 @@ void ChartModel::setSource(const std::string& source)
         auto parser = registry_->Get(ext);
         if (!parser)
         {
+            dataSlot_.reset();
             LogError(logger_) << "Unknown format: " << ext << " for source: " << source;
             emit errorOccurred(QString::fromStdString("Unknown format: " + ext));
             return;
@@ -82,7 +84,7 @@ void ChartModel::setSource(const std::string& source)
 
         try
         {
-            // parser->Load бросает ParseException — ловим и уведомляем сигналом, старый слот не трогаем.
+            dataSlot_.reset();
             dataSlot_ = DataSlot{source, mtime, parser->Load(source)};
         } catch (const std::exception& e)
         {

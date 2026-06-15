@@ -94,6 +94,9 @@ class MainWindow : public QMainWindow
     /// @brief Передаёт новый график в QChartView, удаляя предыдущий.
     /// @param[in] chart Новый график; владение передаётся QChartView через release().
     void setChart(std::unique_ptr<QChart> chart);
+    /// @brief Сбрасывает сцену графика в пустое состояние и возвращает заголовок/счётчик к заглушке.
+    /// @details Вызывается при ошибке загрузки, чтобы не отображать устаревший график неоткрывшегося файла.
+    void clearChart();
     /// @brief Строит QChart из данных по текущим builder/style/aggregate модели.
     /// @param[in] data Данные временного ряда.
     /// @return Владеющий указатель на построенный график.
