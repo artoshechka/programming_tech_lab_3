@@ -323,7 +323,7 @@ void MainWindow::buildPalettePopover()
     header->setObjectName("popoverHeader");
     col->addWidget(header);
 
-    auto* grid = new QGridLayout();
+    auto grid = std::make_unique<QGridLayout>();
     grid->setSpacing(8);
     int idx = 0;
     for (const auto& [name, factory] : styles_)
@@ -347,7 +347,7 @@ void MainWindow::buildPalettePopover()
         grid->addWidget(sw, idx / 3, idx % 3);
         ++idx;
     }
-    col->addLayout(grid);
+    col->addLayout(grid.release());
 
     auto* action = new QWidgetAction(paletteMenu_);
     action->setDefaultWidget(popup);
