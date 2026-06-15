@@ -2,12 +2,12 @@
 /// @brief Определение ChartModel
 /// @author Artemenko Anton
 
+#include <QFileInfo>
 #include <exception>
 #include <gui/src/chart_model.hpp>
 #include <logger/logger_macros.hpp>
 #include <parser/iparser.hpp>
 #include <parser/parse_exception.hpp>
-#include <system_error>
 #include <utility>
 
 namespace gui
@@ -28,9 +28,9 @@ const data::TimelineData& ChartModel::data() const
 std::vector<std::string> ChartModel::listSubSources(const std::string& path)
 {
     // Инвалидация по mtime: пока путь и время модификации совпадают — отдаём из слота, файл не читаем.
-    std::error_code ec;
-    const auto mtime = std::filesystem::last_write_time(path, ec);
-    if (!ec && tablesSlot_ && tablesSlot_->path == path && tablesSlot_->mtime == mtime)
+    const QFileInfo fileInfo(QString::fromStdString(path));
+    const QDateTime mtime = fileInfo.lastModified();
+    if (fileInfo.exists() && tablesSlot_ && tablesSlot_->path == path && tablesSlot_->mtime == mtime)
     {
         LogDebug(logger_) << "Sub-sources cache hit: " << path << " (" << tablesSlot_->tables.size() << ")";
         return tablesSlot_->tables;
@@ -46,7 +46,7 @@ std::vector<std::string> ChartModel::listSubSources(const std::string& path)
     LogInfo(logger_) << "Sub-sources listed: " << path << " -> " << tables.size();
 
     // Перечитали — затираем слот свежим значением (если удалось получить mtime).
-    if (!ec) tablesSlot_ = TablesSlot{path, mtime, tables};
+    if (fileInfo.exists()) tablesSlot_ = TablesSlot{path, mtime, tables};
     return tables;
 }
 
@@ -55,14 +55,14 @@ void ChartModel::setSource(const std::string& source)
     const std::string path = SourcePath(source);
 
     // Проверяем mtime файла-источника для инвалидации кэша при внешних изменениях.
-    std::error_code ec;
-    const auto mtime = std::filesystem::last_write_time(path, ec);
-    if (ec)
+    const QFileInfo fileInfo(QString::fromStdString(path));
+    if (!fileInfo.exists())
     {
-        LogError(logger_) << "Cannot stat source: " << path << ": " << ec.message();
-        emit errorOccurred(QString::fromStdString("Cannot stat source: " + path + ": " + ec.message()));
+        LogError(logger_) << "Cannot stat source: " << path;
+        emit errorOccurred(QString::fromStdString("Cannot stat source: " + path));
         return;
     }
+    const QDateTime mtime = fileInfo.lastModified();
 
     // Совпали source и mtime — данные не перечитываем, но всё равно уведомляем View об (повторном) выборе.
     if (!dataSlot_ || dataSlot_->source != source || dataSlot_->mtime != mtime)
