@@ -11,7 +11,6 @@ add_library(${PROJECT_NAME} STATIC
     src/table_select_dialog.cpp
     src/app_compositor.cpp
     src/theme.cpp
-    src/toggle_switch.cpp
     src/file_item_delegate.cpp
     src/file_glyphs.cpp
     src/file_row_widget.cpp

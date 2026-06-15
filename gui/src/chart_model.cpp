@@ -113,13 +113,6 @@ void ChartModel::setStyle(const std::string& style)
     emit renderOptionsChanged();
 }
 
-void ChartModel::setAggregate(bool aggregate)
-{
-    if (aggregate_ == aggregate) return;
-    aggregate_ = aggregate;
-    emit renderOptionsChanged();
-}
-
 std::string ChartModel::SourcePath(const std::string& source)
 {
     const auto pos = source.find('|');

@@ -73,9 +73,6 @@ class ChartModel : public QObject
     /// @brief Меняет стиль; при фактическом изменении эмитит renderOptionsChanged().
     /// @param[in] style Имя стиля графика.
     void setStyle(const std::string& style);
-    /// @brief Меняет флаг агрегации; при фактическом изменении эмитит renderOptionsChanged().
-    /// @param[in] aggregate Включить агрегацию.
-    void setAggregate(bool aggregate);
 
    signals:
     /// @brief Данные источника перечитаны — представление должно перестроить график.

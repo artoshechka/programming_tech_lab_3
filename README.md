@@ -180,14 +180,12 @@ classDiagram
         <<interface>>
         +~ILogger() virtual
         +SetSettings(settings) void
-        +GetSettings() LoggerSettings
         +Log(level, message, file, line, function) void
     }
     class ThreadSafeLogger {
         +ThreadSafeLogger(componentName, output)
         +~ThreadSafeLogger()
         +SetSettings(settings) void
-        +GetSettings() LoggerSettings
         +Log(level, message, file, line, function) void
         #FormatMessage(level, message, file, line, function) string
         #LogLevelToString(level) string$
@@ -603,7 +601,6 @@ classDiagram
         +setSource(source) void
         +setBuilder(builder) void
         +setStyle(style) void
-        +setAggregate(aggregate) void
         +dataChanged() signal
         +renderOptionsChanged() signal
         +errorOccurred(message) signal
@@ -657,16 +654,6 @@ classDiagram
         +TableSelectDialog(tables, parent)
         +selectedTable() QString
         -QListWidget* list_
-    }
-    class ToggleSwitch {
-        +ToggleSwitch(parent)
-        +sizeHint() QSize
-        +pos() qreal
-        +setPos(p) void
-        +setAccent(color) void
-        #paintEvent(event) void
-        -qreal pos_
-        -QColor accent_
     }
     class FileKind {
         <<enumeration>>
@@ -739,7 +726,6 @@ flowchart LR
         swatch["QToolButton swatch (палитра)"]
         fsm["QFileSystemModel"]
         sel["QItemSelectionModel"]
-        toggle["ToggleSwitch"]
         dlgBox["QDialogButtonBox"]
     end
 
@@ -747,7 +733,6 @@ flowchart LR
         setSource["setSource()"]:::slot
         setBuilder["setBuilder()"]:::slot
         setStyle["setStyle()"]:::slot
-        setAgg["setAggregate()"]:::slot
         sigData(["dataChanged()"]):::sig
         sigOpts(["renderOptionsChanged()"]):::sig
         sigErr(["errorOccurred(msg)"]):::sig
@@ -786,7 +771,6 @@ flowchart LR
     setSource -. emit .-> sigErr
     setBuilder -. emit .-> sigOpts
     setStyle -. emit .-> sigOpts
-    setAgg -. emit .-> sigOpts
 
     sigData -- "dataChanged()" --> refresh
     sigOpts -- "renderOptionsChanged()" --> refresh
@@ -794,8 +778,6 @@ flowchart LR
 
     dlgBox -- "accepted()" --> accept
     dlgBox -- "rejected()" --> reject
-
-    toggle -- "toggled(on)" --> toggle
 ```
 
 ### Таблица соединений
@@ -816,13 +798,11 @@ flowchart LR
 | `ChartModel::errorOccurred(msg)`               | `MainWindow::onError`         | `mainwindow.cpp`         |
 | `QDialogButtonBox::accepted()`                 | `QDialog::accept`             | `table_select_dialog.cpp`|
 | `QDialogButtonBox::rejected()`                 | `QDialog::reject`             | `table_select_dialog.cpp`|
-| `ToggleSwitch::toggled(on)`                    | λ (анимация ползунка)         | `toggle_switch.cpp`      |
 
 Сигналы `ChartModel` эмитятся из слотов-мутаторов: `setSource` → `dataChanged` / `errorOccurred`;
-`setBuilder` / `setStyle` / `setAggregate` → `renderOptionsChanged`.
+`setBuilder` / `setStyle` → `renderOptionsChanged`.
 
-> Примечание: слот `ChartModel::setAggregate` определён, но в текущей сборке к нему не
-> подключён ни один виджет; `setSource` вызывается напрямую из `loadFile()`, а не через `connect`.
+> Примечание: `setSource` вызывается напрямую из `loadFile()`, а не через `connect`.
 
 ## Тестирование
 
