@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <chart/aggregate.hpp>
 #include <logger/logger_macros.hpp>
+#include <memory>
 #include <style/ipalette.hpp>
 #include <vector>
 
@@ -64,7 +65,7 @@ std::unique_ptr<QtCharts::QChart> GanttChartBuilder::Build(const data::TimelineD
     const bool timeAxis = n > 0 && ParsePeriod(data.points_.front().time_).isValid();
     const qint64 barMsecs = kBarDays * kMsecsPerDay;
 
-    auto* offsetSet = new QBarSet("");  // прозрачный сегмент-смещение задаёт позицию полосы
+    auto offsetSet = std::make_unique<QBarSet>("");  // прозрачный сегмент-смещение задаёт позицию полосы
     QStringList categories;
 
     // Левые границы (смещения) и категории-подписи для каждого периода.
@@ -85,8 +86,8 @@ std::unique_ptr<QtCharts::QChart> GanttChartBuilder::Build(const data::TimelineD
     offsetSet->setColor(Qt::transparent);
     offsetSet->setBorderColor(Qt::transparent);
 
-    auto* series = new QHorizontalStackedBarSeries();
-    series->append(offsetSet);
+    auto series = std::make_unique<QHorizontalStackedBarSeries>();
+    series->append(offsetSet.release());
 
     const double barLen = timeAxis ? static_cast<double>(barMsecs) : kOrdinalBarLen;
 
@@ -95,43 +96,47 @@ std::unique_ptr<QtCharts::QChart> GanttChartBuilder::Build(const data::TimelineD
     double maxRight = 0.0;
     for (int i = 0; i < n; ++i)
     {
-        auto* barSet = new QBarSet(QString::fromStdString(data.points_[i].time_));
+        auto barSet = std::make_unique<QBarSet>(QString::fromStdString(data.points_[i].time_));
         for (int j = 0; j < n; ++j) *barSet << (j == i ? barLen : 0.0);
         if (palette_ != nullptr)
         {
             barSet->setColor(palette_->ColorFor(i, n));
             barSet->setBorderColor(Qt::transparent);
         }
-        series->append(barSet);
+        series->append(barSet.release());
         maxRight = std::max(maxRight, offsets[i] + barLen);
     }
     series->setLabelsVisible(false);
 
     auto chart = std::make_unique<QChart>();
-    chart->addSeries(series);
+    auto* seriesPtr = series.get();
+    chart->addSeries(series.release());
     chart->setTitle(QString::fromStdString(data.name_));
     chart->legend()->setVisible(false);
 
-    auto* axisY = new QBarCategoryAxis();
+    auto axisY = std::make_unique<QBarCategoryAxis>();
     axisY->append(categories);
-    chart->addAxis(axisY, Qt::AlignLeft);
-    series->attachAxis(axisY);
+    auto* axisYPtr = axisY.get();
+    chart->addAxis(axisY.release(), Qt::AlignLeft);
+    seriesPtr->attachAxis(axisYPtr);
 
     if (timeAxis)
     {
-        auto* axisX = new QDateTimeAxis();
+        auto axisX = std::make_unique<QDateTimeAxis>();
         axisX->setFormat(kMonthAxisFormat);
         axisX->setTickCount(kDateAxisTicks);
         axisX->setRange(QDateTime::fromMSecsSinceEpoch(static_cast<qint64>(offsets.front())),
                         QDateTime::fromMSecsSinceEpoch(static_cast<qint64>(maxRight)));
-        chart->addAxis(axisX, Qt::AlignBottom);
-        series->attachAxis(axisX);
+        auto* axisXPtr = axisX.get();
+        chart->addAxis(axisX.release(), Qt::AlignBottom);
+        seriesPtr->attachAxis(axisXPtr);
     } else
     {
-        auto* axisX = new QValueAxis();
+        auto axisX = std::make_unique<QValueAxis>();
         axisX->setRange(0.0, maxRight);
-        chart->addAxis(axisX, Qt::AlignBottom);
-        series->attachAxis(axisX);
+        auto* axisXPtr = axisX.get();
+        chart->addAxis(axisX.release(), Qt::AlignBottom);
+        seriesPtr->attachAxis(axisXPtr);
     }
 
     LogInfo(logger_) << "Gantt chart built: '" << data.name_ << "', " << n << " periods, timeAxis=" << timeAxis;
