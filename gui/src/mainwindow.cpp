@@ -253,7 +253,8 @@ void MainWindow::installRowWidgets(const QModelIndex& parent)
             const bool isDir = model->isDir(idx);
             const QFileInfo info = model->fileInfo(idx);
             const FileKind kind = ClassifyFileKind(isDir, info.suffix().toLower());
-            auto* rowWidget = new FileRowWidget(kind, isDir, idx.data(Qt::DisplayRole).toString(), info, idx);
+            auto* rowWidget =
+                new FileRowWidget(kind, isDir, idx.data(Qt::DisplayRole).toString(), info, idx, treeView_);
             rowWidget->applyTheme(darkTheme_, accent_);
             treeView_->setIndexWidget(idx, rowWidget);
         }
