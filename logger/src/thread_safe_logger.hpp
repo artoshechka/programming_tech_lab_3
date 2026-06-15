@@ -31,10 +31,6 @@ class ThreadSafeLogger : public ILogger
     /// @param[in] settings Набор настроек логгера
     void SetSettings(const LoggerSettings& settings) override;
 
-    /// @brief Получить текущие настройки логгера
-    /// @return Текущий набор настроек
-    LoggerSettings GetSettings() const override;
-
     /// @brief Записать сообщение в лог с полной синхронизацией
     /// @param[in] level Уровень логирования
     /// @param[in] message Текст сообщения

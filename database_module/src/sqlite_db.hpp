@@ -33,9 +33,6 @@ class SqliteDB : public IDatabase
     /// @return true при успешном открытии, иначе false.
     bool Open(const std::string& path) override;
 
-    /// @brief Закрывает текущее соединение с базой данных.
-    void Close() override;
-
     /// @brief Возвращает список таблиц в открытой базе данных.
     /// @return Вектор имён таблиц.
     std::vector<std::string> Tables() const override;

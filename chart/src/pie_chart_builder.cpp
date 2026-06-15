@@ -7,6 +7,7 @@
 #include <chart/aggregate.hpp>
 #include <chart/src/render_constants.hpp>
 #include <logger/logger_macros.hpp>
+#include <memory>
 #include <style/ipalette.hpp>
 
 QT_CHARTS_USE_NAMESPACE
@@ -30,7 +31,7 @@ std::unique_ptr<QtCharts::QChart> PieChartBuilder::Build(const data::TimelineDat
     auto pts = agg.points_;
     std::sort(pts.begin(), pts.end(), [](const auto& a, const auto& b) { return a.value_ > b.value_; });
 
-    auto* series = new QPieSeries();
+    auto series = std::make_unique<QPieSeries>();
     if (aggregate_)
     {
         double other = 0.0;
@@ -64,11 +65,12 @@ std::unique_ptr<QtCharts::QChart> PieChartBuilder::Build(const data::TimelineDat
     }
 
     auto chart = std::make_unique<QChart>();
-    chart->addSeries(series);
+    auto* seriesPtr = series.get();
+    chart->addSeries(series.release());
     chart->setTitle(QString::fromStdString(agg.name_));
     chart->legend()->setAlignment(Qt::AlignRight);
     chart->legend()->setVisible(true);
-    LogInfo(logger_) << "Pie chart built: '" << agg.name_ << "', " << series->count() << " slices";
+    LogInfo(logger_) << "Pie chart built: '" << agg.name_ << "', " << seriesPtr->count() << " slices";
     return chart;
 }
 

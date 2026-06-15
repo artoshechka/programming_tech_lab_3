@@ -38,6 +38,7 @@
 #include <gui/src/file_item_delegate.hpp>
 #include <gui/src/file_row_widget.hpp>
 #include <gui/src/scrollable_chart_view.hpp>
+#include <gui/src/welcome_dialog.hpp>
 #include <gui/src/theme.hpp>
 #include <gui/ui_strings.hpp>
 #include <logger/logger_macros.hpp>
@@ -65,12 +66,12 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, ExporterFac
       model_(std::make_unique<ChartModel>(std::move(registry), logger_))
 {
     // Верхняя строка: путь к текущему файлу по центру (отступ слева — под нативные кнопки macOS).
-    auto* brandBar = new QWidget();
+    auto* brandBar = new QWidget(this);
     brandBar->setObjectName("brandBar");
     auto* brandRow = new QHBoxLayout(brandBar);
     brandRow->setContentsMargins(80, 6, 16, 6);
     brandRow->addStretch();
-    pathLabel_ = new QLabel();
+    pathLabel_ = new QLabel(brandBar);
     pathLabel_->setObjectName("brandPath");
     brandRow->addWidget(pathLabel_);
     brandRow->addStretch();
@@ -80,7 +81,7 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, ExporterFac
     toolbar->setMovable(false);
 
     // Тип графика: сегмент-контрол с иконками (по одной кнопке на построитель).
-    auto* segWrap = new QWidget();
+    auto* segWrap = new QWidget(this);
     segWrap->setObjectName("segmented");
     auto* segRow = new QHBoxLayout(segWrap);
     segRow->setContentsMargins(3, 3, 3, 3);
@@ -89,7 +90,7 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, ExporterFac
     chartTypeGroup_->setExclusive(true);
     for (const auto& [name, _] : builders_)
     {
-        auto* seg = new QToolButton();
+        auto* seg = new QToolButton(segWrap);
         seg->setObjectName("segButton");
         seg->setCheckable(true);
         seg->setText(QString::fromStdString(name));
@@ -104,7 +105,7 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, ExporterFac
 
     // Палитра: кнопка со свотчем открывает поповер выбора палитры.
     buildPalettePopover();
-    paletteButton_ = new QToolButton();
+    paletteButton_ = new QToolButton(this);
     paletteButton_->setObjectName("paletteButton");
     paletteButton_->setText(ui::kPaletteButton);
     paletteButton_->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
@@ -114,49 +115,49 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, ExporterFac
     toolbar->addSeparator();
 
     // Распорка прижимает правую группу кнопок к краю тулбара (как в референс-дизайне).
-    auto* spacer = new QWidget();
+    auto* spacer = new QWidget(this);
     spacer->setObjectName("toolbarSpacer");
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     toolbar->addWidget(spacer);
 
-    auto* folderBtn = new QPushButton(ui::kFolderButton);
+    auto* folderBtn = new QPushButton(ui::kFolderButton, this);
     folderBtn->setObjectName("primaryButton");
-    auto* saveBtn = new QPushButton(ui::kSaveButton);
+    auto* saveBtn = new QPushButton(ui::kSaveButton, this);
     saveBtn->setObjectName("ghostButton");
-    themeButton_ = new QToolButton();
+    themeButton_ = new QToolButton(this);
     themeButton_->setObjectName("themeButton");
     themeButton_->setText(ui::kThemeDarkButton);
     toolbar->addWidget(folderBtn);
     toolbar->addWidget(saveBtn);
     toolbar->addWidget(themeButton_);
 
-    treeView_ = new QTreeView();
+    treeView_ = new QTreeView(this);
     treeView_->setHeaderHidden(true);
     fileDelegate_ = new FileItemDelegate(this);
     treeView_->setItemDelegate(fileDelegate_);
-    chartView_ = new ScrollableChartView();
+    chartView_ = new ScrollableChartView(this);
     chartView_->setRenderHint(QPainter::Antialiasing);
     chartView_->setChart(new QChart());
 
     // Контейнер графика: заголовок ряда над областью графика.
-    auto* plotContainer = new QWidget();
+    auto* plotContainer = new QWidget(this);
     auto* plotLayout = new QVBoxLayout(plotContainer);
     plotLayout->setContentsMargins(0, 0, 0, 0);
     plotLayout->setSpacing(0);
-    plotTitle_ = new QLabel(ui::kPlotTitlePlaceholder);
+    plotTitle_ = new QLabel(ui::kPlotTitlePlaceholder, plotContainer);
     plotTitle_->setObjectName("plotTitle");
     plotTitle_->setAlignment(Qt::AlignCenter);
     plotLayout->addWidget(plotTitle_);
     plotLayout->addWidget(chartView_, 1);
 
-    auto* splitter = new QSplitter(Qt::Horizontal);
+    auto* splitter = new QSplitter(Qt::Horizontal, this);
     splitter->addWidget(treeView_);
     splitter->addWidget(plotContainer);
     splitter->setStretchFactor(0, 1);
     splitter->setStretchFactor(1, 3);
     setCentralWidget(splitter);
 
-    statusInfo_ = new QLabel();
+    statusInfo_ = new QLabel(this);
     statusBar()->addPermanentWidget(statusInfo_);
 
     // Начальная синхронизация модели с виджетами до подключения сигналов: модель должна знать
@@ -180,8 +181,12 @@ MainWindow::MainWindow(BuilderFactory builders, StyleFactory styles, ExporterFac
         updatePaletteButton(accent_);
     }
 
-    const QString root = QFileDialog::getExistingDirectory(this, ui::kChooseFolderTitle);
-    if (!root.isEmpty()) setRoot(root);
+    WelcomeDialog welcome(accent_, this);
+    if (welcome.exec() == QDialog::Accepted)
+    {
+        const QString root = welcome.selectedFolder();
+        if (!root.isEmpty()) setRoot(root);
+    }
 
     // Сигналы модели -> представление: модель уведомляет, View перестраивает график / показывает ошибку.
     connect(model_.get(), &ChartModel::dataChanged, this, &MainWindow::refresh);
@@ -248,7 +253,8 @@ void MainWindow::installRowWidgets(const QModelIndex& parent)
             const bool isDir = model->isDir(idx);
             const QFileInfo info = model->fileInfo(idx);
             const FileKind kind = ClassifyFileKind(isDir, info.suffix().toLower());
-            auto* rowWidget = new FileRowWidget(kind, isDir, idx.data(Qt::DisplayRole).toString(), info, idx);
+            auto* rowWidget =
+                new FileRowWidget(kind, isDir, idx.data(Qt::DisplayRole).toString(), info, idx, treeView_);
             rowWidget->applyTheme(darkTheme_, accent_);
             treeView_->setIndexWidget(idx, rowWidget);
         }
@@ -313,11 +319,11 @@ void MainWindow::buildPalettePopover()
     col->setContentsMargins(12, 12, 12, 12);
     col->setSpacing(10);
 
-    auto* header = new QLabel(ui::kPaletteHeader);
+    auto* header = new QLabel(ui::kPaletteHeader, popup);
     header->setObjectName("popoverHeader");
     col->addWidget(header);
 
-    auto* grid = new QGridLayout();
+    auto grid = std::make_unique<QGridLayout>();
     grid->setSpacing(8);
     int idx = 0;
     for (const auto& [name, factory] : styles_)
@@ -341,7 +347,7 @@ void MainWindow::buildPalettePopover()
         grid->addWidget(sw, idx / 3, idx % 3);
         ++idx;
     }
-    col->addLayout(grid);
+    col->addLayout(grid.release());
 
     auto* action = new QWidgetAction(paletteMenu_);
     action->setDefaultWidget(popup);
@@ -396,7 +402,16 @@ void MainWindow::applyChartTheme(QChart* chart)
 /// @brief Показывает пользователю ошибку, пришедшую сигналом модели.
 void MainWindow::onError(const QString& message)
 {
+    clearChart();
     QMessageBox::critical(this, ui::kLoadErrorTitle, message);
+}
+
+/// @brief Сбрасывает сцену графика в пустое состояние и возвращает заголовок/счётчик к заглушке.
+void MainWindow::clearChart()
+{
+    setChart(std::make_unique<QChart>());
+    plotTitle_->setText(ui::kPlotTitlePlaceholder);
+    statusInfo_->clear();
 }
 
 /// @brief Обрабатывает клик по элементу дерева: пропускает папки, загружает файл.

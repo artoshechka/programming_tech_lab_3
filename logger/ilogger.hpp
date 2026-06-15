@@ -21,10 +21,6 @@ class ILogger
     /// @param[in] settings Набор настроек логгера
     virtual void SetSettings(const LoggerSettings& settings) = 0;
 
-    /// @brief Получить текущие настройки логгера
-    /// @return Текущие настройки
-    virtual LoggerSettings GetSettings() const = 0;
-
     /// @brief Записать сообщение в лог
     /// @param[in] level Уровень логирования
     /// @param[in] message Текст сообщения

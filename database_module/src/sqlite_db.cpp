@@ -45,11 +45,6 @@ bool SqliteDB::Open(const std::string& path)
     return true;
 }
 
-void SqliteDB::Close()
-{
-    db_.close();
-}
-
 std::vector<std::string> SqliteDB::Tables() const
 {
     std::vector<std::string> result;
