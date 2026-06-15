@@ -1,0 +1,85 @@
+%% Диаграмма сигналов и слотов (Qt Model/View).
+%% Сплошная стрелка с меткой — connect(сигнал -> слот).
+%% Пунктир "emit" — слот модели эмитит сигнал. Пунктир "вызов" — прямой вызов (не connect).
+%% Роли: виджеты — источники ввода; ChartModel — модель/контроллер; MainWindow — представление.
+---
+config:
+  look: classic
+---
+flowchart LR
+    classDef sig fill:#f6d9ec,stroke:#b5497f,color:#000
+    classDef slot fill:#d9e8f6,stroke:#2f78b5,color:#000
+
+    subgraph W["Виджеты Qt (источники сигналов)"]
+        tree["QTreeView treeView_"]
+        folder["QPushButton folderBtn"]
+        save["QPushButton saveBtn"]
+        theme["QToolButton themeButton_"]
+        types["QButtonGroup chartTypeGroup_"]
+        swatch["QToolButton swatch (палитра)"]
+        fsm["QFileSystemModel"]
+        sel["QItemSelectionModel"]
+        toggle["ToggleSwitch"]
+        dlgBox["QDialogButtonBox"]
+    end
+
+    subgraph M["ChartModel — модель / контроллер"]
+        setSource["setSource()"]:::slot
+        setBuilder["setBuilder()"]:::slot
+        setStyle["setStyle()"]:::slot
+        setAgg["setAggregate()"]:::slot
+        sigData(["dataChanged()"]):::sig
+        sigOpts(["renderOptionsChanged()"]):::sig
+        sigErr(["errorOccurred(msg)"]):::sig
+    end
+
+    subgraph V["MainWindow — представление"]
+        onFile["onFileSelected()"]:::slot
+        onFolder["onChooseFolder()"]:::slot
+        onSave["onSaveChart()"]:::slot
+        onTheme["toggleTheme()"]:::slot
+        refresh["refresh()"]:::slot
+        onErr["onError()"]:::slot
+        instRows["installRowWidgets()"]
+        updSel["updateRowSelection()"]
+    end
+
+    subgraph D["TableSelectDialog"]
+        accept["accept()"]:::slot
+        reject["reject()"]:::slot
+    end
+
+    %% --- виджеты -> слоты представления ---
+    tree -- "clicked(index)" --> onFile
+    folder -- "clicked()" --> onFolder
+    save -- "clicked()" --> onSave
+    theme -- "clicked()" --> onTheme
+    tree -- "expanded(index)" --> instRows
+    fsm -- "directoryLoaded(path)" --> instRows
+    sel -- "selectionChanged()" --> updSel
+
+    %% --- контроллер: виджеты -> мутаторы модели (через лямбды) ---
+    types -- "buttonClicked(btn)" --> setBuilder
+    swatch -- "clicked()" --> setStyle
+
+    %% --- прямой вызов: выбор файла -> загрузка ---
+    onFile -. "loadFile()" .-> setSource
+
+    %% --- модель: мутаторы эмитят сигналы ---
+    setSource -. emit .-> sigData
+    setSource -. emit .-> sigErr
+    setBuilder -. emit .-> sigOpts
+    setStyle -. emit .-> sigOpts
+    setAgg -. emit .-> sigOpts
+
+    %% --- наблюдатель: сигналы модели -> слоты представления ---
+    sigData -- "dataChanged()" --> refresh
+    sigOpts -- "renderOptionsChanged()" --> refresh
+    sigErr -- "errorOccurred(msg)" --> onErr
+
+    %% --- диалог выбора таблицы ---
+    dlgBox -- "accepted()" --> accept
+    dlgBox -- "rejected()" --> reject
+
+    %% --- ToggleSwitch: внутренняя анимация ползунка ---
+    toggle -- "toggled(on)" --> toggle
