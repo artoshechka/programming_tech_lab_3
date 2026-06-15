@@ -2,8 +2,9 @@
 /// @brief Реализация потокобезопасного базового логгера
 /// @author Artemenko Anton
 
+#include <QDir>
+#include <QFileInfo>
 #include <chrono>
-#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -47,8 +48,8 @@ void ThreadSafeLogger::OpenLogFile()
     const std::string& logFilePath = settings_.logFilePath_.value();
     try
     {
-        const auto parent = std::filesystem::path(logFilePath).parent_path();
-        if (!parent.empty()) std::filesystem::create_directories(parent);
+        const QString parent = QFileInfo(QString::fromStdString(logFilePath)).absolutePath();
+        if (!parent.isEmpty()) QDir().mkpath(parent);
         logFile_.open(logFilePath, std::ios::app);
         if (!logFile_.is_open())
         {
